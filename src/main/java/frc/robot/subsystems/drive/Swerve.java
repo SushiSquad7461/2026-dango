@@ -54,9 +54,10 @@ import org.littletonrobotics.junction.Logger;
  * Compiles the modules together to create the swerve subsyste,
  */
 public class Swerve extends SubsystemBase {
+  
   // TunerConstants doesn't include these constants, so they are declared locally
   public static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
-  public static final double DRIVE_BASE_RADIUS =
+  public static final double DRIVE_BASE_RADIUS = 
       Math.max(
           Math.max(
               Math.hypot(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
