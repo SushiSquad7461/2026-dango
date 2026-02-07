@@ -119,30 +119,31 @@ public class Intake extends SubsystemBase {
         pivotMotor.setControl(pivotControl.withPosition(targetRot));
     }
 
-    private void updateState() {
+    private void updateState(boolean at) {
         if (state == IntakeState.WIGGLING) {
-            if (isPivotAtTarget() && wiggleReady) {
+            if (at && wiggleReady) {
                 wiggleTargetHigh = !wiggleTargetHigh;
                 pivotTargetDeg = wiggleTargetHigh ? IntakeConstants.wiggleHighDeg : IntakeConstants.wiggleLowDeg;
                 wiggleReady = false;
             }
-            if (!isPivotAtTarget()) {
+            if (!at) {
                 wiggleReady = true;
             }
             return;
         }
-        if (state == IntakeState.DEPLOYING && isPivotAtTarget()) {
+        if (state == IntakeState.DEPLOYING && at) {
             state = IntakeState.DEPLOYED;
         }
-        if (state == IntakeState.STOWING && isPivotAtTarget()) {
+        if (state == IntakeState.STOWING && at) {
             state = IntakeState.STOWED;
         }
     }
 
     private void updateRollers() {
-        updateState();
+        boolean at = isPivotAtTarget();
+        updateState(at);
         double out = 0.0;
-        if (isPivotAtTarget()) {
+        if (at) {
             switch (state.direction) {
                 case FORWARD -> out = +IntakeConstants.rollerPercent;
                 case REVERSE -> out = -IntakeConstants.rollerPercent;
