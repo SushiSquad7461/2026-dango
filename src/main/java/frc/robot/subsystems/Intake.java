@@ -23,7 +23,7 @@ public class Intake extends SubsystemBase {
         public static final double angleToleranceDeg = 5.0;
         public static final double stowedAngleDeg = 0.0;
 
-        public static final double motorRotationsPerArmRotation = 100.0;
+        public static final double motorRotationsPerArmRotation = 100.0;  // TODO: replace gear ratio
 
         public static final double cruiseVelocityRps = 6.0;
         public static final double accelRps2 = 12.0;
@@ -67,6 +67,7 @@ public class Intake extends SubsystemBase {
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         pivotMotor.getConfigurator().apply(cfg);
+        // TODO: pivot zeroing
     }
 
     private void configureRoller() {
@@ -83,11 +84,7 @@ public class Intake extends SubsystemBase {
         pivotTargetDeg = state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
 
         // Set rollers
-        switch(state.direction) {
-            case FORWARD -> rollerMotor.setControl(rollerControl.withOutput(IntakeConstants.rollerPercent));
-            case REVERSE -> rollerMotor.setControl(rollerControl.withOutput(-IntakeConstants.rollerPercent));
-            default -> rollerMotor.setControl(rollerControl.withOutput(0));
-        }
+        updateRollers();
     }
 
     public IntakeState getState() {
@@ -100,17 +97,47 @@ public class Intake extends SubsystemBase {
         return armRot * 360.0;
     }
 
+    private boolean isPivotAtTarget() {
+        return Math.abs(getPivotAngle() - pivotTargetDeg) <= IntakeConstants.angleToleranceDeg;
+    }
+
     private void runPivotToTarget() {
         double targetRot = degreesToMotorRotations(pivotTargetDeg);
         pivotMotor.setControl(pivotControl.withPosition(targetRot));
     }
 
+    private void updateState() {
+        if (state == IntakeState.DEPLOYING && isPivotAtTarget()) {
+            state = IntakeState.DEPLOYED;
+        }
+        if (state == IntakeState.STOWING && isPivotAtTarget()) {
+            state = IntakeState.STOWED;
+        }
+    }
+
+    private void updateRollers() {
+        updateState();
+        double out = 0.0;
+        if (isPivotAtTarget()) {
+            switch (state.direction) {
+                case FORWARD -> out = +IntakeConstants.rollerPercent;
+                case REVERSE -> out = -IntakeConstants.rollerPercent;
+                case OFF -> out = 0.0;
+            }
+        }
+        out = MathUtil.clamp(out, -1.0, 1.0);
+        rollerMotor.setControl(rollerControl.withOutput(out));
+    }
+
     @Override
     public void periodic() {
         runPivotToTarget();
+        updateRollers();
 
         SmartDashboard.putString("Intake/State", state.name());
         SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
+        SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
+        SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
 
     private static double degreesToMotorRotations(double degrees) {
