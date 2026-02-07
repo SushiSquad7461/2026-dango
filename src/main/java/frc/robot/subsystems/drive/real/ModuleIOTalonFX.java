@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.real;
 
 import static frc.robot.util.PhoenixUtil.*;
 
@@ -35,6 +35,11 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.PhoenixOdometryThread;
+import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.ModuleIO.ModuleIOInputs;
+
 import java.util.Queue;
 
 /**
@@ -171,7 +176,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
     // Configure periodic frames
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Drive.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
+        Swerve.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         driveVelocity,

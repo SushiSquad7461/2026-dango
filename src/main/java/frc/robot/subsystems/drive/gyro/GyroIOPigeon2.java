@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.gyro;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
@@ -17,6 +17,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.drive.PhoenixOdometryThread;
+import frc.robot.subsystems.drive.Swerve;
+
 import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */
@@ -36,7 +39,7 @@ public class GyroIOPigeon2 implements GyroIO {
     }
 
     pigeon.getConfigurator().setYaw(0.0);
-    yaw.setUpdateFrequency(Drive.ODOMETRY_FREQUENCY);
+    yaw.setUpdateFrequency(Swerve.ODOMETRY_FREQUENCY);
     yawVelocity.setUpdateFrequency(50.0);
     pigeon.optimizeBusUtilization();
     yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
