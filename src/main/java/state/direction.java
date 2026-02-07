@@ -1,5 +1,7 @@
 package state;
 
-public class direction {
-
+public enum Direction {
+  FORWARD,
+  REVERSE,
+  STOP
 }
