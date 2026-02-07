@@ -23,7 +23,7 @@ public class Intake extends SubsystemBase {
         public static final double angleToleranceDeg = 5.0;
         public static final double stowedAngleDeg = 0.0;
 
-        public static final double motorRotationsPerArmRotation = 100.0;  // TODO: replace gear ratio
+        public static final double motorRotationsPerArmRotation = 72.0;
 
         public static final double cruiseVelocityRps = 6.0;
         public static final double accelRps2 = 12.0;
