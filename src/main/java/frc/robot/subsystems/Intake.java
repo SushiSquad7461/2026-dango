@@ -33,6 +33,9 @@ public class Intake extends SubsystemBase {
         public static final double pivotD = 0.5;
 
         public static final double rollerPercent = 0.70; // base roller percent
+
+        public static final double wiggleLowDeg = 90.0;
+        public static final double wiggleHighDeg = 110.0;
     }
 
     private IntakeState state = IntakeState.IDLE;
@@ -44,6 +47,9 @@ public class Intake extends SubsystemBase {
     private final DutyCycleOut rollerControl = new DutyCycleOut(0);
 
     private double pivotTargetDeg = IntakeConstants.stowedAngleDeg;
+
+    private boolean wiggleTargetHigh = false;
+    private boolean wiggleReady = true;
 
     public Intake() {
         configurePivot();
@@ -82,7 +88,13 @@ public class Intake extends SubsystemBase {
         state = newState;
 
         // Set pivot target
-        pivotTargetDeg = state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
+        if (state == IntakeState.WIGGLING) {
+            wiggleTargetHigh = false;
+            wiggleReady = true;
+            pivotTargetDeg = IntakeConstants.wiggleLowDeg;
+        } else {
+            pivotTargetDeg = state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
+        }
 
         // Set rollers
         updateRollers();
@@ -108,6 +120,17 @@ public class Intake extends SubsystemBase {
     }
 
     private void updateState() {
+        if (state == IntakeState.WIGGLING) {
+            if (isPivotAtTarget() && wiggleReady) {
+                wiggleTargetHigh = !wiggleTargetHigh;
+                pivotTargetDeg = wiggleTargetHigh ? IntakeConstants.wiggleHighDeg : IntakeConstants.wiggleLowDeg;
+                wiggleReady = false;
+            }
+            if (!isPivotAtTarget()) {
+                wiggleReady = true;
+            }
+            return;
+        }
         if (state == IntakeState.DEPLOYING && isPivotAtTarget()) {
             state = IntakeState.DEPLOYED;
         }

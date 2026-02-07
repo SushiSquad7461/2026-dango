@@ -5,7 +5,8 @@ public enum IntakeState {
     ROLLERS_IN(true, Direction.FORWARD),
     ROLLERS_OUT(true, Direction.REVERSE),
     STOWING(false, Direction.OFF),
-    STOWED(false, Direction.OFF);
+    STOWED(false, Direction.OFF),
+    WIGGLING(true, Direction.FORWARD);
 
     public final boolean intakeExtended;
     public final Direction direction;
