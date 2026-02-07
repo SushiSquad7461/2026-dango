@@ -74,6 +74,7 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.SupplyCurrentLimit = 30;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+        cfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rollerMotor.getConfigurator().apply(cfg);
     }
 
