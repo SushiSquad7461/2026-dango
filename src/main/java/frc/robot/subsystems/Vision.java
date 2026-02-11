@@ -4,6 +4,11 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Timer;
+
 public class Vision extends SubsystemBase {
 
     private final NetworkTable m_limelightTable;
@@ -70,6 +75,44 @@ public class Vision extends SubsystemBase {
     }
 
     /**
+     * Calculates the robot's pose based on AprilTags.
+     * This uses the standard botpose array.
+     * @return The 2D pose of the robot or a default pose if no target is seen.
+     */
+    public Pose2d getBotPose2d() {
+        double[] botpose = getBotPose();
+        if (getTV()) {
+          // Extracts x, y, and rotation from the array
+          return new Pose2d(new Translation2d(botpose[0], botpose[1]), Rotation2d.fromDegrees(botpose[5]));
+        }
+        return new Pose2d();
+    }
+
+    /**
+     * Gets the pose relative to the Blue Alliance wall.
+     * @return The 2D pose of the robot (Blue Origin)
+     */
+    public Pose2d getBotPoseBlue2d() {
+        double[] botpose = getBotPoseWPIBlue();
+        if (getTV()) {
+            return new Pose2d(new Translation2d(botpose[0], botpose[1]), Rotation2d.fromDegrees(botpose[5]));
+        }
+        return new Pose2d();
+    }
+
+    /**
+     * Gets the pose relative to the Red Alliance wall.
+     * @return The 2D pose of the robot (Red Origin)
+     */
+    public Pose2d getBotPoseRed2d() {
+        double[] botpose = getBotPoseWPIRed();
+        if (getTV()) {
+            return new Pose2d(new Translation2d(botpose[0], botpose[1]), Rotation2d.fromDegrees(botpose[5]));
+        }
+        return new Pose2d();
+    }
+
+    /**
      * Sets the vision pipeline.
      * @param pipelineIndex The index of the pipeline to use (0-9)
      */
@@ -96,6 +139,5 @@ public class Vision extends SubsystemBase {
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
-        // You can add debug prints here if needed
     }
 }
