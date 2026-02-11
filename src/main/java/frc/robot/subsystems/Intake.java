@@ -11,8 +11,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.state.Direction;
-
 public class Intake extends SubsystemBase {
 
     public static final class IntakeConstants {
@@ -32,7 +30,7 @@ public class Intake extends SubsystemBase {
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.5;
 
-        public static final double rollerPercent = 0.70; // base roller percent
+        public static final double rollerPercent = 0.70;
 
         public static final double wiggleLowDeg = 90.0;
         public static final double wiggleHighDeg = 110.0;
@@ -46,17 +44,21 @@ public class Intake extends SubsystemBase {
     private final MotionMagicVoltage pivotControl = new MotionMagicVoltage(0);
     private final DutyCycleOut rollerControl = new DutyCycleOut(0);
 
+    // Current pivot setpoint in degrees (converted to motor rotations when commanded).
     private double pivotTargetDeg = IntakeConstants.stowedAngleDeg;
 
+    // Wiggle edge detector: flip target once per arrival at setpoint.
     private boolean wiggleTargetHigh = false;
     private boolean wiggleReady = true;
 
+    // Configure motors and start in IDLE.
     public Intake() {
         configurePivot();
         configureRoller();
         setState(IntakeState.IDLE);
     }
 
+    // Apply Motion Magic + PID + current limit + brake mode for the pivot.
     private void configurePivot() {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
 
@@ -76,6 +78,7 @@ public class Intake extends SubsystemBase {
         // TODO: pivot zeroing
     }
 
+    // Apply current limit + coast mode for the roller.
     private void configureRoller() {
         TalonFXConfiguration cfg = new TalonFXConfiguration();
         cfg.CurrentLimits.SupplyCurrentLimit = 30;
@@ -84,10 +87,10 @@ public class Intake extends SubsystemBase {
         rollerMotor.getConfigurator().apply(cfg);
     }
 
+    // Set high-level state; updates pivot setpoint and roller behavior.
     public void setState(IntakeState newState) {
         state = newState;
 
-        // Set pivot target
         if (state == IntakeState.WIGGLING) {
             wiggleTargetHigh = false;
             wiggleReady = true;
@@ -96,7 +99,6 @@ public class Intake extends SubsystemBase {
             pivotTargetDeg = state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
         }
 
-        // Set rollers
         updateRollers();
     }
 
@@ -104,21 +106,25 @@ public class Intake extends SubsystemBase {
         return state;
     }
 
+    // Pivot angle in degrees (from motor rotations via gear ratio).
     public double getPivotAngle() {
         double motorRot = pivotMotor.getPosition().getValueAsDouble();
         double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
         return armRot * 360.0;
     }
 
+    // True when pivot is within tolerance of current target.
     private boolean isPivotAtTarget() {
         return Math.abs(getPivotAngle() - pivotTargetDeg) <= IntakeConstants.angleToleranceDeg;
     }
 
+    // Command pivot Motion Magic to current target.
     private void runPivotToTarget() {
         double targetRot = degreesToMotorRotations(pivotTargetDeg);
         pivotMotor.setControl(pivotControl.withPosition(targetRot));
     }
 
+    // Handle state transitions (deploy/stow completion and wiggle target flips).
     private void updateState() {
         if (state == IntakeState.WIGGLING) {
             if (isPivotAtTarget() && wiggleReady) {
@@ -139,8 +145,10 @@ public class Intake extends SubsystemBase {
         }
     }
 
+    // Update rollers; only runs when pivot is at target.
     private void updateRollers() {
         updateState();
+
         double out = 0.0;
         if (isPivotAtTarget()) {
             switch (state.direction) {
@@ -153,6 +161,7 @@ public class Intake extends SubsystemBase {
         rollerMotor.setControl(rollerControl.withOutput(out));
     }
 
+    // Periodic loop: command pivot and update rollers and log telemetry.
     @Override
     public void periodic() {
         runPivotToTarget();
@@ -164,6 +173,7 @@ public class Intake extends SubsystemBase {
         SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
 
+    // Convert degrees to motor rotations (arm rotations scaled by gear ratio).
     private static double degreesToMotorRotations(double degrees) {
         double armRot = degrees / 360.0;
         return armRot * IntakeConstants.motorRotationsPerArmRotation;
