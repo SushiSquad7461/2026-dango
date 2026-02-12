@@ -1,3 +1,6 @@
+/* Shooter Subsystem: initializes shooter motors, controls speed and hood position using PID, etc.
+ * Mainly using a state machine to control shooter behavior between IDLE, PRESHOOT, and SHOOT
+*/
 package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -27,23 +30,28 @@ public class Shooter extends SubsystemBase{
     public final double HOOD_KI = 0;
     public final double HOOD_KD = 0.1;
 
+    // initialize shooter, shooter intake, and hood motors
     private final TalonFX krakenShooterLeft = new TalonFX(0, "rio");
     private final TalonFX krakenShooterRight = new TalonFX(1, "rio");
     private final TalonFX krakenShooterIntake = new TalonFX(2, "rio");
     private final TalonFX krakenShooterHood = new TalonFX(3, "rio");
 
     public Shooter() {
+        // shooter flywheel motor config
         TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         shooterConfig.CurrentLimits.StatorCurrentLimit = 120.0;
         shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 70.0;
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        // adapts for different battery voltages
         shooterConfig.Voltage.PeakForwardVoltage = 12.0;
         shooterConfig.Voltage.PeakReverseVoltage = -12.0;
         krakenShooterLeft.getConfigurator().apply(shooterConfig);
         krakenShooterRight.getConfigurator().apply(shooterConfig);
+        // sets second shooter motor w same config, opposite direction
         krakenShooterRight.setControl(new Follower(krakenShooterLeft.getDeviceID(), MotorAlignmentValue.Opposed));
+        // setup PID
         Slot0Configs shooterPID = new Slot0Configs();
         shooterPID.kS = SHOOTER_KS;
         shooterPID.kV = SHOOTER_KV; 
@@ -52,6 +60,7 @@ public class Shooter extends SubsystemBase{
         shooterPID.kD = SHOOTER_KD;
         krakenShooterLeft.getConfigurator().apply(shooterPID);
 
+        // shooter intake wheel motor config
         TalonFXConfiguration shooterIntakeConfig = new TalonFXConfiguration();
         shooterIntakeConfig.CurrentLimits.StatorCurrentLimit = 20.0;
         shooterIntakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -59,6 +68,7 @@ public class Shooter extends SubsystemBase{
         shooterIntakeConfig.Voltage.PeakForwardVoltage = 12.0;
         shooterIntakeConfig.Voltage.PeakReverseVoltage = -12.0;
         krakenShooterIntake.getConfigurator().apply(shooterIntakeConfig);
+        // setup PID
         Slot0Configs shooterIntakePID = new Slot0Configs();
         shooterIntakePID.kS = SHOOTER_INTAKE_KS;
         shooterIntakePID.kV = SHOOTER_INTAKE_KV; 
@@ -67,11 +77,13 @@ public class Shooter extends SubsystemBase{
         shooterIntakePID.kD = SHOOTER_INTAKE_KD;
         krakenShooterIntake.getConfigurator().apply(shooterIntakePID);
 
+        // shooter adjustable hood motor config
         TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
         hoodConfig.CurrentLimits.StatorCurrentLimit = 20.0;
         hoodConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; // note the brake behavior because we need to stop the hood in place
         krakenShooterHood.getConfigurator().apply(hoodConfig);
+        // setup PID
         Slot0Configs hoodPID = new Slot0Configs();
         hoodPID.kP = HOOD_KP;
         hoodPID.kI = HOOD_KI; 
