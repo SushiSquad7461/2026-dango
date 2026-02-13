@@ -1,8 +1,3 @@
-/* Shooter Subsystem: initializes shooter motors, controls speed and hood position using PID, etc.
- * TODO: State machine to control shooter behavior between IDLE, PRESHOOT, and SHOOT
- * TODO: Add shooter control methods (set target rpm, target hood position)
- * TODO: Tune PID
-*/
 package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -12,34 +7,31 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+public class ShooterIOKraken implements ShooterIO {
+  public final double SHOOTER_KS = 0.1;
+  public final double SHOOTER_KV = 0.12;
+  public final double SHOOTER_KP = 0.11;
+  public final double SHOOTER_KI = 0;
+  public final double SHOOTER_KD = 0;
+  // TODO: tune shooter intake PID
+  public final double SHOOTER_INTAKE_KS = 0.1;
+  public final double SHOOTER_INTAKE_KV = 0.12;
+  public final double SHOOTER_INTAKE_KP = 0.11;
+  public final double SHOOTER_INTAKE_KI = 0;
+  public final double SHOOTER_INTAKE_KD = 0;
+  // TODO: tune hood PID
+  public final double HOOD_KP = 2.4;
+  public final double HOOD_KI = 0;
+  public final double HOOD_KD = 0.1;
 
-public class Shooter extends SubsystemBase{
-    // TODO: tune shooter PID
-    public final double SHOOTER_KS = 0.1;
-    public final double SHOOTER_KV = 0.12;
-    public final double SHOOTER_KP = 0.11;
-    public final double SHOOTER_KI = 0;
-    public final double SHOOTER_KD = 0;
-    // TODO: tune shooter intake PID
-    public final double SHOOTER_INTAKE_KS = 0.1;
-    public final double SHOOTER_INTAKE_KV = 0.12;
-    public final double SHOOTER_INTAKE_KP = 0.11;
-    public final double SHOOTER_INTAKE_KI = 0;
-    public final double SHOOTER_INTAKE_KD = 0;
-    // TODO: tune hood PID
-    public final double HOOD_KP = 2.4;
-    public final double HOOD_KI = 0;
-    public final double HOOD_KD = 0.1;
+  // initialize shooter, shooter intake, and hood motors
+  private final TalonFX krakenShooterLeft = new TalonFX(0, "rio");
+  private final TalonFX krakenShooterRight = new TalonFX(1, "rio");
+  private final TalonFX krakenShooterIntake = new TalonFX(2, "rio");
+  private final TalonFX krakenShooterHood = new TalonFX(3, "rio");
 
-    // initialize shooter, shooter intake, and hood motors
-    private final TalonFX krakenShooterLeft = new TalonFX(0, "rio");
-    private final TalonFX krakenShooterRight = new TalonFX(1, "rio");
-    private final TalonFX krakenShooterIntake = new TalonFX(2, "rio");
-    private final TalonFX krakenShooterHood = new TalonFX(3, "rio");
-
-    public Shooter() {
-        // shooter flywheel motor config
+  public ShooterIOKraken() {
+    // shooter flywheel motor config
         TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         shooterConfig.CurrentLimits.StatorCurrentLimit = 120.0;
         shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -91,5 +83,32 @@ public class Shooter extends SubsystemBase{
         hoodPID.kI = HOOD_KI; 
         hoodPID.kD = HOOD_KD;
         krakenShooterHood.getConfigurator().apply(hoodPID);
-    }
+  }
+
+  @Override
+  public void setFlywheelRPM(double rpm) {
+    // open-loop "good enough" for first iteration
+    krakenShooterLeft.set(0.8);
+  }
+
+  @Override
+  public void stopFlywheel() {
+    krakenShooterLeft.set(0);
+  }
+
+  @Override
+  public void runFeeder() {
+    krakenShooterIntake.set(0.6);
+  }
+
+  @Override
+  public void stopFeeder() {
+    krakenShooterIntake.set(0);
+  }
+
+  @Override
+  public double getFlywheelRPM() {
+    // not implemented yet
+    return 0;
+  }
 }
