@@ -1,5 +1,11 @@
+/* Shooter configuration and motor control
+Motors: Shooter Left, Shooter Right, Hood, Feeder
+Motor control methods accessible through interface ShooterIO.java
+*/ 
 package frc.robot.subsystems.shooter;
 
+
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -25,10 +31,10 @@ public class ShooterIOKraken implements ShooterIO {
   public final double HOOD_KD = 0.1;
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(0, "rio");
-  private final TalonFX krakenShooterRight = new TalonFX(1, "rio");
-  private final TalonFX krakenShooterIntake = new TalonFX(2, "rio");
-  private final TalonFX krakenShooterHood = new TalonFX(3, "rio");
+  private final TalonFX krakenShooterLeft = new TalonFX(0, new CANBus("rio"));
+  private final TalonFX krakenShooterRight = new TalonFX(1, new CANBus("rio"));
+  private final TalonFX krakenShooterIntake = new TalonFX(2, new CANBus("rio"));
+  private final TalonFX krakenShooterHood = new TalonFX(3, new CANBus("rio"));
 
   public ShooterIOKraken() {
     // shooter flywheel motor config
@@ -97,7 +103,7 @@ public class ShooterIOKraken implements ShooterIO {
   }
 
   @Override
-  public void runFeeder() {
+  public void runFeeder() { // open-loop "good enough" for first iteration
     krakenShooterIntake.set(0.6);
   }
 
@@ -108,7 +114,9 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public double getFlywheelRPM() {
-    // not implemented yet
+    // TODO: implement checking flywheel RPM
     return 0;
   }
+
+  // TODO: implement shooter readiness check
 }

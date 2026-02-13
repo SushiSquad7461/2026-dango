@@ -1,3 +1,4 @@
+// Exposes methods for shooter control
 package frc.robot.subsystems.shooter;
 
 public interface ShooterIO {

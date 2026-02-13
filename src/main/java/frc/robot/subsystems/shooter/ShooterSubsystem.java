@@ -1,3 +1,4 @@
+// Shooter Subsystem: controls shooter state using a state machine, switches between IDLE, PRESHOOT, and SHOOT
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -6,9 +7,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ShooterSubsystem extends SubsystemBase {
 
   public enum ShooterState {
-    IDLE,
-    PRESHOOT,
-    SHOOT
+    IDLE, // shooter inactive
+    PRESHOOT, // shooter spinning up, waiting for hood to come into position, or waiting for robot to turn to goal
+    SHOOT // shooting
   }
 
   private ShooterState state = ShooterState.IDLE;
@@ -40,14 +41,10 @@ public class ShooterSubsystem extends SubsystemBase {
         io.stopFeeder();
         break;
 
-      case PRESHOOT:
+      case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
         io.setFlywheelRPM(TARGET_RPM);
-
-        // rookie-friendly: RPM check works later, ignored now
         shootStartTime = Timer.getFPGATimestamp();
-        state = ShooterState.SHOOT;
-        break;
-
+        
       case SHOOT:
         io.setFlywheelRPM(TARGET_RPM);
         io.runFeeder();
