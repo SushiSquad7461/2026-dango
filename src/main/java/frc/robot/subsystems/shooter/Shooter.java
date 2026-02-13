@@ -1,5 +1,7 @@
 /* Shooter Subsystem: initializes shooter motors, controls speed and hood position using PID, etc.
- * Mainly using a state machine to control shooter behavior between IDLE, PRESHOOT, and SHOOT
+ * TODO: State machine to control shooter behavior between IDLE, PRESHOOT, and SHOOT
+ * TODO: Add shooter control methods (set target rpm, target hood position)
+ * TODO: Tune PID
 */
 package frc.robot.subsystems.shooter;
 
