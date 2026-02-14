@@ -24,6 +24,8 @@ import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.sim.ModuleIOSim;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.drive.ModuleIO;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
