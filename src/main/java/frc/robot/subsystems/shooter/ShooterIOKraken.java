@@ -14,27 +14,29 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class ShooterIOKraken implements ShooterIO {
-  public final double SHOOTER_KS = 0.1;
-  public final double SHOOTER_KV = 0.12;
-  public final double SHOOTER_KP = 0.11;
-  public final double SHOOTER_KI = 0;
-  public final double SHOOTER_KD = 0;
+  CANBus rioCanBus = new CANBus("rio");
+  // TODO: tune shooter flywheel PID
+  private final double SHOOTER_KS = 0.1;
+  private final double SHOOTER_KV = 0.12;
+  private final double SHOOTER_KP = 0.11;
+  private final double SHOOTER_KI = 0;
+  private final double SHOOTER_KD = 0;
   // TODO: tune shooter intake PID
-  public final double SHOOTER_INTAKE_KS = 0.1;
-  public final double SHOOTER_INTAKE_KV = 0.12;
-  public final double SHOOTER_INTAKE_KP = 0.11;
-  public final double SHOOTER_INTAKE_KI = 0;
-  public final double SHOOTER_INTAKE_KD = 0;
+  private final double SHOOTER_INTAKE_KS = 0.1;
+  private final double SHOOTER_INTAKE_KV = 0.12;
+  private final double SHOOTER_INTAKE_KP = 0.11;
+  private final double SHOOTER_INTAKE_KI = 0;
+  private final double SHOOTER_INTAKE_KD = 0;
   // TODO: tune hood PID
-  public final double HOOD_KP = 2.4;
-  public final double HOOD_KI = 0;
-  public final double HOOD_KD = 0.1;
+  private final double HOOD_KP = 2.4;
+  private final double HOOD_KI = 0;
+  private final double HOOD_KD = 0.1;
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(0, new CANBus("rio"));
-  private final TalonFX krakenShooterRight = new TalonFX(1, new CANBus("rio"));
-  private final TalonFX krakenShooterIntake = new TalonFX(2, new CANBus("rio"));
-  private final TalonFX krakenShooterHood = new TalonFX(3, new CANBus("rio"));
+  private final TalonFX krakenShooterLeft = new TalonFX(0, rioCanBus);
+  private final TalonFX krakenShooterRight = new TalonFX(1, rioCanBus);
+  private final TalonFX krakenShooterIntake = new TalonFX(2, rioCanBus);
+  private final TalonFX krakenShooterHood = new TalonFX(3, rioCanBus);
 
   public ShooterIOKraken() {
     // shooter flywheel motor config
@@ -48,7 +50,6 @@ public class ShooterIOKraken implements ShooterIO {
         shooterConfig.Voltage.PeakForwardVoltage = 12.0;
         shooterConfig.Voltage.PeakReverseVoltage = -12.0;
         krakenShooterLeft.getConfigurator().apply(shooterConfig);
-        krakenShooterRight.getConfigurator().apply(shooterConfig);
         // sets second shooter motor w same config, opposite direction
         krakenShooterRight.setControl(new Follower(krakenShooterLeft.getDeviceID(), MotorAlignmentValue.Opposed));
         // setup PID
@@ -118,5 +119,12 @@ public class ShooterIOKraken implements ShooterIO {
     return 0;
   }
 
+  // TODO: implement hood angle check
+  public double getHoodPos() {
+    return 0;
+  }
   // TODO: implement shooter readiness check
+  public boolean isShooterReady() {
+    return true;
+  }
 }

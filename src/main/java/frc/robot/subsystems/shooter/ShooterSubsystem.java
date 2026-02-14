@@ -16,9 +16,8 @@ public class ShooterSubsystem extends SubsystemBase {
   private final ShooterIO io;
 
   private static final double TARGET_RPM = 4500;
-  private static final double FEED_TIME = 0.4;
 
-  private double shootStartTime = 0;
+  private double shootStartTime = 0; // could come in useful later, especially for logging
 
   public ShooterSubsystem(ShooterIO io) {
     this.io = io;
@@ -48,10 +47,6 @@ public class ShooterSubsystem extends SubsystemBase {
       case SHOOT:
         io.setFlywheelRPM(TARGET_RPM);
         io.runFeeder();
-
-        if (Timer.getFPGATimestamp() - shootStartTime > FEED_TIME) {
-          state = ShooterState.IDLE;
-        }
         break;
     }
   }
