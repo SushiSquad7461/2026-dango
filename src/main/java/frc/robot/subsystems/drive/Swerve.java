@@ -39,11 +39,13 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
-import frc.robot.generated.TunerConstants;
+import frc.robot.generated.Constants;
+import frc.robot.generated.Constants.Mode;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
+import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
+import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
+import frc.robot.subsystems.drive.sim.ModuleIOSim;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -55,16 +57,16 @@ import org.littletonrobotics.junction.Logger;
  */
 public class Swerve extends SubsystemBase {
   
-  // TunerConstants doesn't include these constants, so they are declared locally
-  public static final double ODOMETRY_FREQUENCY = TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
+  // Constants doesn't include these constants, so they are declared locally
+  public static final double ODOMETRY_FREQUENCY = Constants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
   public static final double DRIVE_BASE_RADIUS = 
       Math.max(
           Math.max(
-              Math.hypot(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
-              Math.hypot(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY)),
+              Math.hypot(Constants.FrontLeft.LocationX, Constants.FrontLeft.LocationY),
+              Math.hypot(Constants.FrontRight.LocationX, Constants.FrontRight.LocationY)),
           Math.max(
-              Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
-              Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
+              Math.hypot(Constants.BackLeft.LocationX, Constants.BackLeft.LocationY),
+              Math.hypot(Constants.BackRight.LocationX, Constants.BackRight.LocationY)));
 
   // PathPlanner config constants
   private static final double ROBOT_MASS_KG = 74.088;
@@ -75,12 +77,12 @@ public class Swerve extends SubsystemBase {
           ROBOT_MASS_KG,
           ROBOT_MOI,
           new ModuleConfig(
-              TunerConstants.FrontLeft.WheelRadius,
-              TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+              Constants.FrontLeft.WheelRadius,
+              Constants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
               DCMotor.getKrakenX60Foc(1)
-                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-              TunerConstants.FrontLeft.SlipCurrent,
+                  .withReduction(Constants.FrontLeft.DriveMotorGearRatio),
+              Constants.FrontLeft.SlipCurrent,
               1),
           getModuleTranslations());
 
@@ -104,17 +106,37 @@ public class Swerve extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
-  public Swerve(
-      GyroIO gyroIO,
-      ModuleIO flModuleIO,
-      ModuleIO frModuleIO,
-      ModuleIO blModuleIO,
-      ModuleIO brModuleIO) {
-    this.gyroIO = gyroIO;
-    modules[0] = new Module(flModuleIO, 0, TunerConstants.FrontLeft);
-    modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
-    modules[2] = new Module(blModuleIO, 2, TunerConstants.BackLeft);
-    modules[3] = new Module(brModuleIO, 3, TunerConstants.BackRight);
+  public Swerve() {
+
+    ModuleIO flModuleIO;
+    ModuleIO frModuleIO;
+    ModuleIO blModuleIO;
+    ModuleIO brModuleIO;
+
+    if(Constants.currentMode==Mode.SIM ){
+                this.gyroIO = new GyroIO() {};
+                flModuleIO = new ModuleIOSim(Constants.FrontLeft);
+                frModuleIO = new ModuleIOSim(Constants.FrontRight);
+                blModuleIO = new ModuleIOSim(Constants.BackLeft);
+                brModuleIO = new ModuleIOSim(Constants.BackRight);
+    } else if(Constants.currentMode== Mode.REAL){
+                  this.gyroIO = new GyroIOPigeon2();
+                  flModuleIO = new ModuleIOTalonFX(Constants.FrontLeft);
+                  frModuleIO = new ModuleIOTalonFX(Constants.FrontRight);
+                  blModuleIO = new ModuleIOTalonFX(Constants.BackLeft);
+                  brModuleIO = new ModuleIOTalonFX(Constants.BackRight);
+    }else{
+                this.gyroIO = new GyroIO() {};
+                flModuleIO = new ModuleIO() {};
+                frModuleIO = new ModuleIO() {};
+                blModuleIO = new ModuleIO() {};
+                brModuleIO = new ModuleIO() {};
+    }
+    
+    modules[0] = new Module(flModuleIO, 0, Constants.FrontLeft);
+    modules[1] = new Module(frModuleIO, 1, Constants.FrontRight);
+    modules[2] = new Module(blModuleIO, 2, Constants.BackLeft);
+    modules[3] = new Module(brModuleIO, 3, Constants.BackRight);
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -223,7 +245,7 @@ public class Swerve extends SubsystemBase {
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, Constants.kSpeedAt12Volts);
 
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
@@ -345,7 +367,7 @@ public class Swerve extends SubsystemBase {
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {
-    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    return Constants.kSpeedAt12Volts.in(MetersPerSecond);
   }
 
   /** Returns the maximum angular speed in radians per sec. */
@@ -356,10 +378,10 @@ public class Swerve extends SubsystemBase {
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
-      new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
-      new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
-      new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
-      new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+      new Translation2d(Constants.FrontLeft.LocationX, Constants.FrontLeft.LocationY),
+      new Translation2d(Constants.FrontRight.LocationX, Constants.FrontRight.LocationY),
+      new Translation2d(Constants.BackLeft.LocationX, Constants.BackLeft.LocationY),
+      new Translation2d(Constants.BackRight.LocationX, Constants.BackRight.LocationY)
     };
   }
 }
