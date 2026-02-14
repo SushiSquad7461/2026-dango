@@ -175,7 +175,7 @@ public class Intake extends SubsystemBase {
 
     // Convert degrees to motor rotations (arm rotations scaled by gear ratio).
     private static double degreesToMotorRotations(double degrees) {
-        double armRot = degrees / 360.0;
+        final double armRot = degrees / 360.0;
         return armRot * IntakeConstants.motorRotationsPerArmRotation;
     }
 }
