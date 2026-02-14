@@ -108,8 +108,8 @@ public class Intake extends SubsystemBase {
 
     // Pivot angle in degrees (from motor rotations via gear ratio).
     public double getPivotAngle() {
-        double motorRot = pivotMotor.getPosition().getValueAsDouble();
-        double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
+        final double motorRot = pivotMotor.getPosition().getValueAsDouble();
+        final double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
         return armRot * 360.0;
     }
 
