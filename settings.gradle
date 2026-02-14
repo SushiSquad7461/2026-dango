@@ -4,6 +4,14 @@ pluginManagement {
     repositories {
         mavenLocal()
         gradlePluginPortal()
+
+        // AG Added
+        maven {
+            name = "littletonrobotics"
+            url = 'https://frcmaven.wpi.edu/artifactory/littleonrobotics-mvn-release/'
+        }
+        // AG Added
+
         String frcYear = '2026'
         File frcHome
         if (OperatingSystem.current().isWindows()) {
