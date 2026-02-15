@@ -25,6 +25,9 @@ import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.sim.ModuleIOSim;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIOReal;
+import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeReal;
@@ -49,6 +52,7 @@ public class RobotContainer {
   private final Swerve swerve = new Swerve();
   private final Intake intake;
   private final ShooterSubsystem shooter;
+  private final Hopper hopper;
   private final StateMachine stateMachine;
 
   // Controller
@@ -62,11 +66,13 @@ public class RobotContainer {
     if(Robot.isReal()){
             shooter = new ShooterSubsystem(new ShooterIOKraken());
             intake = new Intake(new IntakeReal());
+            hopper = new Hopper( new HopperIOReal());
     } else{
             shooter = new ShooterSubsystem(new ShooterIOSim());
             intake = new Intake(new IntakeSim());
+            hopper = new Hopper(new HopperIOSim());
     }
-    this.stateMachine = new StateMachine(intake, shooter);
+    this.stateMachine = new StateMachine(intake, shooter,hopper);
     
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -128,18 +134,17 @@ public class RobotContainer {
     driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
                     new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
     
-    //TODO: See if there is a way to check if two buttons are down at the same time
-    if(driverController.rightTrigger().getAsBoolean()&&driverController.rightBumper().getAsBoolean()){
-        stateMachine.changeState(RobotState.INTAKE_DOWN_SHOOT);
-    }
-    else if(driverController.rightBumper().getAsBoolean()){
-        stateMachine.changeState(RobotState.INTAKE_DOWN);
-    }
-    else if(driverController.rightTrigger().getAsBoolean()){
-      stateMachine.changeState(RobotState.SHOOT_ONLY);
-    }else{
-        stateMachine.changeState(RobotState.IDLE);
-    }
+    driverController.rightTrigger().and(driverController.rightBumper())
+        .whileTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_SHOOT));
+
+    driverController.rightBumper().and(driverController.rightTrigger().negate())
+        .whileTrue(stateMachine.changeState(RobotState.INTAKE_DOWN));
+
+    driverController.rightTrigger()
+        .and(driverController.rightBumper().negate()).whileTrue(stateMachine.changeState(RobotState.SHOOT_ONLY));
+
+    driverController.rightTrigger()
+        .or(driverController.rightBumper()).negate().whileTrue(stateMachine.changeState(RobotState.IDLE));
   }
   
   public Command getAutonomousCommand() {

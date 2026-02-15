@@ -1,7 +1,13 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.intake.Intake.IntakeState;
+
 public class IntakeSim implements IntakeIO{
+    private IntakeState state = IntakeState.IDLE;
+
     public IntakeSim() {
+
     }
 
     @Override
@@ -17,7 +23,7 @@ public class IntakeSim implements IntakeIO{
     }
 
     @Override
-    public void changeState(boolean atTarget) {
+    public void changeIfWiggle(boolean atTarget) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'changeState'");
     }
@@ -38,5 +44,15 @@ public class IntakeSim implements IntakeIO{
     public boolean isPivotAtTarget() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'isPivotAtTarget'");
+    }
+
+    public void simulationPeriodic() {
+        if (state == IntakeState.WIGGLING) {
+            changeIfWiggle(isPivotAtTarget());
+        }   
+        SmartDashboard.putString("Intake/State", state.name());
+     //   SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
+     //   SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
+        SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
 }

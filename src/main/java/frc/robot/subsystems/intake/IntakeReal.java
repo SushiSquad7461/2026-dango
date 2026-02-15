@@ -10,13 +10,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
 import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.util.Direction;
 
 
 public class IntakeReal implements IntakeIO {
@@ -115,7 +111,7 @@ public class IntakeReal implements IntakeIO {
     }
 
     // Handle state transitions (deploy/stow completion and wiggle target flips).
-   public void changeState(boolean atTarget) {
+   public void changeIfWiggle(boolean atTarget) {
         if (state == IntakeState.WIGGLING) {
             if (atTarget && wiggleReady) {
                 wiggleTargetHigh = !wiggleTargetHigh;
@@ -127,7 +123,7 @@ public class IntakeReal implements IntakeIO {
             }
             return;
         } else{
-            
+
         }
     }
 
@@ -148,7 +144,9 @@ public class IntakeReal implements IntakeIO {
 
     // Periodic loop: command pivot and update rollers and log telemetry.
     public void periodic() {
-
+        if (state == IntakeState.WIGGLING) {
+            changeIfWiggle(isPivotAtTarget());
+        }   
         SmartDashboard.putString("Intake/State", state.name());
         SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
         SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);

@@ -1,10 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.util.Direction;
 
 public class Intake {
@@ -32,7 +29,7 @@ public class Intake {
     }
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
-            io.changeState(io.isPivotAtTarget());
+            io.changeIfWiggle(io.isPivotAtTarget());
             io.runPivotToTarget();
             io.updateRollers();
         });

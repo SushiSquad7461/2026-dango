@@ -13,7 +13,8 @@ public class Hopper extends SubsystemBase{
             this.speed = speed;
         }
     }
-    public Hopper(){
-        
+    private HopperIO io;
+    public Hopper(HopperIO io){
+        this.io = io;
     }
 }

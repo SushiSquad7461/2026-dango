@@ -1,7 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 public class ShooterIOSim implements ShooterIO{
-      @Override
+  @Override
   public void setFlywheelRPM(double rpm) {
     // open-loop "good enough" for first iteration
   }

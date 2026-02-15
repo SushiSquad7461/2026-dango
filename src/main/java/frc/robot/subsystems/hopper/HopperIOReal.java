@@ -1,5 +1,5 @@
 package frc.robot.subsystems.hopper;
 
-public class HopperIOReal {
+public class HopperIOReal implements HopperIO{
     
 }
