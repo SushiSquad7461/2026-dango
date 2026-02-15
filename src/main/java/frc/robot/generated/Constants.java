@@ -28,19 +28,63 @@ public class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  public static final class Shooter{
+    public static final double FLYWHEELRPM = 0.8;
+    public static final double TARGET_RPM = 4500;
+      // TODO: tune shooter flywheel PID
+    public static final double SHOOTER_KS = 0.1;
+    public static final double SHOOTER_KV = 0.12;
+    public static final double SHOOTER_KP = 0.11;
+    public static final double SHOOTER_KI = 0;
+    public static final double SHOOTER_KD = 0;
+    // TODO: tune shooter intake PID
+    public static final double SHOOTER_INTAKE_KS = 0.1;
+    public static final double SHOOTER_INTAKE_KV = 0.12;
+    public static final double SHOOTER_INTAKE_KP = 0.11;
+    public static final double SHOOTER_INTAKE_KI = 0;
+    public static final double SHOOTER_INTAKE_KD = 0;
+    // TODO: tune hood PID
+    public static final double HOOD_KP = 2.4;
+    public static final double HOOD_KI = 0;
+    public static
+     final double HOOD_KD = 0.1;
+  }
+
+    public static final class IntakeConstants {
+        public static final int pivotMotorId = 10;
+        public static final int rollerMotorId = 11;
+
+        public static final double intakeAngleDeg = 125.0;
+        public static final double angleToleranceDeg = 5.0;
+        public static final double stowedAngleDeg = 0.0;
+
+        public static final double motorRotationsPerArmRotation = 72.0;
+
+        public static final double cruiseVelocityRps = 6.0;
+        public static final double accelRps2 = 12.0;
+
+        public static final double pivotP = 40.0;
+        public static final double pivotI = 0.0;
+        public static final double pivotD = 0.5;
+
+        public static final double rollerPercent = 0.70;
+
+        public static final double wiggleLowDeg = 90.0;
+        public static final double wiggleHighDeg = 110.0;
+    }
+
+
   public static enum Mode {
     /** Running on a real robot. */
     REAL,
-
     /** Running a physics simulator. */
     SIM,
-
     /** Replaying from a log file. */
     REPLAY
   }
 
-  // Both sets of gains need to be tuned to your individual robot.
 
+  // Both sets of gains need to be tuned to your individual robot.
   // The steer motor uses any SwerveModule.SteerRequestType control request with
   // the
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
@@ -53,6 +97,8 @@ public class Constants {
           .withKV(1.91)
           .withKA(0)
           .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+
+
   // When using closed-loop control, the drive motor uses the control
   // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
   private static final Slot0Configs driveGains =
@@ -65,6 +111,7 @@ public class Constants {
   // This affects the PID/FF gains for the drive motors
   private static final ClosedLoopOutputType kDriveClosedLoopOutput = ClosedLoopOutputType.Voltage;
 
+
   // The type of motor used for the drive motor
   private static final DriveMotorArrangement kDriveMotorType =
       DriveMotorArrangement.TalonFX_Integrated;
@@ -72,15 +119,20 @@ public class Constants {
   private static final SteerMotorArrangement kSteerMotorType =
       SteerMotorArrangement.TalonFX_Integrated;
 
+
   // The remote sensor feedback type to use for the steer motors;
   // When not Pro-licensed, FusedCANcoder/SyncCANcoder automatically fall back to
   // RemoteCANcoder
   private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.FusedCANcoder;
 
+
+
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
   private static final Current kSlipCurrent = Amps.of(120.0);
 
+
+  
   // Initial configs for the drive and steer motors and the azimuth encoder; these
   // cannot be null.
   // Some configs will be overwritten; check the `with*InitialConfigs()` API

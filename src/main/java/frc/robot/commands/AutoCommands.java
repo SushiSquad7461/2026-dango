@@ -10,14 +10,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class AutoCommands {
     private final SendableChooser<Command> autoChooser;
     private final StringPublisher selectedAuto;
     private final NetworkTable autoNetworkTable;
 
-    public AutoCommands(StateMachine stateMachine, Intake intake, Shooter shooter){
+    public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter){
             autoChooser= new SendableChooser<Command>();
             autoNetworkTable = NetworkTableInstance.getDefault().getTable("Auto");
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();

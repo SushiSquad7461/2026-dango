@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
+import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.gyro.GyroIO;
@@ -25,8 +26,15 @@ import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.sim.ModuleIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeReal;
+import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.shooter.ShooterIOKraken;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.drive.ModuleIO;
+
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -39,9 +47,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Swerve swerve = new Swerve();
-  private final Intake intake = new Intake();
-  private final Shooter shooter = new Shooter();
-  private final StateMachine stateMachine = new StateMachine(intake, shooter);
+  private final Intake intake;
+  private final ShooterSubsystem shooter;
+  private final StateMachine stateMachine;
 
   // Controller
   private final CommandXboxController driverController = new CommandXboxController(0);
@@ -51,7 +59,15 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-
+    if(Robot.isReal()){
+            shooter = new ShooterSubsystem(new ShooterIOKraken());
+            intake = new Intake(new IntakeReal());
+    } else{
+            shooter = new ShooterSubsystem(new ShooterIOSim());
+            intake = new Intake(new IntakeSim());
+    }
+    this.stateMachine = new StateMachine(intake, shooter);
+    
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -82,13 +98,16 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+
     // Default command, normal field-relative drive
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
             () -> -driverController.getLeftY(),
             () -> -driverController.getLeftX(),
-            () -> -driverController.getRightX()));
+            () -> -driverController.getRightX()
+        )
+    );
 
     // Lock to 0° when A button is held
     driverController
@@ -98,15 +117,31 @@ public class RobotContainer {
                 swerve,
                 () -> -driverController.getLeftY(),
                 () -> -driverController.getLeftX(),
-                () -> Rotation2d.kZero));
+                () -> Rotation2d.kZero
+                )
+        );
 
     // Switch to X pattern when X button is pressed
     driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
 
-    // Reset gyro to 0° when B button is pressed
+    // Reset gyro to 0° when Y button is pressed
     driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
                     new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
+    
+    //TODO: See if there is a way to check if two buttons are down at the same time
+    if(driverController.rightTrigger().getAsBoolean()&&driverController.rightBumper().getAsBoolean()){
+        stateMachine.changeState(RobotState.INTAKE_DOWN_SHOOT);
+    }
+    else if(driverController.rightBumper().getAsBoolean()){
+        stateMachine.changeState(RobotState.INTAKE_DOWN);
+    }
+    else if(driverController.rightTrigger().getAsBoolean()){
+      stateMachine.changeState(RobotState.SHOOT_ONLY);
+    }else{
+        stateMachine.changeState(RobotState.IDLE);
+    }
   }
+  
   public Command getAutonomousCommand() {
     return autoChooser.get();
   }
