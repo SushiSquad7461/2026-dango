@@ -14,32 +14,22 @@ import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 
 
 public class StateMachine extends SubsystemBase {
-    private final NetworkTable stateTable;
+    //private final NetworkTable stateTable;
     private final StringPublisher currentStatePub;
 
     public enum RobotState {
 
 
         IDLE(IntakeState.IDLE,ShooterState.IDLE,HopperState.IDLE),
-        SHOOT_ONLY(IntakeState.IDLE,ShooterState.SHOOT,HopperState.IDLE),
+        SHOOT_ONLY(IntakeState.IDLE,ShooterState.SHOOT,HopperState.RUNNING),
         INTAKE_DOWN(IntakeState.DEPLOYED, ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.IDLE),
+        //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_ROLL_IN_AND_SHOOT(IntakeState.ROLLERS_IN,ShooterState.SHOOT,HopperState.IDLE),
+        //INTAKE_ROLL_IN_AND_SHOOT(IntakeState.ROLLERS_IN,ShooterState.SHOOT,HopperState.RUNNING),
         INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.IDLE),
-        INTAKE_WIGGLE(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
-
-        INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING),
-        SHOOT_HOPPER(IntakeState.IDLE,ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_DOWN_HOPPER(IntakeState.DEPLOYED, ShooterState.IDLE,HopperState.RUNNING),
-        INTAKE_DOWN_SHOOT_HOPPER(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_ROLL_IN_HOPPER(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.RUNNING),
-        INTAKE_ROLL_IN_AND_SHOOT_HOPPER(IntakeState.ROLLERS_IN,ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_ROLL_OUT_HOPPER(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.RUNNING),
-        INTAKE_ROLL_OUT_AND_SHOOT_HOPPER(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_WIGGLE_HOPPER(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.RUNNING),
-        INTAKE_WIGGLE_AND_SHOOT_HOPPER(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
+        //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
+        INTAKE_WIGGLE(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE);
+        //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
 
         public final IntakeState intakeState;
@@ -67,7 +57,7 @@ public class StateMachine extends SubsystemBase {
         this.hopper = hopper;
 
         this.currentStatePub = null;
-        this.stateTable = null;
+        //this.stateTable = null;
     }
 
     /**
@@ -84,22 +74,27 @@ public class StateMachine extends SubsystemBase {
 
     //TODO: Combine
     public Command changeState(RobotState newState) {
-    return Commands.runOnce(() -> {
-        if (state == newState){ 
-            return;
-        }
-            state = newState;
-            intake.changeState(newState.intakeState);
-            shooter.changeState(newState.shooterState);
-            //hopper.changeState(newState.hopperState);
-        });
+        
+        return Commands.sequence(
+           Commands.runOnce(()->{
+                state = newState;
+           }),
+           Commands.race(
+                Commands.waitSeconds(1),
+                Commands.parallel(
+                        intake.changeState(newState.intakeState),
+                        shooter.changeState(newState.shooterState)
+                        //hopper.changeState(newState.hopperState);
+                )
+           )
+        );
     }
 
     public RobotState getCurrentState() {
         return state;
     }
 
-    // private void publishStates() {
-    //     currentStatePub.set(state.toString());
-    // }
+     private void publishStates() {
+        currentStatePub.set(state.toString());
+     }
 }

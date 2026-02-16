@@ -51,6 +51,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Command changeState(ShooterState newState){
+    this.state = newState;
     switch (newState) {
       case IDLE:
         return Commands.parallel(

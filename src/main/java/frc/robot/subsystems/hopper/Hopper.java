@@ -17,4 +17,8 @@ public class Hopper extends SubsystemBase{
     public Hopper(HopperIO io){
         this.io = io;
     }
+    public boolean isRunning() {
+        // TODO Auto-generated method stub
+        return true;
+    }
 }

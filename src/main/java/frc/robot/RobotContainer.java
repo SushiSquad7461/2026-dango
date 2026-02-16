@@ -54,9 +54,12 @@ public class RobotContainer {
   private final ShooterSubsystem shooter;
   private final Hopper hopper;
   private final StateMachine stateMachine;
+  //private boolean wiggleOn;
 
   // Controller
   private final CommandXboxController driverController = new CommandXboxController(0);
+ private final CommandXboxController operatorController = new CommandXboxController(1);
+
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -73,6 +76,7 @@ public class RobotContainer {
             hopper = new Hopper(new HopperIOSim());
     }
     this.stateMachine = new StateMachine(intake, shooter,hopper);
+    //this.wiggleOn = false;
     
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -134,17 +138,19 @@ public class RobotContainer {
     driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
                     new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
     
-    driverController.rightTrigger().and(driverController.rightBumper())
-        .whileTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_SHOOT));
+    
+    /*TODO: Consider scenario where intake is at "wiggleHigh" position
+    *       while the rollers are rotating outward so that the ball would have
+    *       room to escape
+    */
 
-    driverController.rightBumper().and(driverController.rightTrigger().negate())
-        .whileTrue(stateMachine.changeState(RobotState.INTAKE_DOWN));
+    //operatorController.a().onTrue(Commands.runOnce(()->{wiggleOn=!wiggleOn;}));
+    driverController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
-    driverController.rightTrigger()
-        .and(driverController.rightBumper().negate()).whileTrue(stateMachine.changeState(RobotState.SHOOT_ONLY));
-
-    driverController.rightTrigger()
-        .or(driverController.rightBumper()).negate().whileTrue(stateMachine.changeState(RobotState.IDLE));
+    operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
+                                     .onFalse(stateMachine.changeState(RobotState.IDLE));
   }
   
   public Command getAutonomousCommand() {

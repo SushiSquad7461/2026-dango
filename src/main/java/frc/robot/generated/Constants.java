@@ -67,7 +67,7 @@ public class Constants {
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.5;
 
-        public static final double rollerPercent = 0.70;
+        public static final double rollerSpeed = 0.70;
 
         public static final double wiggleLowDeg = 90.0;
         public static final double wiggleHighDeg = 110.0;

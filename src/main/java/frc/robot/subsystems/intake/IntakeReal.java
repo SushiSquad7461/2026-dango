@@ -22,7 +22,6 @@ public class IntakeReal implements IntakeIO {
     private final TalonFX rollerMotor = new TalonFX(IntakeConstants.rollerMotorId);
     private IntakeState state = IntakeState.IDLE;
 
-   
 
     private final MotionMagicVoltage pivotControl = new MotionMagicVoltage(0);
     private final DutyCycleOut rollerControl = new DutyCycleOut(0);
@@ -36,6 +35,7 @@ public class IntakeReal implements IntakeIO {
 
     // Configure motors and start in IDLE.
     public IntakeReal() {
+        zeroPivot();
         configurePivot();
         configureRoller();
         setState(IntakeState.IDLE);
@@ -74,21 +74,21 @@ public class IntakeReal implements IntakeIO {
 
     // Set high-level state; updates pivot setpoint and roller behavior.
     public void setState(IntakeState newState) {
-        state = newState;
+        this.state = newState;
 
-        if (state == IntakeState.WIGGLING) {
+        if (this.state == IntakeState.WIGGLING) {
             wiggleTargetHigh = false;
             wiggleReady = true;
             pivotTargetDeg = IntakeConstants.wiggleLowDeg;
         } else {
-            pivotTargetDeg = state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
+            pivotTargetDeg = this.state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
         }
 
         updateRollers();
     }
 
     public IntakeState getState() {
-        return state;
+        return this.state;
     }
 
     // Pivot angle in degrees (from motor rotations via gear ratio).
@@ -96,6 +96,9 @@ public class IntakeReal implements IntakeIO {
         final double motorRot = pivotMotor.getPosition().getValueAsDouble();
         final double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
         return armRot * 360.0;
+    }
+    public double getPivotTargetAngle(){
+        return pivotTargetDeg;
     }
 
     // True when pivot is within tolerance of current target.
@@ -108,6 +111,13 @@ public class IntakeReal implements IntakeIO {
     public void runPivotToTarget() {
         double targetRot = degreesToMotorRotations(pivotTargetDeg);
         pivotMotor.setControl(pivotControl.withPosition(targetRot));
+    }
+
+    public void runRollers(){
+        rollerMotor.set(IntakeConstants.rollerSpeed);
+    }
+    public void stopRollers(){
+        rollerMotor.set(0.0);
     }
 
     // Handle state transitions (deploy/stow completion and wiggle target flips).
@@ -133,8 +143,8 @@ public class IntakeReal implements IntakeIO {
         double out = 0.0;
         if (atTarget) {
             switch (state.direction) {
-                case FORWARD -> out = +IntakeConstants.rollerPercent;
-                case REVERSE -> out = -IntakeConstants.rollerPercent;
+                case FORWARD -> out = +IntakeConstants.rollerSpeed;
+                case REVERSE -> out = -IntakeConstants.rollerSpeed;
                 case OFF -> out = 0.0;
             }
         }
@@ -144,18 +154,23 @@ public class IntakeReal implements IntakeIO {
 
     // Periodic loop: command pivot and update rollers and log telemetry.
     public void periodic() {
-        if (state == IntakeState.WIGGLING) {
-            changeIfWiggle(isPivotAtTarget());
-        }   
-        SmartDashboard.putString("Intake/State", state.name());
-        SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
-        SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
-        SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
+
+        // SmartDashboard.putString("Intake/State", state.name());
+        // SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
+        // SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
+        // SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
 
     // Convert degrees to motor rotations (arm rotations scaled by gear ratio).
     private static double degreesToMotorRotations(double degrees) {
         final double armRot = degrees / 360.0;
         return armRot * IntakeConstants.motorRotationsPerArmRotation;
+    }
+
+
+    @Override
+    public void zeroPivot() {
+        pivotMotor.setPosition(0.0);
+        pivotTargetDeg = IntakeConstants.stowedAngleDeg;    
     }
 }

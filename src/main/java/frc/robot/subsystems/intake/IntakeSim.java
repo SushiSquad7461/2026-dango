@@ -55,4 +55,42 @@ public class IntakeSim implements IntakeIO{
      //   SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
         SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
+
+    
+
+    @Override
+    public void zeroPivot() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'zeroPivot'");
+    }
+
+    @Override
+    public double getPivotAngle() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPivotAngle'");
+    }
+
+    @Override
+    public double getPivotTargetAngle() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPivotTargetAngle'");
+    }
+
+    @Override
+    public void setState(IntakeState newState) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setState'");
+    }
+
+    @Override
+    public void runRollers() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'runRollers'");
+    }
+
+    @Override
+    public void stopRollers() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'stopRollers'");
+    }
 }
