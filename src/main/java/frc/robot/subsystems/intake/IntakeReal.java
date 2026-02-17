@@ -35,7 +35,7 @@ public class IntakeReal implements IntakeIO {
 
     // Configure motors and start in IDLE.
     public IntakeReal() {
-        zeroPivot();
+      //  zeroPivot();
         configurePivot();
         configureRoller();
         setState(IntakeState.IDLE);
