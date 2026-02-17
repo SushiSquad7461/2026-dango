@@ -213,8 +213,8 @@ public class Constants {
               .withDriveFrictionVoltage(kDriveFrictionVoltage);
 
   // Front Left
-  private static final int kFrontLeftDriveMotorId = 3;
-  private static final int kFrontLeftSteerMotorId = 2;
+  private static final int kFrontLeftDriveMotorId = 17;
+  private static final int kFrontLeftSteerMotorId = 12;
   private static final int kFrontLeftEncoderId = 1;
   private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.15234375);
   private static final boolean kFrontLeftSteerMotorInverted = true;
@@ -224,8 +224,8 @@ public class Constants {
   private static final Distance kFrontLeftYPos = Inches.of(10);
 
   // Front Right
-  private static final int kFrontRightDriveMotorId = 1;
-  private static final int kFrontRightSteerMotorId = 0;
+  private static final int kFrontRightDriveMotorId = 9;
+  private static final int kFrontRightSteerMotorId = 8;
   private static final int kFrontRightEncoderId = 0;
   private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.4873046875);
   private static final boolean kFrontRightSteerMotorInverted = true;
@@ -235,8 +235,8 @@ public class Constants {
   private static final Distance kFrontRightYPos = Inches.of(-10);
 
   // Back Left
-  private static final int kBackLeftDriveMotorId = 7;
-  private static final int kBackLeftSteerMotorId = 6;
+  private static final int kBackLeftDriveMotorId = 18;
+  private static final int kBackLeftSteerMotorId = 19;
   private static final int kBackLeftEncoderId = 3;
   private static final Angle kBackLeftEncoderOffset = Rotations.of(-0.219482421875);
   private static final boolean kBackLeftSteerMotorInverted = true;

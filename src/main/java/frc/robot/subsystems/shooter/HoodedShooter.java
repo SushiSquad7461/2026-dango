@@ -10,7 +10,7 @@ public class HoodedShooter extends SubsystemBase{
     TalonFX hoodMotor;
     public HoodedShooter(){
         //TODO: Set the device ID
-        hoodMotor = new TalonFX(0);
+        hoodMotor = new TalonFX(15);
         TalonFXConfiguration hoodMotorConfig = new TalonFXConfiguration();
         hoodMotorConfig.CurrentLimits.StatorCurrentLimit = 20.0;
         hoodMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;

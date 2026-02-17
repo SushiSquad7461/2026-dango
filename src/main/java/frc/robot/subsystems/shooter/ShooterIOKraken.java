@@ -19,10 +19,10 @@ public class ShooterIOKraken implements ShooterIO {
   CANBus rioCanBus = new CANBus("rio");
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(0, rioCanBus);
-  private final TalonFX krakenShooterRight = new TalonFX(1, rioCanBus);
-  private final TalonFX krakenShooterIntake = new TalonFX(2, rioCanBus);
-  private final TalonFX krakenShooterHood = new TalonFX(3, rioCanBus);
+  private final TalonFX krakenShooterLeft = new TalonFX(14, rioCanBus);
+  private final TalonFX krakenShooterRight = new TalonFX(2, rioCanBus);
+  private final TalonFX krakenShooterKicker = new TalonFX(5, rioCanBus);
+ // private final TalonFX krakenShooterHood = new TalonFX(3, rioCanBus);
 
   public ShooterIOKraken() {
     // shooter flywheel motor config
@@ -54,7 +54,7 @@ public class ShooterIOKraken implements ShooterIO {
         shooterIntakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterIntakeConfig.Voltage.PeakForwardVoltage = 12.0;
         shooterIntakeConfig.Voltage.PeakReverseVoltage = -12.0;
-        krakenShooterIntake.getConfigurator().apply(shooterIntakeConfig);
+        krakenShooterKicker.getConfigurator().apply(shooterIntakeConfig);
 
         // setup PID
         Slot0Configs shooterIntakePID = new Slot0Configs();
@@ -63,21 +63,21 @@ public class ShooterIOKraken implements ShooterIO {
         shooterIntakePID.kP = Constants.Shooter.SHOOTER_INTAKE_KP;
         shooterIntakePID.kI = Constants.Shooter.SHOOTER_INTAKE_KI; 
         shooterIntakePID.kD = Constants.Shooter.SHOOTER_INTAKE_KD;
-        krakenShooterIntake.getConfigurator().apply(shooterIntakePID);
+        krakenShooterKicker.getConfigurator().apply(shooterIntakePID);
 
         // shooter adjustable hood motor config
-        TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
-        hoodConfig.CurrentLimits.StatorCurrentLimit = 20.0;
-        hoodConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; // note the brake behavior because we need to stop the hood in place
-        krakenShooterHood.getConfigurator().apply(hoodConfig);
-        // setup PID
-        Slot0Configs hoodPID = new Slot0Configs();
-        hoodPID.kP = Constants.Shooter.HOOD_KP;
-        hoodPID.kI = Constants.Shooter.HOOD_KI; 
-        hoodPID.kD = Constants.Shooter.HOOD_KD;
-        krakenShooterHood.getConfigurator().apply(hoodPID);
-  }
+  //       TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
+  //       hoodConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+  //       hoodConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+  //       hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake; // note the brake behavior because we need to stop the hood in place
+  //       krakenShooterHood.getConfigurator().apply(hoodConfig);
+  //       // setup PID
+  //       Slot0Configs hoodPID = new Slot0Configs();
+  //       hoodPID.kP = Constants.Shooter.HOOD_KP;
+  //       hoodPID.kI = Constants.Shooter.HOOD_KI; 
+  //       hoodPID.kD = Constants.Shooter.HOOD_KD;
+  //       krakenShooterHood.getConfigurator().apply(hoodPID);
+   }
 
   @Override
   public void setFlywheelRPM(double rpm) {
@@ -92,12 +92,12 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public void runFeeder() { // open-loop "good enough" for first iteration
-    krakenShooterIntake.set(0.6);
+    krakenShooterKicker.set(0.6);
   }
 
   @Override
   public void stopFeeder() {
-    krakenShooterIntake.set(0);
+    krakenShooterKicker.set(0);
   }
 
   @Override
