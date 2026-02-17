@@ -82,7 +82,7 @@ public class ShooterIOKraken implements ShooterIO {
   @Override
   public void setFlywheelRPM(double rpm) {
     // open-loop "good enough" for first iteration
-    krakenShooterLeft.set(0.8);
+    krakenShooterLeft.set(1);
   }
 
   @Override

@@ -51,7 +51,7 @@ public class Constants {
   }
 
     public static final class IntakeConstants {
-        public static final int pivotMotorId = 10;
+        public static final int pivotMotorId = 13;
         public static final int rollerMotorId = 11;
 
         public static final double intakeAngleDeg = 125.0;

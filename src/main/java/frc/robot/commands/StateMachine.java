@@ -65,7 +65,7 @@ public class StateMachine extends SubsystemBase {
      */
     @Override
     public void periodic() {
-       // publishStates();
+        publishStates();
     }
 
     public void scheduleNewState(RobotState newState) {
@@ -83,8 +83,8 @@ public class StateMachine extends SubsystemBase {
                 Commands.waitSeconds(1),
                 Commands.parallel(
                         intake.changeState(newState.intakeState),
-                        shooter.changeState(newState.shooterState)
-                        //hopper.changeState(newState.hopperState);
+                        shooter.changeState(newState.shooterState),
+                        hopper.changeState(newState.hopperState)
                 )
            )
         );

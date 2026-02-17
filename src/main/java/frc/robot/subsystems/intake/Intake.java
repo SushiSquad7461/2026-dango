@@ -66,7 +66,7 @@ public class Intake extends SubsystemBase{
     public void periodic(){
         io.runPivotToTarget();
         io.changeIfWiggle(io.isPivotAtTarget());
-         if (!manualRoll) {
+        if (!manualRoll) {
             io.updateRollers();
         }
         SmartDashboard.putString("Intake/State", state.name());

@@ -32,6 +32,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -54,6 +55,7 @@ public class RobotContainer {
   private final ShooterSubsystem shooter;
   private final Hopper hopper;
   private final StateMachine stateMachine;
+  private final HoodedShooter hoodedShooter;
   //private boolean wiggleOn;
 
   // Controller
@@ -70,11 +72,13 @@ public class RobotContainer {
             shooter = new ShooterSubsystem(new ShooterIOKraken());
             intake = new Intake(new IntakeReal());
             hopper = new Hopper( new HopperIOReal());
+            
     } else{
             shooter = new ShooterSubsystem(new ShooterIOSim());
             intake = new Intake(new IntakeSim());
             hopper = new Hopper(new HopperIOSim());
     }
+    hoodedShooter = new HoodedShooter();
     this.stateMachine = new StateMachine(intake, shooter,hopper);
     //this.wiggleOn = false;
     
@@ -148,6 +152,11 @@ public class RobotContainer {
     driverController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+
+    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
+                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
+    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
+                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
     operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      .onFalse(stateMachine.changeState(RobotState.IDLE));
