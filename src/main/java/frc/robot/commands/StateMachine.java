@@ -14,9 +14,6 @@ import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 
 
 public class StateMachine extends SubsystemBase {
-    //private final NetworkTable stateTable;
-    private final StringPublisher currentStatePub;
-
     public enum RobotState {
 
 
@@ -47,6 +44,8 @@ public class StateMachine extends SubsystemBase {
     private final Intake intake;
     private final ShooterSubsystem shooter;
     private final Hopper hopper;
+    private final NetworkTable stateTable;
+    private final StringPublisher currentStatePub;
 
     /**
      * Constructs the State Machine
@@ -57,8 +56,9 @@ public class StateMachine extends SubsystemBase {
         this.hopper = hopper;
         this.state = RobotState.IDLE;
 
-        this.currentStatePub = null;
-        //this.stateTable = null;
+       
+        this.stateTable = NetworkTableInstance.getDefault().getTable("StateMachine");
+         this.currentStatePub = stateTable.getStringTopic("CurrentState").publish();
     }
 
     /**
@@ -95,7 +95,7 @@ public class StateMachine extends SubsystemBase {
         return state;
     }
 
-     private void publishStates() {
-        currentStatePub.set(state.toString());
-     }
-}
+      private void publishStates() {
+         currentStatePub.set(state.toString());
+      }
+ }

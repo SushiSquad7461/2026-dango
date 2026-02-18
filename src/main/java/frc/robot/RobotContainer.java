@@ -153,9 +153,9 @@ public class RobotContainer {
     operatorController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
-    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
+    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
-    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
+    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
     operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
