@@ -55,6 +55,7 @@ public class StateMachine extends SubsystemBase {
         this.intake = intake;
         this.shooter = shooter;
         this.hopper = hopper;
+        this.state = RobotState.IDLE;
 
         this.currentStatePub = null;
         //this.stateTable = null;
