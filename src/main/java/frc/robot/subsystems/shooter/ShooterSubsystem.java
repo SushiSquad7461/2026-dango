@@ -16,6 +16,7 @@ public class ShooterSubsystem extends SubsystemBase {
   private final ShooterIO io;
 
   private static final double TARGET_RPM = 4500;
+  private static final double PRESHOOT_RPM = 2500;
 
   private double shootStartTime = 0; // could come in useful later, especially for logging
 
@@ -23,8 +24,12 @@ public class ShooterSubsystem extends SubsystemBase {
     this.io = io;
   }
 
-  public void startShoot() {
+  public void preShoot() {
     state = ShooterState.PRESHOOT;
+  }
+
+  public void startShoot() {
+    state = ShooterState.SHOOT;
   }
 
   public void stop() {
@@ -41,10 +46,10 @@ public class ShooterSubsystem extends SubsystemBase {
         break;
 
       case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
-        io.setFlywheelRPM(TARGET_RPM);
-        shootStartTime = Timer.getFPGATimestamp();
-        
+        io.setFlywheelRPM(PRESHOOT_RPM);
+        break;
       case SHOOT:
+        shootStartTime = Timer.getFPGATimestamp();
         io.setFlywheelRPM(TARGET_RPM);
         io.runFeeder();
         break;

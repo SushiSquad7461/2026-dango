@@ -14,6 +14,10 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class ShooterIOKraken implements ShooterIO {
+  private double targetShooterRPM;
+  private final double SHOOTER_RPM_TOLERANCE = 200;
+  private final double TARGET_INTAKE_RPM = 1000;
+
   CANBus rioCanBus = new CANBus("rio");
   // TODO: tune shooter flywheel PID
   private final double SHOOTER_KS = 0.1;
@@ -63,7 +67,7 @@ public class ShooterIOKraken implements ShooterIO {
 
         // shooter intake wheel motor config
         TalonFXConfiguration shooterIntakeConfig = new TalonFXConfiguration();
-        shooterIntakeConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+        shooterIntakeConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         shooterIntakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         shooterIntakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterIntakeConfig.Voltage.PeakForwardVoltage = 12.0;
@@ -115,16 +119,18 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public double getFlywheelRPM() {
-    // TODO: implement checking flywheel RPM
-    return 0;
+    return krakenShooterLeft.getVelocity().getValueAsDouble() * 60;
   }
 
+  @Override
   // TODO: implement hood angle check
   public double getHoodPos() {
     return 0;
   }
-  // TODO: implement shooter readiness check
+  
+  @Override
+  // TODO: add requirement for hood angle
   public boolean isShooterReady() {
-    return true;
+    return Math.abs(targetShooterRPM - getFlywheelRPM()) < SHOOTER_RPM_TOLERANCE; 
   }
 }
