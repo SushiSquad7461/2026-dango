@@ -66,7 +66,7 @@ public class RobotContainer {
 
 
   // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  //private final LoggedDashboardChooser<Command> autoChooser;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -85,7 +85,8 @@ public class RobotContainer {
     //this.wiggleOn = false;
     
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    //AutoBuilder.configure(null, null, null, null, null, null, null, null);
+    //autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
     // autoChooser.addOption(
@@ -174,6 +175,6 @@ public class RobotContainer {
   }
   
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return Commands.none();//autoChooser.get();
   }
 }
