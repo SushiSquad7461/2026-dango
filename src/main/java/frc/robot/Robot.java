@@ -27,6 +27,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  public static final CTREConfigs ctreConfigs = new CTREConfigs();
 
   public Robot() {
     // Record metadata

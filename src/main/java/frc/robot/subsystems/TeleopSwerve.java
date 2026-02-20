@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import frc.robot.Constants;
+import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.util.AllianceUtil;
 

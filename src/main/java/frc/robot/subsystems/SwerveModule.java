@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.lib.math.Conversions;
 import frc.lib.util.SwerveModuleConstants;
+import frc.robot.Robot;
+import frc.robot.generated.Constants;
 
 public class SwerveModule {
     public final int moduleNumber;
@@ -175,8 +177,7 @@ public class SwerveModule {
         angleMotorSim.setSupplyVoltage(supplyVoltage);
         driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
         angleSim.setInputVoltage(angleMotorSim.getMotorVoltage());
-        driveSim.update(Constants.LOOP_TIME_SECONDS);
-        angleSim.update(Constants.LOOP_TIME_SECONDS);
+
         
         driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.driveGearRatio);
         driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.driveGearRatio));

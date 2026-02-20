@@ -20,7 +20,7 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.generated.Constants;
-import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.SwerveNew;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
@@ -36,6 +36,8 @@ import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.drive.ModuleIO;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
@@ -86,20 +88,20 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(swerve));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(swerve));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        swerve.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        swerve.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", swerve.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", swerve.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(swerve));
+    // autoChooser.addOption(
+    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(swerve));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Forward)",
+    //     swerve.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Reverse)",
+    //     swerve.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Forward)", swerve.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Reverse)", swerve.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -113,36 +115,45 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-    // Default command, normal field-relative drive
-    swerve.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            swerve,
-            () -> -driverController.getLeftY(),
-            () -> -driverController.getLeftX(),
-            () -> -driverController.getRightX()
-        )
-    );
+    // // Default command, normal field-relative drive
+    // swerve.setDefaultCommand(
+    //     DriveCommands.joystickDrive(
+    //         swerve,
+    //         () -> -driverController.getLeftY(),
+    //         () -> -driverController.getLeftX(),
+    //         () -> -driverController.getRightX()
+    //     )
+    // );
 
-    // Lock to 0° when A button is held
-    driverController
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                swerve,
-                () -> -driverController.getLeftY(),
-                () -> -driverController.getLeftX(),
-                () -> Rotation2d.kZero
-                )
-        );
+    // // Lock to 0° when A button is held
+    // driverController
+    //     .a()
+    //     .whileTrue(
+    //         DriveCommands.joystickDriveAtAngle(
+    //             swerve,
+    //             () -> -driverController.getLeftY(),
+    //             () -> -driverController.getLeftX(),
+    //             () -> Rotation2d.kZero
+    //             )
+    //     );
 
-    // Switch to X pattern when X button is pressed
-    driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
+    // // Switch to X pattern when X button is pressed
+    // driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
 
-    // Reset gyro to 0° when Y button is pressed
-    driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
-                    new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
+    // // Reset gyro to 0° when Y button is pressed
+    // driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
+    //                 new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
     
-    
+    swerve.setDefaultCommand(new TeleopSwerve(
+    swerve,
+        () -> -driverController.getLeftY(),
+        () -> -driverController.getLeftX(),
+        () -> -driverController.getRightX(), 
+        () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
+        
+    // Driver handles robot positioning, alignment, and algae
+    driverController.y().onTrue(swerve.resetHeading());
+
     /*TODO: Consider scenario where intake is at "wiggleHigh" position
     *       while the rollers are rotating outward so that the ball would have
     *       room to escape

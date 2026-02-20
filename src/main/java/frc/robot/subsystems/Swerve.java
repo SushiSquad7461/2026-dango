@@ -1,63 +1,36 @@
 package frc.robot.subsystems;
 
-import frc.robot.SwerveModule;
-import frc.robot.commands.TrajectoryAlign;
-import frc.robot.commands.VisionAlign;
-
 import frc.robot.util.AllianceUtil;
-import frc.robot.Constants;
-import frc.robot.Robot;
+import frc.robot.generated.Constants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
-import com.ctre.phoenix6.sim.Pigeon2SimState;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.Waypoint;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -70,35 +43,23 @@ public class Swerve extends SubsystemBase {
     private final SwerveModule[] mSwerveMods;
     private final BaseStatusSignal[] modStatusSignals;
     private final Pigeon2 gyro;
-    private final Pigeon2SimState gyroSim;
     private final StatusSignal<Angle> gyroYaw;
     private final SysIdRoutine driveSysIdRoutine;
     private final SysIdRoutine steerSysIdRoutine;
 
-    public final PhotonCamera leftCamera;
-    public final PhotonCamera rightCamera;
 
-    private final PhotonPoseEstimator photonPoseEstimatorLeft;
-    private final PhotonPoseEstimator photonPoseEstimatorRight;
-    private Matrix<N3, N1> curStdDevs;
     private final PIDController alignmentPID;
 
-    private AlignmentPosition currentAlignmentPosition = AlignmentPosition.CENTER;
     
     private final NetworkTable table;
-    private final StringPublisher alignmentPositionPub;
 
     private final DoublePublisher gyroDoublePublisher;
     private final Field2d field;
-    public final AprilTagFieldLayout aprilTagFieldLayout;
 
     private final DoublePublisher[] cancoderPubs;
     private final DoublePublisher[] anglePubs;
     private final DoublePublisher[] velocityPubs;
 
-    private final Alert robotConfigAlert;
-    private final Alert leftCameraAlert;
-    private final Alert rightCameraAlert;
     //private final HttpCamera camStream;
 
     private double simCurrentDrawAmps = 0;
@@ -111,20 +72,25 @@ public class Swerve extends SubsystemBase {
     
     public Swerve() {
         field = new Field2d();
-        gyro = new Pigeon2(frc.robot.subsystems.pigeonID);
+        gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
-        gyroSim = gyro.getSimState();
         gyroYaw = gyro.getYaw();
         alignmentPID = new PIDController(0.15, 0, 0); 
         alignmentPID.setTolerance(10, 10);
-        
         mSwerveMods = new SwerveModule[] {
-            new SwerveModule(0, frc.robot.subsystems.constants),
-            new SwerveModule(1, frc.robot.subsystems.constants),
-            new SwerveModule(2, frc.robot.subsystems.constants),
-            new SwerveModule(3, frc.robot.subsystems.constants)
+            new SwerveModule(0, Constants.Swerve.Mod0.constants),
+            new SwerveModule(1, Constants.Swerve.Mod1.constants),
+            new SwerveModule(2, Constants.Swerve.Mod2.constants),
+            new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
+        poseEstimator = new SwerveDrivePoseEstimator(
+            Constants.Swerve.swerveKinematics,
+            getGyroYaw(),
+            getModulePositions(),
+            new Pose2d()
+        );
+        
         modStatusSignals = new BaseStatusSignal[]{
             mSwerveMods[0].getDrivePosition(),
             mSwerveMods[0].getDriveVelocity(),
@@ -145,46 +111,16 @@ public class Swerve extends SubsystemBase {
             gyroYaw
         };
 
-        //TODO: rename cameras
-        leftCamera = new PhotonCamera(Constants.VisionConstants.leftCameraName);
-        leftCameraAlert = new Alert(
-            String.format("Left camera %s is not connected", Constants.VisionConstants.leftCameraName), 
-            AlertType.kError);
-
-        //camStream = new HttpCamera("Photonvison Left", "http://photonvision.local:1181");
-        rightCamera = new PhotonCamera(Constants.VisionConstants.rightCameraName);
-        rightCameraAlert = new Alert(
-            String.format("Right camera %s is not connected", Constants.VisionConstants.rightCameraName), 
-            AlertType.kError);
-        
-        poseEstimator = new SwerveDrivePoseEstimator(
-            frc.robot.subsystems.swerveKinematics,
-            getGyroYaw(),
-            getModulePositions(),
-            new Pose2d()
-        );
-        
-        if(Constants.IS_SIM) {
-            Robot.registerFastPeriodic(() -> updateOdom());
-        }
-    
-        aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
-        photonPoseEstimatorLeft = new PhotonPoseEstimator(
-            aprilTagFieldLayout,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            Constants.VisionConstants.leftCamera 
-        );
-        photonPoseEstimatorLeft.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-
-        photonPoseEstimatorRight = new PhotonPoseEstimator(
-            aprilTagFieldLayout,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            Constants.VisionConstants.rightCamera
-        );
-        photonPoseEstimatorRight.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-        
         table = NetworkTableInstance.getDefault().getTable("Swerve");
-        alignmentPositionPub = table.getStringTopic("Alignment/Position").publish();
+        gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
+        cancoderPubs = new DoublePublisher[4];
+        anglePubs = new DoublePublisher[4];
+        velocityPubs = new DoublePublisher[4];
+        for (int i = 0; i < 4; i++) {
+            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
+            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
+            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
+        }
         if(Constants.IS_SIM) {
             xPosEntry = table.getDoubleTopic("Simulation/SetOdom/X").getEntry(0);
             xPosEntry.set(0);
@@ -197,16 +133,6 @@ public class Swerve extends SubsystemBase {
             yPosEntry = null;
             rotEntry = null;
         }
-        gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
-        cancoderPubs = new DoublePublisher[4];
-        anglePubs = new DoublePublisher[4];
-        velocityPubs = new DoublePublisher[4];
-        for (int i = 0; i < 4; i++) {
-            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
-            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
-            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
-        }
-
         driveSysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
@@ -247,64 +173,8 @@ public class Swerve extends SubsystemBase {
             )
         );
 
-        robotConfigAlert = new Alert(
-            "Failed to get PathPlanner robot config from GUI settings, please ensure this file is present and restart the robot code", 
-            AlertType.kError);
-        try{
-            RobotConfig config = RobotConfig.fromGUISettings();
-            AutoBuilder.configure(
-                this::getPose, // Robot pose supplier
-                this::setPose, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                (speeds, feedforwards) -> driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
-                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                        new PIDConstants(Constants.AutoConstants.kPTranslationController, 0, 0), // Translation PID constants
-                        new PIDConstants(Constants.AutoConstants.kPThetaController, 0, 0.01) // Rotation PID constants
-                ),
-                config, // The robot configuration
-                () -> {
-                // Boolean supplier that controls when the path will be mirrored for the red alliance
-                // This will flip the path being followed to the red side of the field.
-                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-                    var alliance = DriverStation.getAlliance();
-                    if (alliance.isPresent()) {
-                        return alliance.get() == DriverStation.Alliance.Red;
-                    }
-                    return false;
-                },
-                this
-            );
-        } catch (Exception e) {
-            robotConfigAlert.set(true);
-            e.printStackTrace();
-        }
     
-        SmartDashboard.putData("Field", field);
-        SmartDashboard.putData("Align Center ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.CENTER)));
-        SmartDashboard.putData("Align Left ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.LEFT)));
-        SmartDashboard.putData("Align Right ODOM", defer(() -> runTrajectoryAlign(AlignmentPosition.RIGHT)));
-
-        SmartDashboard.putData("Align Center ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.CENTER)));
-        SmartDashboard.putData("Align Left ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.LEFT)));
-        SmartDashboard.putData("Align Right ROYAL", defer(() -> runRoyalAlign(AlignmentPosition.RIGHT)));
-
-        SmartDashboard.putData("Align Center VISION", defer(() -> runVisionAlign(AlignmentPosition.CENTER)));
-        SmartDashboard.putData("Align Left VISION", defer(() -> runVisionAlign(AlignmentPosition.LEFT)));
-        SmartDashboard.putData("Align Right VISION", defer(() -> runVisionAlign(AlignmentPosition.RIGHT)));
-
-
-        SmartDashboard.putData("Reset Position", defer(() -> resetPositionToFrontReef()));
-        SmartDashboard.putData("Stop Drive", runOnce(() -> stop()));
-
-        SmartDashboard.putData("DriveSysIdQuasiFwd", sysIdDriveQuasistatic(SysIdRoutine.Direction.kForward));
-        SmartDashboard.putData("DriveSysIdQuasiRev", sysIdDriveQuasistatic(SysIdRoutine.Direction.kReverse));
-        SmartDashboard.putData("DriveSysIdDynFwd", sysIdDriveDynamic(SysIdRoutine.Direction.kForward));
-        SmartDashboard.putData("DriveSysIdDynRev", sysIdDriveDynamic(SysIdRoutine.Direction.kReverse));
-        
-        SmartDashboard.putData("SteerSysIdQuasiFwd", sysIdSteerQuasistatic(SysIdRoutine.Direction.kForward));
-        SmartDashboard.putData("SteerSysIdQuasiRev", sysIdSteerQuasistatic(SysIdRoutine.Direction.kReverse));
-        SmartDashboard.putData("SteerSysIdDynFwd", sysIdSteerDynamic(SysIdRoutine.Direction.kForward));
-        SmartDashboard.putData("SteerSysIdDynRev", sysIdSteerDynamic(SysIdRoutine.Direction.kReverse));
+       
         SmartDashboard.putData("Swerve Drive", new Sendable() {    
             @Override
             public void initSendable(SendableBuilder builder) {
@@ -350,12 +220,12 @@ public class Swerve extends SubsystemBase {
     }
 
     private ChassisSpeeds getRobotRelativeSpeeds() {
-        return frc.robot.subsystems.swerveKinematics.toChassisSpeeds(getModuleStates());
+        return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
     }
 
     private void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
-        SwerveModuleState[] states = frc.robot.subsystems.swerveKinematics.toSwerveModuleStates(robotRelativeSpeeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(states, frc.robot.subsystems.maxSpeed);
+        SwerveModuleState[] states = Constants.Swerve.swerveKinematics.toSwerveModuleStates(robotRelativeSpeeds);
+        SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.Swerve.maxSpeed);
         setModuleStates(states);
     }
 
@@ -367,7 +237,7 @@ public class Swerve extends SubsystemBase {
     
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates =
-            frc.robot.subsystems.swerveKinematics.toSwerveModuleStates(
+            Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                                     translation.getX(), 
                                     translation.getY(), 
@@ -379,7 +249,7 @@ public class Swerve extends SubsystemBase {
                                     translation.getY(), 
                                     rotation)
                                 );
-        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, frc.robot.subsystems.maxSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,Constants.Swerve.maxSpeed);
 
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
@@ -388,7 +258,7 @@ public class Swerve extends SubsystemBase {
 
     /* Used by SwerveControllerCommand in Auto */
     public void setModuleStates(SwerveModuleState[] desiredStates) {
-        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, frc.robot.subsystems.maxSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
         
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(desiredStates[mod.moduleNumber], false);
@@ -461,17 +331,6 @@ public class Swerve extends SubsystemBase {
         else gyro.setYaw(0);
     }
 
-    public Command runTrajectoryAlign(AlignmentPosition position) {
-        return new TrajectoryAlign(this, field, position);
-    }
-    
-    public Command runRoyalAlign(AlignmentPosition position) {
-        return new TrajectoryAlign(this, field, position);
-    }
-
-    public Command runVisionAlign(AlignmentPosition position) {
-        return new VisionAlign(this, field, position, aprilTagFieldLayout);
-    }
     
     /**
      * The latest estimated robot pose on the field from vision data. This may be empty. This should
@@ -483,67 +342,10 @@ public class Swerve extends SubsystemBase {
      * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
      *     used for estimation.
      */
-    private Optional<EstimatedRobotPose> getEstimatedGlobalPose(PhotonCamera camera, PhotonPoseEstimator photonEstimator) {
-        Optional<EstimatedRobotPose> visionEst = Optional.empty();
-        for (var change : camera.getAllUnreadResults()) {
-            if (change.hasTargets()) {
-                if (change.multitagResult.isPresent() || change.getBestTarget() != null && change.getBestTarget().poseAmbiguity < 0.15) {
-                    visionEst = photonEstimator.update(change);
-                    updateEstimationStdDevs(photonEstimator, visionEst, change.getTargets());
-                }
-            }
-        }
-        return visionEst;
-    }
-
-    private void updateEstimationStdDevs(PhotonPoseEstimator photonEstimator, Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
-        if (estimatedPose.isEmpty()) {
-            // No pose input. Default to single-tag std devs
-            curStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
-        } else {
-            // Pose present. Start running Heuristic
-            var estStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
-            int numTags = 0;
-            double avgDist = 0;
-
-            // Precalculation - see how many tags we found, and calculate an average-distance metric
-            for (var tgt : targets) {
-                var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
-                if (tagPose.isEmpty()) continue;
-                numTags++;
-                avgDist += tagPose
-                    .get()
-                    .toPose2d()
-                    .getTranslation()
-                    .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
-            }
-
-            if (numTags == 0) {
-                // No tags visible. Default to single-tag std devs
-                curStdDevs = Constants.VisionConstants.SINGLE_TAG_STD_DEVS;
-            } else {
-                // One or more tags visible, run the full heuristic.
-                avgDist /= numTags;
-                // Decrease std devs if multiple targets are visible
-                if (numTags > 1) estStdDevs = Constants.VisionConstants.MULTI_TAG_STD_DEVS;
-                // Increase std devs based on (average) distance
-                if (numTags == 1 && avgDist > 3)
-                    estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-                else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
-                curStdDevs = estStdDevs;
-            }
-        }
-    }
-
+   
 
     
-    private boolean poseIsValid(EstimatedRobotPose pose) {
-        return pose.estimatedPose.getZ() < 0.75 &&
-            pose.estimatedPose.getX() > 0.0 &&
-            pose.estimatedPose.getX() < aprilTagFieldLayout.getFieldLength() &&
-            pose.estimatedPose.getY() > 0.0 &&
-            pose.estimatedPose.getY() < aprilTagFieldLayout.getFieldWidth();
-    }
+
 
     @Override
     public void periodic(){
@@ -556,40 +358,11 @@ public class Swerve extends SubsystemBase {
         }
 
         updateOdom(); 
-
-
-        if (!Constants.isAuto) {
-            var leftGotPose = false;
-            if (leftCamera.isConnected()) {
-                var estOpt = getEstimatedGlobalPose(leftCamera, photonPoseEstimatorLeft);
-                if (estOpt.isPresent()) {
-                    var est = estOpt.get();
-                    poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
-                    leftGotPose = true;
-                }
-                leftCameraAlert.set(false);
-            } else {
-                leftCameraAlert.set(true);
-            }
-            if (rightCamera.isConnected()) {
-                if (!leftGotPose) {
-                    var estOpt = getEstimatedGlobalPose(rightCamera, photonPoseEstimatorRight);
-                    if(estOpt.isPresent()) {
-                        var est = estOpt.get();
-                        poseEstimator.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, curStdDevs);
-                    }
-                }
-                rightCameraAlert.set(false);
-            } else {
-                rightCameraAlert.set(true);
-            }   
-        }
         
         Pose2d currentPose = getPose();
         currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
-        alignmentPositionPub.set(currentAlignmentPosition.toString());
     }
 
     @Override
@@ -636,11 +409,7 @@ public class Swerve extends SubsystemBase {
         return simCurrentDrawAmps;
     }
 
-    priavate void updateOdom() {
-        if (Constants.IS_SIM) {
-            gyroSim.setRawYaw(Units.radiansToDegrees(
-                getGyroYaw().getRadians() + getRobotRelativeSpeeds().omegaRadiansPerSecond * Constants.LOOP_TIME_SECONDS));
-        }
+    private void updateOdom() {
         poseEstimator.update(getGyroYaw(), getModulePositions());
     }
 }
