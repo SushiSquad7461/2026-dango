@@ -160,8 +160,8 @@ public class RobotContainer {
     */
 
     //operatorController.a().onTrue(Commands.runOnce(()->{wiggleOn=!wiggleOn;}));
-    operatorController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
-    operatorController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
