@@ -87,6 +87,12 @@ public class IntakeReal implements IntakeIO {
         updateRollers();
     }
 
+    @Override
+    public void getMotorPos(){
+        // Replace motor.getPosition() with your specific motor encoder method
+        SmartDashboard.putNumber("Arm Position", pivotMotor.getPosition().getValueAsDouble());
+    }
+
     public IntakeState getState() {
         return this.state;
     }

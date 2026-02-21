@@ -25,4 +25,5 @@ public interface IntakeIO {
     void runRollers();
     void stopRollers();
     void setState(IntakeState newState);
+    void getMotorPos();
 }

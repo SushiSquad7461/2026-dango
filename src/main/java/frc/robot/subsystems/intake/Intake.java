@@ -64,6 +64,7 @@ public class Intake extends SubsystemBase{
 
     @Override
     public void periodic(){
+        io.getMotorPos();
         io.runPivotToTarget();
         io.changeIfWiggle(io.isPivotAtTarget());
         if (!manualRoll) {

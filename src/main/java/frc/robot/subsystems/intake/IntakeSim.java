@@ -75,7 +75,11 @@ public class IntakeSim implements IntakeIO{
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getPivotTargetAngle'");
     }
-
+    @Override
+    public void getMotorPos() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPivotTargetAngle'");
+    }
     @Override
     public void setState(IntakeState newState) {
         // TODO Auto-generated method stub
