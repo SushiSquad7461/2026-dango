@@ -74,6 +74,7 @@ public class RobotContainer {
             shooter = new ShooterSubsystem(new ShooterIOKraken());
             intake = new Intake(new IntakeReal());
             hopper = new Hopper( new HopperIOReal());
+            swerve.resetGyro();
             
     } else{
             shooter = new ShooterSubsystem(new ShooterIOSim());

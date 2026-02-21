@@ -232,6 +232,8 @@ public class Swerve extends SubsystemBase {
     private void stop() {
         for (SwerveModule mod : mSwerveMods) {
             mod.setDriveVoltage(0);
+            mod.setSteerVoltage(0);
+
         }
     }
     
@@ -301,7 +303,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getHeading(){
-        return getPose().getRotation();
+        return getGyroYaw();//getPose().getRotation();
     }
 
     public Rotation2d getGyroYaw() {
@@ -349,6 +351,8 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
+        SmartDashboard.putNumber("GyroYaw", getGyroYaw().getDegrees());
+        SmartDashboard.putNumber("PoseYaw", getPose().getRotation().getDegrees());
         BaseStatusSignal.refreshAll(modStatusSignals);
         for(SwerveModule mod : mSwerveMods){
             cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());

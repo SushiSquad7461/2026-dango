@@ -1,100 +1,131 @@
 package frc.robot.subsystems.intake;
 
+import org.littletonrobotics.junction.AutoLog;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class IntakeSim implements IntakeIO{
-    private IntakeState state = IntakeState.IDLE;
-
-    public IntakeSim() {
-
+ @AutoLog
+    public static class IntakeData {
+        public double appliedVolts = 0.0;
+        public double currentAmps = 0.0;
     }
+
+    public final IntakeData data = new IntakeData();
+
+    // Pivot simulation
+    private double pivotAngleDeg = 0.0;
+    private double pivotTargetDeg = 0.0;
+    private final double pivotToleranceDeg = 2.0;
+
+    // Roller simulation
+    private double rollerOutput = 0.0;
+
+    // Wiggle logic
+    private boolean wiggleHigh = false;
+    private boolean wiggleReady = true;
+
+    private IntakeState state = IntakeState.IDLE;
 
     @Override
     public void configurePivot() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'configurePivot'");
+        // Nothing needed for sim
     }
 
     @Override
     public void configureRoller() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'configureRoller'");
+        // Nothing needed for sim
     }
 
     @Override
-    public void changeIfWiggle(boolean atTarget) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'changeState'");
+    public void setState(IntakeState newState) {
+        this.state = newState;
+
+        if (newState == IntakeState.WIGGLING) {
+            wiggleHigh = false;
+            wiggleReady = true;
+            pivotTargetDeg = IntakeConstants.wiggleLowDeg;
+        } else {
+            pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg
+                                                     : IntakeConstants.stowedAngleDeg;
+        }
+        updateRollers();
+    }
+
+    @Override
+    public void getMotorPos() {
+        // Simulate encoder output (put on SmartDashboard if you want)
     }
 
     @Override
     public void runPivotToTarget() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runPivotToTarget'");
+        // simple 10% ramping simulation per periodic call
+        double diff = pivotTargetDeg - pivotAngleDeg;
+        pivotAngleDeg += diff * 0.1;
     }
 
     @Override
     public void updateRollers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateRollers'");
+        if (isPivotAtTarget()) {
+            switch (state.direction) {
+                case FORWARD -> rollerOutput = +IntakeConstants.rollerSpeed;
+                case REVERSE -> rollerOutput = -IntakeConstants.rollerSpeed;
+                case OFF -> rollerOutput = 0.0;
+            }
+        } else {
+            rollerOutput = 0.0;
+        }
+        // Simulate applied volts/current
+        data.appliedVolts = rollerOutput * 12.0;
+        data.currentAmps = Math.abs(rollerOutput) * 5.0;
     }
 
     @Override
     public boolean isPivotAtTarget() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isPivotAtTarget'");
-    }
-
-    public void simulationPeriodic() {
-        if (state == IntakeState.WIGGLING) {
-            changeIfWiggle(isPivotAtTarget());
-        }   
-        SmartDashboard.putString("Intake/State", state.name());
-     //   SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
-     //   SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
-        SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
-    }
-
-    
-
-    @Override
-    public void zeroPivot() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'zeroPivot'");
+        return Math.abs(pivotAngleDeg - pivotTargetDeg) <= pivotToleranceDeg;
     }
 
     @Override
     public double getPivotAngle() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPivotAngle'");
+        return pivotAngleDeg;
     }
 
     @Override
     public double getPivotTargetAngle() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPivotTargetAngle'");
+        return pivotTargetDeg;
     }
+
     @Override
-    public void getMotorPos() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPivotTargetAngle'");
-    }
-    @Override
-    public void setState(IntakeState newState) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setState'");
+    public void zeroPivot() {
+        pivotAngleDeg = 0.0;
+        pivotTargetDeg = IntakeConstants.stowedAngleDeg;
     }
 
     @Override
     public void runRollers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runRollers'");
+        rollerOutput = IntakeConstants.rollerSpeed;
     }
 
     @Override
     public void stopRollers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stopRollers'");
+        rollerOutput = 0.0;
+    }
+
+    @Override
+    public void changeIfWiggle(boolean atTarget) {
+        if (state == IntakeState.WIGGLING) {
+            if (atTarget && wiggleReady) {
+                wiggleHigh = !wiggleHigh;
+                pivotTargetDeg = wiggleHigh ? IntakeConstants.wiggleHighDeg
+                                            : IntakeConstants.wiggleLowDeg;
+                wiggleReady = false;
+            }
+            if (!atTarget) {
+                wiggleReady = true;
+            }
+        }
     }
 }
+

@@ -36,10 +36,10 @@ public class TeleopSwerve extends Command {
         double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
         double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
 
-        if (AllianceUtil.isRedAlliance()) {
-            translationVal = -translationVal;
-            strafeVal = -strafeVal;
-        }
+        // if (AllianceUtil.isRedAlliance()) {
+        //     translationVal = -translationVal;
+        //     strafeVal = -strafeVal;
+        // }
 
         Translation2d translationVector = new Translation2d(translationVal, strafeVal);
         double magnitude = translationVector.getNorm();
