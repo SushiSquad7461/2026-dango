@@ -35,7 +35,7 @@ public class IntakeReal implements IntakeIO {
 
     // Configure motors and start in IDLE.
     public IntakeReal() {
-      //  zeroPivot();
+       // zeroPivot();
         configurePivot();
         configureRoller();
         setState(IntakeState.IDLE);
@@ -54,7 +54,7 @@ public class IntakeReal implements IntakeIO {
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
 
-        cfg.CurrentLimits.SupplyCurrentLimit = 40;
+        cfg.CurrentLimits.SupplyCurrentLimit = 5;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
