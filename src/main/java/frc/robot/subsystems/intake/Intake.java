@@ -64,12 +64,12 @@ public class Intake extends SubsystemBase{
 
     @Override
     public void periodic(){
-        io.getMotorPos();
-        io.runPivotToTarget();
-        io.changeIfWiggle(io.isPivotAtTarget());
-        if (!manualRoll) {
-            io.updateRollers();
-        }
+        // io.getMotorPos();
+        //  io.runPivotToTarget();
+        // io.changeIfWiggle(io.isPivotAtTarget());
+        //  if (!manualRoll) {
+        //      io.updateRollers();
+        //  }
         SmartDashboard.putString("Intake/State", state.name());
         SmartDashboard.putNumber("Intake/PivotDeg", io.getPivotAngle());
         SmartDashboard.putNumber("Intake/PivotTargetDeg", io.getPivotTargetAngle());

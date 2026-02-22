@@ -76,15 +76,16 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
 
-        if (this.state == IntakeState.WIGGLING) {
-            wiggleTargetHigh = false;
-            wiggleReady = true;
-            pivotTargetDeg = IntakeConstants.wiggleLowDeg;
-        } else {
+        // if (this.state == IntakeState.WIGGLING) {
+        //     wiggleTargetHigh = false;
+        //     wiggleReady = true;
+        //     pivotTargetDeg = IntakeConstants.wiggleLowDeg;
+        // } else {
             pivotTargetDeg = this.state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-        }
+       // }
 
         updateRollers();
+        runPivotToTarget();
     }
 
     @Override
@@ -145,11 +146,10 @@ public class IntakeReal implements IntakeIO {
 
     // Update rollers; only runs when pivot is at target.
     public void updateRollers() {
-        boolean atTarget = isPivotAtTarget();
         double out = 0.0;
-        if (atTarget) {
+        if (isPivotAtTarget()) {
             switch (state.direction) {
-                case FORWARD -> out = +IntakeConstants.rollerSpeed;
+                case FORWARD -> out = IntakeConstants.rollerSpeed;
                 case REVERSE -> out = -IntakeConstants.rollerSpeed;
                 case OFF -> out = 0.0;
             }

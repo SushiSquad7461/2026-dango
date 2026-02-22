@@ -171,8 +171,8 @@ public class RobotContainer {
     driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
-    operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
-                                     .onFalse(stateMachine.changeState(RobotState.IDLE));
+   // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
+                                     //.onFalse(stateMachine.changeState(RobotState.IDLE));
   }
   
   public Command getAutonomousCommand() {

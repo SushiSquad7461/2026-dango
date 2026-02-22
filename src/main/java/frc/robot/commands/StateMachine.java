@@ -83,7 +83,7 @@ public class StateMachine extends SubsystemBase {
            Commands.race(
                 Commands.waitSeconds(1),
                 Commands.parallel(
-                        (!intake.intakeAtTargetPos())?intake.changeState(newState.intakeState):Commands.none(),
+                        (intake.intakeAtTargetPos())?intake.changeState(newState.intakeState):Commands.none(),
                         shooter.changeState(newState.shooterState),
                         hopper.changeState(newState.hopperState)
                 )
