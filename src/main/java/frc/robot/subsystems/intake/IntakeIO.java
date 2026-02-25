@@ -11,9 +11,7 @@ public interface IntakeIO {
     //TODO: Clean up this code/Get rid of unnecessary methods
     void configurePivot();
     void configureRoller();
-    void changeIfWiggle(boolean atTarget);
-    void runPivotToTarget();
-    void updateRollers();
+
     boolean isPivotAtTarget();
     double getPivotAngle();
     double getPivotTargetAngle();

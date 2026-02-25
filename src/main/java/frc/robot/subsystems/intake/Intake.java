@@ -9,22 +9,22 @@ import frc.robot.util.Direction;
 public class Intake extends SubsystemBase{
     private IntakeIO io;
     private IntakeState state;
-    private boolean manualRoll;
     public enum IntakeState {
-            IDLE(false, Direction.OFF),
-            DEPLOYED(true, Direction.OFF),
-            ROLLERS_IN(true, Direction.FORWARD),
-            ROLLERS_OUT(true, Direction.REVERSE),
-            WIGGLING(true, Direction.FORWARD);
+            IDLE(false, 0),
+            DEPLOYED(true, 0),
+            ROLLERS_IN(true, 1),
+            ROLLERS_OUT(true, -1);
 
             public final boolean intakeExtended;
-            public final Direction direction;
+            public final double rollerSpeed;
 
-            private IntakeState(boolean extended, Direction direction) {
+
+            private IntakeState(boolean extended, double speed) {
                 this.intakeExtended = extended;
-                this.direction = direction;
+                this.rollerSpeed = speed;
             }
     }
+    
     public Intake(IntakeIO io){
         this.io = io;
         this.state = IntakeState.IDLE;
@@ -41,20 +41,10 @@ public class Intake extends SubsystemBase{
 
     }
     public Command runRollers(){
-        // return Commands.runOnce(()->{
-        //     io.runRollers();
-        // });
-       return Commands.startEnd(
-        () -> {
-            manualRoll = true;
-            io.runRollers();
-        },
-        () -> {
-            manualRoll = false;
-            io.stopRollers();
-        },
-        this
-    );
+         return Commands.runOnce(()->{
+             io.runRollers();
+         });
+
     }
     public Command stopRollers(){
         return Commands.runOnce(()->{

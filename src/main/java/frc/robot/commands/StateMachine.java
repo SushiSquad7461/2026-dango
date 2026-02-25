@@ -23,12 +23,11 @@ public class StateMachine extends SubsystemBase {
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_ROLL_IN_AND_SHOOT(IntakeState.ROLLERS_IN,ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE),
+        INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
-        INTAKE_WIGGLE(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
-
+    
         public final IntakeState intakeState;
         public final ShooterState shooterState;
         public final HopperState hopperState;
@@ -77,18 +76,16 @@ public class StateMachine extends SubsystemBase {
     public Command changeState(RobotState newState) {
         
         return Commands.sequence(
-           Commands.runOnce(()->{
-                state = newState;
-           }),
-           Commands.race(
-                Commands.waitSeconds(1),
-                Commands.parallel(
-                        (intake.intakeAtTargetPos())?intake.changeState(newState.intakeState):Commands.none(),
-                        shooter.changeState(newState.shooterState),
-                        hopper.changeState(newState.hopperState)
-                )
-           )
-        );
+            Commands.runOnce(() -> state = newState),
+            Commands.parallel(
+            Commands.sequence(
+                Commands.waitUntil(intake::intakeAtTargetPos),
+                intake.changeState(newState.intakeState)
+            ),
+            shooter.changeState(newState.shooterState),
+            hopper.changeState(newState.hopperState)
+        )
+);
     }
 
     public RobotState getCurrentState() {

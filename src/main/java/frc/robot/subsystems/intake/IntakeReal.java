@@ -3,8 +3,10 @@ package frc.robot.subsystems.intake;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 
@@ -18,7 +20,8 @@ import frc.robot.subsystems.intake.Intake.IntakeState;
 public class IntakeReal implements IntakeIO {
     
     
-    private final TalonFX pivotMotor = new TalonFX(IntakeConstants.pivotMotorId);
+    private final TalonFX leftPivotMotor = new TalonFX(IntakeConstants.leftPivotMotorId);
+    private final TalonFX rightPivotMotor = new TalonFX(IntakeConstants.rightPivotMotorId);
     private final TalonFX rollerMotor = new TalonFX(IntakeConstants.rollerMotorId);
     private IntakeState state = IntakeState.IDLE;
 
@@ -29,9 +32,6 @@ public class IntakeReal implements IntakeIO {
     // Current pivot setpoint in degrees (converted to motor rotations when commanded).
     private double pivotTargetDeg = Constants.IntakeConstants.stowedAngleDeg;
 
-    // Wiggle edge detector: flip target once per arrival at setpoint.
-    private boolean wiggleTargetHigh = false;
-    private boolean wiggleReady = true;
 
     // Configure motors and start in IDLE.
     public IntakeReal() {
@@ -58,7 +58,9 @@ public class IntakeReal implements IntakeIO {
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        pivotMotor.getConfigurator().apply(cfg);
+        leftPivotMotor.getConfigurator().apply(cfg);
+        rightPivotMotor.setControl(new Follower(leftPivotMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+
         // TODO: pivot zeroing
     }
 
@@ -75,23 +77,15 @@ public class IntakeReal implements IntakeIO {
     // Set high-level state; updates pivot setpoint and roller behavior.
     public void setState(IntakeState newState) {
         this.state = newState;
-
-        // if (this.state == IntakeState.WIGGLING) {
-        //     wiggleTargetHigh = false;
-        //     wiggleReady = true;
-        //     pivotTargetDeg = IntakeConstants.wiggleLowDeg;
-        // } else {
-            pivotTargetDeg = this.state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-       // }
-
-        updateRollers();
-        runPivotToTarget();
+        pivotTargetDeg = this.state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+        rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
     }
 
     @Override
     public void getMotorPos(){
         // Replace motor.getPosition() with your specific motor encoder method
-        SmartDashboard.putNumber("Arm Position", pivotMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Arm Position", leftPivotMotor.getPosition().getValueAsDouble());
     }
 
     public IntakeState getState() {
@@ -100,7 +94,7 @@ public class IntakeReal implements IntakeIO {
 
     // Pivot angle in degrees (from motor rotations via gear ratio).
     public double getPivotAngle() {
-        final double motorRot = pivotMotor.getPosition().getValueAsDouble();
+        final double motorRot = leftPivotMotor.getPosition().getValueAsDouble();
         final double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
         return armRot * 360.0;
     }
@@ -113,58 +107,13 @@ public class IntakeReal implements IntakeIO {
         return Math.abs(getPivotAngle() - pivotTargetDeg) <= IntakeConstants.angleToleranceDeg;
     }
 
-    // Command pivot Motion Magic to current target.
-    @Override
-    public void runPivotToTarget() {
-        double targetRot = degreesToMotorRotations(pivotTargetDeg);
-        pivotMotor.setControl(pivotControl.withPosition(targetRot));
-    }
+
 
     public void runRollers(){
         rollerMotor.set(IntakeConstants.rollerSpeed);
     }
     public void stopRollers(){
         rollerMotor.set(0.0);
-    }
-
-    // Handle state transitions (deploy/stow completion and wiggle target flips).
-   public void changeIfWiggle(boolean atTarget) {
-        if (state == IntakeState.WIGGLING) {
-            if (atTarget && wiggleReady) {
-                wiggleTargetHigh = !wiggleTargetHigh;
-                pivotTargetDeg = wiggleTargetHigh ? IntakeConstants.wiggleHighDeg : IntakeConstants.wiggleLowDeg;
-                wiggleReady = false;
-            }
-            if (!atTarget) {
-                wiggleReady = true;
-            }
-            return;
-        } else{
-
-        }
-    }
-
-    // Update rollers; only runs when pivot is at target.
-    public void updateRollers() {
-        double out = 0.0;
-        if (isPivotAtTarget()) {
-            switch (state.direction) {
-                case FORWARD -> out = IntakeConstants.rollerSpeed;
-                case REVERSE -> out = -IntakeConstants.rollerSpeed;
-                case OFF -> out = 0.0;
-            }
-        }
-        out = MathUtil.clamp(out, -1.0, 1.0);
-        rollerMotor.setControl(rollerControl.withOutput(out));
-    }
-
-    // Periodic loop: command pivot and update rollers and log telemetry.
-    public void periodic() {
-
-        // SmartDashboard.putString("Intake/State", state.name());
-        // SmartDashboard.putNumber("Intake/PivotDeg", getPivotAngle());
-        // SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
-        // SmartDashboard.putBoolean("Intake/PivotAtTarget", isPivotAtTarget());
     }
 
     // Convert degrees to motor rotations (arm rotations scaled by gear ratio).
@@ -176,7 +125,7 @@ public class IntakeReal implements IntakeIO {
 
     @Override
     public void zeroPivot() {
-        pivotMotor.setPosition(0.0);
+        leftPivotMotor.setPosition(0.0);
         pivotTargetDeg = IntakeConstants.stowedAngleDeg;    
     }
 }

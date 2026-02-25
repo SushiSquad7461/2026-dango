@@ -41,17 +41,7 @@ public class IntakeSim implements IntakeIO{
 
     @Override
     public void setState(IntakeState newState) {
-        this.state = newState;
-
-        if (newState == IntakeState.WIGGLING) {
-            wiggleHigh = false;
-            wiggleReady = true;
-            pivotTargetDeg = IntakeConstants.wiggleLowDeg;
-        } else {
-            pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg
-                                                     : IntakeConstants.stowedAngleDeg;
-        }
-        updateRollers();
+        
     }
 
     @Override
@@ -59,28 +49,8 @@ public class IntakeSim implements IntakeIO{
         // Simulate encoder output (put on SmartDashboard if you want)
     }
 
-    @Override
-    public void runPivotToTarget() {
-        // simple 10% ramping simulation per periodic call
-        double diff = pivotTargetDeg - pivotAngleDeg;
-        pivotAngleDeg += diff * 0.1;
-    }
 
-    @Override
-    public void updateRollers() {
-        if (isPivotAtTarget()) {
-            switch (state.direction) {
-                case FORWARD -> rollerOutput = +IntakeConstants.rollerSpeed;
-                case REVERSE -> rollerOutput = -IntakeConstants.rollerSpeed;
-                case OFF -> rollerOutput = 0.0;
-            }
-        } else {
-            rollerOutput = 0.0;
-        }
-        // Simulate applied volts/current
-        data.appliedVolts = rollerOutput * 12.0;
-        data.currentAmps = Math.abs(rollerOutput) * 5.0;
-    }
+
 
     @Override
     public boolean isPivotAtTarget() {
@@ -111,21 +81,6 @@ public class IntakeSim implements IntakeIO{
     @Override
     public void stopRollers() {
         rollerOutput = 0.0;
-    }
-
-    @Override
-    public void changeIfWiggle(boolean atTarget) {
-        if (state == IntakeState.WIGGLING) {
-            if (atTarget && wiggleReady) {
-                wiggleHigh = !wiggleHigh;
-                pivotTargetDeg = wiggleHigh ? IntakeConstants.wiggleHighDeg
-                                            : IntakeConstants.wiggleLowDeg;
-                wiggleReady = false;
-            }
-            if (!atTarget) {
-                wiggleReady = true;
-            }
-        }
     }
 }
 
