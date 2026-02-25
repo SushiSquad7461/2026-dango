@@ -78,14 +78,15 @@ public class StateMachine extends SubsystemBase {
         return Commands.sequence(
             Commands.runOnce(() -> state = newState),
             Commands.parallel(
-            Commands.sequence(
-                Commands.waitUntil(intake::intakeAtTargetPos),
-                intake.changeState(newState.intakeState)
-            ),
-            shooter.changeState(newState.shooterState),
-            hopper.changeState(newState.hopperState)
-        )
-);
+                Commands.sequence(
+                    //Commands.waitSeconds(2),
+                    intake.changeState(newState.intakeState)
+                ),
+                shooter.changeState(newState.shooterState)),
+                Commands.runOnce(()->System.out.println("Exited parallel command")),
+                Commands.waitSeconds(2),
+                hopper.changeState(newState.hopperState) 
+        );
     }
 
     public RobotState getCurrentState() {

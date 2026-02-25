@@ -58,8 +58,12 @@ public class IntakeReal implements IntakeIO {
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        leftPivotMotor.getConfigurator().apply(cfg);
-        rightPivotMotor.setControl(new Follower(leftPivotMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        TalonFXConfiguration tempCFG = cfg;
+        tempCFG.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
+        rightPivotMotor.getConfigurator().apply(cfg);
+        leftPivotMotor.getConfigurator().apply(tempCFG);
+        //rightPivotMotor.setControl(new Follower(leftPivotMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
         // TODO: pivot zeroing
     }

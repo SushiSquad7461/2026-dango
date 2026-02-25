@@ -12,8 +12,8 @@ public class Intake extends SubsystemBase{
     public enum IntakeState {
             IDLE(false, 0),
             DEPLOYED(true, 0),
-            ROLLERS_IN(true, 1),
-            ROLLERS_OUT(true, -1);
+            ROLLERS_IN(true, 0.5),
+            ROLLERS_OUT(true, -0.5);
 
             public final boolean intakeExtended;
             public final double rollerSpeed;
@@ -41,7 +41,7 @@ public class Intake extends SubsystemBase{
 
     }
     public Command runRollers(){
-         return Commands.runOnce(()->{
+         return Commands.run(()->{
              io.runRollers();
          });
 

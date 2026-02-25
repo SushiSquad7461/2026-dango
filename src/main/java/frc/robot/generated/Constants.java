@@ -248,7 +248,7 @@ public class Constants {
 
     public static final class IntakeConstants {
         public static final int leftPivotMotorId = 13;
-        public static final int rightPivotMotorId = 13;
+        public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
         public static final double intakeAngleDeg = 40; //+125
@@ -264,7 +264,7 @@ public class Constants {
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.5;
 
-        public static final double rollerSpeed = 0.60;//0.60;
+        public static final double rollerSpeed = 0.5;//0.60;
 
         public static final double wiggleLowDeg = 90.0;
         public static final double wiggleHighDeg = 110.0;
