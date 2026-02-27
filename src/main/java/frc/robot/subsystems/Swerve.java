@@ -329,8 +329,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public void resetGyro() {
-        if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
-        else gyro.setYaw(0);
+        //if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
+        // else 
+        gyro.setYaw(0);
     }
 
     

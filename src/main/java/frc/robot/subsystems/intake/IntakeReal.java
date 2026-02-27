@@ -54,7 +54,7 @@ public class IntakeReal implements IntakeIO {
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
 
-        cfg.CurrentLimits.SupplyCurrentLimit = 5;
+        cfg.CurrentLimits.SupplyCurrentLimit = 3;
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 

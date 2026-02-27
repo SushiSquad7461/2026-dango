@@ -154,7 +154,7 @@ public class RobotContainer {
         () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
     // Driver handles robot positioning, alignment, and algae
-    driverController.y().onTrue(swerve.resetHeading());
+    driverController.y().onTrue(Commands.runOnce(()->swerve.resetGyro()));
 
     /*TODO: Consider scenario where intake is at "wiggleHigh" position
     *       while the rollers are rotating outward so that the ball would have
