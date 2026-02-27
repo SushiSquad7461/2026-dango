@@ -266,8 +266,8 @@ public class Constants {
 
         public static final double rollerSpeed = 0.5;//0.60;
 
-        public static final double wiggleLowDeg = 90.0;
-        public static final double wiggleHighDeg = 110.0;
+        // public static final double wiggleLowDeg = 90.0;
+        // public static final double wiggleHighDeg = 110.0;
     }
 
 

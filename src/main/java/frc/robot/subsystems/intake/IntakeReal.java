@@ -36,6 +36,7 @@ public class IntakeReal implements IntakeIO {
     // Configure motors and start in IDLE.
     public IntakeReal() {
        // zeroPivot();
+        
         configurePivot();
         configureRoller();
         setState(IntakeState.IDLE);
@@ -65,7 +66,6 @@ public class IntakeReal implements IntakeIO {
 
         rightPivotMotor.getConfigurator().apply(cfg);
         leftPivotMotor.getConfigurator().apply(tempCFG);
-        //rightPivotMotor.setControl(new Follower(leftPivotMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
         // TODO: pivot zeroing
     }
@@ -84,8 +84,12 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
         pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-        rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
+        // leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+        // rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
+        leftPivotMotor.set(newState.pivotSpeed);
+        rightPivotMotor.set(newState.pivotSpeed);
+        
+        
     }
 
     @Override

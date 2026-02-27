@@ -10,18 +10,20 @@ public class Intake extends SubsystemBase{
     private IntakeIO io;
     private IntakeState state;
     public enum IntakeState {
-            IDLE(false, 0),
-            DEPLOYED(true, 0),
-            ROLLERS_IN(true, 0.5),
-            ROLLERS_OUT(true, -0.5);
+            IDLE(false, 0,0),
+            DEPLOYED(true, 0,0.1),
+            ROLLERS_IN(true, 0.5,0),
+            ROLLERS_OUT(true, -0.5,0);
 
             public final boolean intakeExtended;
             public final double rollerSpeed;
+            public final double pivotSpeed;
 
 
-            private IntakeState(boolean extended, double speed) {
+            private IntakeState(boolean extended, double rollerSpeed,double pivotSpeed) {
                 this.intakeExtended = extended;
-                this.rollerSpeed = speed;
+                this.pivotSpeed = pivotSpeed;
+                this.rollerSpeed = rollerSpeed;
             }
     }
     
