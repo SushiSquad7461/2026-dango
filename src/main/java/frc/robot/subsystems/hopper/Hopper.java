@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Hopper extends SubsystemBase{
     public enum HopperState{
         IDLE(0.0),
-        RUNNING(-0.75);
+        RUNNING(-0.5);
 
         public double speed; 
 

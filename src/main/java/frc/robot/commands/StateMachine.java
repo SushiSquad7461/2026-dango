@@ -83,9 +83,9 @@ public class StateMachine extends SubsystemBase {
                     intake.changeState(newState.intakeState)
                 ),
                 shooter.changeState(newState.shooterState)),
-                Commands.runOnce(()->System.out.println("Exited parallel command")),
-                Commands.waitSeconds(2),
-                hopper.changeState(newState.hopperState) 
+                //Commands.runOnce(()->System.out.println("Exited parallel command")),
+            Commands.waitSeconds(2),
+            hopper.changeState(newState.hopperState) 
         );
     }
 

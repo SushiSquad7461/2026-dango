@@ -54,7 +54,9 @@ public class IntakeReal implements IntakeIO {
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
 
+        //CHANGES THE SPEED OF THE PIVOT
         cfg.CurrentLimits.SupplyCurrentLimit = 3;
+        
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -81,7 +83,7 @@ public class IntakeReal implements IntakeIO {
     // Set high-level state; updates pivot setpoint and roller behavior.
     public void setState(IntakeState newState) {
         this.state = newState;
-        pivotTargetDeg = this.state.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
+        pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
         leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
         rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
     }
