@@ -56,7 +56,7 @@ public class IntakeReal implements IntakeIO {
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
 
         //CHANGES THE SPEED OF THE PIVOT
-        cfg.CurrentLimits.SupplyCurrentLimit = 3;
+        cfg.CurrentLimits.SupplyCurrentLimit = 10;
         
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
         cfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -66,6 +66,7 @@ public class IntakeReal implements IntakeIO {
 
         rightPivotMotor.getConfigurator().apply(cfg);
         leftPivotMotor.getConfigurator().apply(tempCFG);
+        rightPivotMotor.setControl(new Follower(leftPivotMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
         // TODO: pivot zeroing
     }
@@ -84,10 +85,10 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
         pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-        // leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-        // rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
-        leftPivotMotor.set(newState.pivotSpeed);
-        rightPivotMotor.set(newState.pivotSpeed);
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+        rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
+        //leftPivotMotor.set(newState.pivotSpeed);
+        //rightPivotMotor.set(newState.pivotSpeed);
         
         
     }
