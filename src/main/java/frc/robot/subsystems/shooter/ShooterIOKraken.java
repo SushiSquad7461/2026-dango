@@ -19,9 +19,9 @@ public class ShooterIOKraken implements ShooterIO {
   CANBus rioCanBus = new CANBus("rio");
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(14, rioCanBus);
+  private final TalonFX krakenShooterLeft = new TalonFX(5, rioCanBus);
   private final TalonFX krakenShooterRight = new TalonFX(2, rioCanBus);
-  private final TalonFX krakenShooterKicker = new TalonFX(5, rioCanBus);
+  private final TalonFX krakenShooterKicker = new TalonFX(14, rioCanBus);
  // private final TalonFX krakenShooterHood = new TalonFX(3, rioCanBus);
 
   public ShooterIOKraken() {
@@ -82,12 +82,12 @@ public class ShooterIOKraken implements ShooterIO {
   @Override
   public void setFlywheelRPM(double rpm) {
     // open-loop "good enough" for first iteration
-    krakenShooterLeft.set(-1);
+    krakenShooterLeft.set(-0.8);
   }
 
   @Override
   public void stopFlywheel() {
-    krakenShooterLeft.set(0);
+    krakenShooterLeft.set(-0.2);
   }
 
   @Override

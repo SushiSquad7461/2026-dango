@@ -85,8 +85,9 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
         pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-        rollerMotor.setControl(rollerControl.withOutput(newState.rollerSpeed));
+        leftPivotMotor.setControl(new DutyCycleOut(0));
+        //leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+
         //leftPivotMotor.set(newState.pivotSpeed);
         //rightPivotMotor.set(newState.pivotSpeed);
         

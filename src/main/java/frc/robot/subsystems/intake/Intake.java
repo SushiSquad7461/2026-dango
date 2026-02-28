@@ -11,7 +11,7 @@ public class Intake extends SubsystemBase{
     private IntakeState state;
     public enum IntakeState {
             IDLE(false, 0,0),
-            DEPLOYED(true, 0,0.1),
+            DEPLOYED(true, 0.2,0.1),
             ROLLERS_IN(true, 0.5,0),
             ROLLERS_OUT(true, -0.5,0);
 
