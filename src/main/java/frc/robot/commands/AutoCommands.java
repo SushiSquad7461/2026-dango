@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 
@@ -23,7 +24,8 @@ public class AutoCommands {
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
-            NamedCommands.registerCommand("Move_Ahead", stateMachine.changeState(null) );
+            NamedCommands.registerCommand("Shoot", stateMachine.changeState(RobotState.SHOOT_ONLY) );
+            NamedCommands.registerCommand("Shoot", stateMachine.changeState(RobotState.INTAKE_DOWN) );
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("a", new PathPlannerAuto("a"));
