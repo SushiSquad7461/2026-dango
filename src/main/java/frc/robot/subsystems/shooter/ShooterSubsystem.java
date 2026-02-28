@@ -51,38 +51,43 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Command changeState(ShooterState newState){
-    this.state = newState;
     switch (newState) {
       case IDLE:
         return Commands.parallel(
-            Commands.runOnce(()->{
-                io.stopFlywheel();    
-            }),
-            Commands.runOnce(()->{
+            Commands.runOnce(() -> {
+                this.state = newState;
+                io.stopFlywheel();
+            }, this),
+            Commands.runOnce(() -> {
                 io.stopFeeder();
-            }));
-
+            })
+        );
+  
       case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
         return Commands.parallel(
-            Commands.runOnce(()->{
+            Commands.runOnce(() -> {
+                this.state = newState;
                 io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
-            }),
-            Commands.runOnce(()->{
+            }, this),
+            Commands.runOnce(() -> {
                 shootStartTime = Timer.getFPGATimestamp();
-            }));
+            })
+        );
         
       case SHOOT:
         return Commands.parallel(
-            Commands.runOnce(()->{
+            Commands.runOnce(() -> {
+                this.state = newState;
                 io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
-            }),
-            Commands.runOnce(()->{
+            }, this),
+            Commands.runOnce(() -> {
                 io.runFeeder();
-            }));
+            })
+        );
+  
       default:
         return Commands.none();
     }
-
   }
   @Override
   public void periodic() {
