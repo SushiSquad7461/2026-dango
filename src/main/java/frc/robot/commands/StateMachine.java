@@ -89,7 +89,7 @@ public class StateMachine extends SubsystemBase {
             Commands.parallel(
                 Commands.sequence(
                     //If the new state's change is the "wiggle" state
-                    state.intakeState == IntakeState.WIGGLING ?
+                    newState.intakeState == IntakeState.WIGGLING ?
                     //Depoly the intake
                     intake.changeState(IntakeState.DEPLOYED)
                         //Wait until the intake is in position
