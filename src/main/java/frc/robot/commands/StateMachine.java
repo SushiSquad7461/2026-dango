@@ -75,6 +75,10 @@ public class StateMachine extends SubsystemBase {
         changeState(newState).schedule();
     }
 
+    public RobotState getState(){
+        return this.state;
+    }
+
     //TODO: Combine
     public Command changeState(RobotState newState) {
         

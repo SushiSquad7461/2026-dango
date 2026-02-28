@@ -119,7 +119,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-
     // // Default command, normal field-relative drive
     // swerve.setDefaultCommand(
     //     DriveCommands.joystickDrive(
@@ -165,10 +164,9 @@ public class RobotContainer {
     */
 
     driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    //operatorController.a().onTrue(Commands.runOnce(()->{wiggleOn=!wiggleOn;}));
-    //driverController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightTrigger().toggleOnFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
+    //.onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
