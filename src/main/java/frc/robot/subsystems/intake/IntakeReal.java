@@ -87,19 +87,10 @@ public class IntakeReal implements IntakeIO {
         this.state = newState;
         pivotTargetDeg = newState.pivotAngle;
         //leftPivotMotor.setControl(new DutyCycleOut(0));
-        if(newState == IntakeState.WIGGLING){
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        } else{
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        }
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+        rollerMotor.set(newState.rollerSpeed);
         //leftPivotMotor.set(newState.pivotSpeed);
         //rightPivotMotor.set(newState.pivotSpeed);
-        
-        
     }
 
     @Override
