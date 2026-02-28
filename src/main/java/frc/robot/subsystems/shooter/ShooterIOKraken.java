@@ -113,5 +113,6 @@ public class ShooterIOKraken implements ShooterIO {
   // TODO: implement shooter readiness check
   public boolean isShooterReady() {
     return true;
+    // return Math.abs(targetShooterRPM - getFlywheelRPM()) < SHOOTER_RPM_TOLERANCE;
   }
 }
