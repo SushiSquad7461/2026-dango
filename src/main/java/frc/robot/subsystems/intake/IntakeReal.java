@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.Constants;
 import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
@@ -84,10 +85,17 @@ public class IntakeReal implements IntakeIO {
     // Set high-level state; updates pivot setpoint and roller behavior.
     public void setState(IntakeState newState) {
         this.state = newState;
-        pivotTargetDeg = newState.intakeExtended ? IntakeConstants.intakeAngleDeg : IntakeConstants.stowedAngleDeg;
-        leftPivotMotor.setControl(new DutyCycleOut(0));
-        //leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-
+        pivotTargetDeg = newState.pivotAngle;
+        //leftPivotMotor.setControl(new DutyCycleOut(0));
+        if(newState == IntakeState.WIGGLING){
+            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+            Commands.waitUntil(this::isPivotAtTarget);
+            rollerMotor.set(newState.rollerSpeed);
+        } else{
+            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+            Commands.waitUntil(this::isPivotAtTarget);
+            rollerMotor.set(newState.rollerSpeed);
+        }
         //leftPivotMotor.set(newState.pivotSpeed);
         //rightPivotMotor.set(newState.pivotSpeed);
         
@@ -119,8 +127,7 @@ public class IntakeReal implements IntakeIO {
         return Math.abs(getPivotAngle() - pivotTargetDeg) <= IntakeConstants.angleToleranceDeg;
     }
 
-
-
+    
     public void runRollers(){
         rollerMotor.set(IntakeConstants.rollerSpeed);
     }

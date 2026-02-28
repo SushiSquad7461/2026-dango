@@ -4,26 +4,31 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.util.Direction;
 
 public class Intake extends SubsystemBase{
     private IntakeIO io;
     private IntakeState state;
     public enum IntakeState {
-            IDLE(false, 0,0),
-            DEPLOYED(true, 0.2,0.1),
-            ROLLERS_IN(true, 0.5,0),
-            ROLLERS_OUT(true, -0.5,0);
+            IDLE(false, 0,IntakeConstants.stowedAngleDeg),
+            DEPLOYED(true, 0.35,IntakeConstants.intakeAngleDeg),
+            //ROLLERS_IN(true, 0.5),
+            //ROLLERS_OUT(true, -0.5),
+
+            //TODO: Tune wiggle angle
+            WIGGLING(true, 0,80);
+            // UPPER_WIGGLE(true, 0.35),
+            // SLAM_DOWN(true,0.35);
 
             public final boolean intakeExtended;
             public final double rollerSpeed;
-            public final double pivotSpeed;
+            public final double pivotAngle;
 
-
-            private IntakeState(boolean extended, double rollerSpeed,double pivotSpeed) {
+            private IntakeState(boolean extended, double rollerSpeed, double pivotAngle) {
                 this.intakeExtended = extended;
-                this.pivotSpeed = pivotSpeed;
                 this.rollerSpeed = rollerSpeed;
+                this.pivotAngle = pivotAngle;
             }
     }
     
@@ -38,7 +43,15 @@ public class Intake extends SubsystemBase{
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
             this.state = newState;
-            io.setState(newState);
+            //If "wiggle" command called
+            if(this.state == IntakeState.WIGGLING){
+                io.setState(IntakeState.WIGGLING);
+                Commands.waitUntil(this::intakeAtTargetPos);
+                io.setState(IntakeState.DEPLOYED);
+                this.state = IntakeState.DEPLOYED;
+             } else{
+                    io.setState(newState);
+             }
         }, this);
 
     }
