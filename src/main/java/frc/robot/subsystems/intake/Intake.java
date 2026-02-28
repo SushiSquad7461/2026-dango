@@ -41,17 +41,10 @@ public class Intake extends SubsystemBase{
         return io.isPivotAtTarget();
     }
     public Command changeState(IntakeState newState) {
-        return Commands.runOnce(()->{
+        return Commands.runOnce(() -> {
             this.state = newState;
-            //If "wiggle" command called
-            if(this.state == IntakeState.WIGGLING){
-                io.setState(IntakeState.WIGGLING);
-                Commands.waitUntil(this::intakeAtTargetPos);
-             } else{
-                    io.setState(newState);
-             }
+            io.setState(newState);
         }, this);
-
     }
     public Command runRollers(){
          return Commands.run(()->{
