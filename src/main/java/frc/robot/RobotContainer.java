@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.AutoCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -58,6 +59,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
+  private final AutoCommands autos;
   //private boolean wiggleOn;
 
   // Controller
@@ -83,6 +85,7 @@ public class RobotContainer {
     }
     hoodedShooter = new HoodedShooter();
     this.stateMachine = new StateMachine(intake, shooter,hopper);
+    this.autos = new AutoCommands(stateMachine, intake, shooter);
     //this.wiggleOn = false;
     
     // Set up auto routines
