@@ -50,10 +50,8 @@ public class ShooterIOKraken implements ShooterIO {
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 70.0;
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        // adapts for different battery voltages
-        shooterConfig.Voltage.PeakForwardVoltage = 12.0;
-        shooterConfig.Voltage.PeakReverseVoltage = -12.0;
         krakenShooterLeft.getConfigurator().apply(shooterConfig);
+        krakenShooterRight.getConfigurator().apply(shooterConfig);
         // sets second shooter motor w same config, opposite direction
         krakenShooterRight.setControl(new Follower(krakenShooterLeft.getDeviceID(), MotorAlignmentValue.Opposed));
         // setup PID
@@ -64,14 +62,13 @@ public class ShooterIOKraken implements ShooterIO {
         shooterPID.kI = SHOOTER_KI; 
         shooterPID.kD = SHOOTER_KD;
         krakenShooterLeft.getConfigurator().apply(shooterPID);
+        krakenShooterRight.getConfigurator().apply(shooterPID);
 
         // shooter intake wheel motor config
         TalonFXConfiguration shooterIntakeConfig = new TalonFXConfiguration();
         shooterIntakeConfig.CurrentLimits.StatorCurrentLimit = 40.0;
         shooterIntakeConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         shooterIntakeConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        shooterIntakeConfig.Voltage.PeakForwardVoltage = 12.0;
-        shooterIntakeConfig.Voltage.PeakReverseVoltage = -12.0;
         krakenShooterIntake.getConfigurator().apply(shooterIntakeConfig);
         // setup PID
         Slot0Configs shooterIntakePID = new Slot0Configs();
