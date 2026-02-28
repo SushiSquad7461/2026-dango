@@ -106,7 +106,11 @@ public class StateMachine extends SubsystemBase {
                     : intake.changeState(newState.intakeState)
                 ),
                 shooter.changeState(newState.shooterState))
-                .andThen(Commands.waitSeconds(2))
+                .andThen(
+                    newState.hopperState == HopperState.RUNNING
+                        ? Commands.waitSeconds(2)
+                        : Commands.none()
+                )
                 .andThen(hopper.changeState(newState.hopperState))
         );
     }
