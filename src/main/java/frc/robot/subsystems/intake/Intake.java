@@ -47,8 +47,6 @@ public class Intake extends SubsystemBase{
             if(this.state == IntakeState.WIGGLING){
                 io.setState(IntakeState.WIGGLING);
                 Commands.waitUntil(this::intakeAtTargetPos);
-                io.setState(IntakeState.DEPLOYED);
-                this.state = IntakeState.DEPLOYED;
              } else{
                     io.setState(newState);
              }

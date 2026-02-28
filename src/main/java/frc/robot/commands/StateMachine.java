@@ -96,13 +96,14 @@ public class StateMachine extends SubsystemBase {
                         .andThen(Commands.waitUntil(intake::intakeAtTargetPos))
                         //Slams the intake back down
                         .andThen(intake.changeState(IntakeState.DEPLOYED))
+                        //ensures that the intake is in its deployed position before another command is scheduled
+                        .andThen(Commands.waitUntil(intake::intakeAtTargetPos))
                     //If the new state isn't wiggle, act normally
                     : intake.changeState(newState.intakeState)
                 ),
-                shooter.changeState(newState.shooterState)),
-                //Commands.runOnce(()->System.out.println("Exited parallel command")),
-            Commands.waitSeconds(2),
-            hopper.changeState(newState.hopperState) 
+                shooter.changeState(newState.shooterState))
+                .andThen(Commands.waitSeconds(2))
+                .andThen(hopper.changeState(newState.hopperState))
         );
     }
 
