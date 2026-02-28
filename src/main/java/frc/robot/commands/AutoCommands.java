@@ -25,7 +25,7 @@ public class AutoCommands {
             selectedAuto.set("Nothing");
 
             NamedCommands.registerCommand("Shoot", stateMachine.changeState(RobotState.SHOOT_ONLY) );
-            NamedCommands.registerCommand("Shoot", stateMachine.changeState(RobotState.INTAKE_DOWN) );
+            NamedCommands.registerCommand("Intake", stateMachine.changeState(RobotState.INTAKE_DOWN) );
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("a", new PathPlannerAuto("a"));
