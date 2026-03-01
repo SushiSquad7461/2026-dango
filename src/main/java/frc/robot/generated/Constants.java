@@ -40,7 +40,7 @@ public class Constants {
 
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
-    public static final double TARGET_RPM = 4500;
+    public static final double TARGET_RPM_0 = 4500;
       // TODO: tune shooter flywheel PID
     public static final double SHOOTER_KS = 0.1;
     public static final double SHOOTER_KV = 0.12;
@@ -56,8 +56,16 @@ public class Constants {
     // TODO: tune hood PID
     public static final double HOOD_KP = 2.4;
     public static final double HOOD_KI = 0;
-    public static
-     final double HOOD_KD = 0.1;
+    public static final double HOOD_KD = 0.1;
+    // TODO: tune shooter presets
+    public static final double TARGET_RPM_1 = 0;
+    public static final double TARGET_RPM_2 = 0;
+    public static final double TARGET_RPM_3 = 0;
+    public static final double TARGET_RPM_4 = 0;
+    public static final double TARGET_HOOD_1 = 0;
+    public static final double TARGET_HOOD_2 = 0;
+    public static final double TARGET_HOOD_3 = 0;
+    public static final double TARGET_HOOD_4 = 0;
   }
  public static final class Swerve {
         public static final int pigeonID = 20;
