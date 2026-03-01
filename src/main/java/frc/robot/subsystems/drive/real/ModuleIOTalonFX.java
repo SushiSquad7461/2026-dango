@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.real;
 
 import static frc.robot.util.PhoenixUtil.*;
 
@@ -34,14 +34,19 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.generated.TunerConstants;
+import frc.robot.generated.Constants;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.PhoenixOdometryThread;
+import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.ModuleIO.ModuleIOInputs;
+
 import java.util.Queue;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
  * CANcoder. Configured using a set of module constants from Phoenix.
  *
- * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
+ * <p>Device configuration and other behaviors not exposed by Constants can be customized here.
  */
 public class ModuleIOTalonFX implements ModuleIO {
   private final SwerveModuleConstants<
@@ -49,8 +54,8 @@ public class ModuleIOTalonFX implements ModuleIO {
       constants;
 
   // Hardware objects
-  private final TalonFX driveTalon;
-  private final TalonFX turnTalon;
+  private final TalonFX driveMotor;
+  private final TalonFX angleMotor;
   private final CANcoder cancoder;
 
   // Voltage control requests
@@ -95,9 +100,9 @@ public class ModuleIOTalonFX implements ModuleIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     this.constants = constants;
-    driveTalon = new TalonFX(constants.DriveMotorId, TunerConstants.kCANBus);
-    turnTalon = new TalonFX(constants.SteerMotorId, TunerConstants.kCANBus);
-    cancoder = new CANcoder(constants.EncoderId, TunerConstants.kCANBus);
+    driveMotor = new TalonFX(constants.DriveMotorId, Constants.kCANBus);
+    angleMotor = new TalonFX(constants.SteerMotorId, Constants.kCANBus);
+    cancoder = new CANcoder(constants.EncoderId, Constants.kCANBus);
 
     // Configure drive motor
     var driveConfig = constants.DriveMotorInitialConfigs;
@@ -112,8 +117,8 @@ public class ModuleIOTalonFX implements ModuleIO {
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
-    tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
+    tryUntilOk(5, () -> driveMotor.getConfigurator().apply(driveConfig, 0.25));
+    tryUntilOk(5, () -> driveMotor.setPosition(0.0, 0.25));
 
     // Configure turn motor
     var turnConfig = new TalonFXConfiguration();
@@ -140,7 +145,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         constants.SteerMotorInverted
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+    tryUntilOk(5, () -> angleMotor.getConfigurator().apply(turnConfig, 0.25));
 
     // Configure CANCoder
     CANcoderConfiguration cancoderConfig = constants.EncoderInitialConfigs;
@@ -155,23 +160,23 @@ public class ModuleIOTalonFX implements ModuleIO {
     timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
 
     // Create drive status signals
-    drivePosition = driveTalon.getPosition();
+    drivePosition = driveMotor.getPosition();
     drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(drivePosition.clone());
-    driveVelocity = driveTalon.getVelocity();
-    driveAppliedVolts = driveTalon.getMotorVoltage();
-    driveCurrent = driveTalon.getStatorCurrent();
+    driveVelocity = driveMotor.getVelocity();
+    driveAppliedVolts = driveMotor.getMotorVoltage();
+    driveCurrent = driveMotor.getStatorCurrent();
 
     // Create turn status signals
     turnAbsolutePosition = cancoder.getAbsolutePosition();
-    turnPosition = turnTalon.getPosition();
+    turnPosition = angleMotor.getPosition();
     turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnPosition.clone());
-    turnVelocity = turnTalon.getVelocity();
-    turnAppliedVolts = turnTalon.getMotorVoltage();
-    turnCurrent = turnTalon.getStatorCurrent();
+    turnVelocity = angleMotor.getVelocity();
+    turnAppliedVolts = angleMotor.getMotorVoltage();
+    turnCurrent = angleMotor.getStatorCurrent();
 
     // Configure periodic frames
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Drive.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
+        Swerve.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         driveVelocity,
@@ -181,7 +186,7 @@ public class ModuleIOTalonFX implements ModuleIO {
         turnVelocity,
         turnAppliedVolts,
         turnCurrent);
-    ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+    ParentDevice.optimizeBusUtilizationForAll(driveMotor, angleMotor);
   }
 
   @Override
@@ -227,7 +232,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   @Override
   public void setDriveOpenLoop(double output) {
-    driveTalon.setControl(
+    driveMotor.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> voltageRequest.withOutput(output);
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
@@ -236,7 +241,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   @Override
   public void setTurnOpenLoop(double output) {
-    turnTalon.setControl(
+    angleMotor.setControl(
         switch (constants.SteerMotorClosedLoopOutput) {
           case Voltage -> voltageRequest.withOutput(output);
           case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
@@ -246,7 +251,7 @@ public class ModuleIOTalonFX implements ModuleIO {
   @Override
   public void setDriveVelocity(double velocityRadPerSec) {
     double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
-    driveTalon.setControl(
+    driveMotor.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
           case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
@@ -255,7 +260,7 @@ public class ModuleIOTalonFX implements ModuleIO {
 
   @Override
   public void setTurnPosition(Rotation2d rotation) {
-    turnTalon.setControl(
+    angleMotor.setControl(
         switch (constants.SteerMotorClosedLoopOutput) {
           case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());
           case TorqueCurrentFOC ->
