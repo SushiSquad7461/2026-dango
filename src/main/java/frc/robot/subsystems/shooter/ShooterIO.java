@@ -10,6 +10,7 @@ public interface ShooterIO {
     void runFeeder();
     void stopFeeder();
     double getFlywheelRPM();
+    double getFlywheelTargetRPM();
     double getHoodPos();
     boolean isShooterReady();
 }

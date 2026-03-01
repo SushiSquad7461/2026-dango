@@ -65,7 +65,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
+                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
             }),
             Commands.runOnce(()->{
                 shootStartTime = Timer.getFPGATimestamp();
@@ -74,7 +74,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
+                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
