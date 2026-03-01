@@ -167,16 +167,15 @@ public class RobotContainer {
     *       room to escape
     */
 
-    driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    //driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
     //driverController.rightBumper().onTrue(intake.runRollers()).onFalse(intake.stopRollers());
-    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN));//.onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightTrigger().onFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
-    //.onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
     driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
    // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      //.onFalse(stateMachine.changeState(RobotState.IDLE));

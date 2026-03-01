@@ -55,7 +55,7 @@ public class Intake extends SubsystemBase{
 
     }
     public Command runRollers(){
-         return Commands.runOnce(()->{
+         return Commands.run(()->{
              io.runRollers();
          });
 

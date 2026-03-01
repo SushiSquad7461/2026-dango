@@ -257,14 +257,14 @@ public class Constants {
 
         public static final double motorRotationsPerArmRotation = 64.0;
 
-        public static final double cruiseVelocityRps = 8;
+        public static final double cruiseVelocityRps = 16;
         public static final double accelRps2 =2;
 
         public static final double pivotP = 0.4;
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
-        public static final double rollerSpeed = 0.35;//0.60;
+        public static final double rollerSpeed = -0.35;//0.60;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;

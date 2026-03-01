@@ -93,13 +93,12 @@ public class IntakeReal implements IntakeIO {
              leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
              Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
          } else{
-            //leftPivotMotor.setControl(new DutyCycleOut(0));
             leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-             Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
-             //Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed));
+            if(isPivotAtTarget()){
+                rollerMotor.set(newState.rollerSpeed);
+            }
          }
-        //leftPivotMotor.set(newState.pivotSpeed);
-        //rightPivotMotor.set(newState.pivotSpeed);
+
         
         
     }
