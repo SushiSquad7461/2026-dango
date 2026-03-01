@@ -46,14 +46,14 @@ public class Intake extends SubsystemBase{
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
             this.state = newState;
-        if(newState == IntakeState.DEPLOYED){
-                        io.setStateRollers(newState.rollerSpeed*-1);
-                    }else{
-                        
-                    }
-                    io.setState(newState);
-                }, this).andThen(Commands.waitUntil(this::intakeAtTargetPos))
-                        .andThen(Commands.runOnce(()->io.setStateRollers(newState.rollerSpeed)));
+            if(newState == IntakeState.DEPLOYED){
+                io.setStateRollers(newState.rollerSpeed*-1);
+            }else{
+                io.setStateRollers(0);
+            }
+            io.setState(newState);
+        }, this).andThen(Commands.waitUntil(this::intakeAtTargetPos))
+                .andThen(Commands.runOnce(()->io.setStateRollers(newState.rollerSpeed)));
     }
 
     @Override
