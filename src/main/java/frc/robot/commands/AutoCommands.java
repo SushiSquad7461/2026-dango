@@ -7,6 +7,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine.RobotState;
@@ -26,9 +27,11 @@ public class AutoCommands {
 
             NamedCommands.registerCommand("Shoot", stateMachine.changeState(RobotState.SHOOT_ONLY) );
             NamedCommands.registerCommand("Intake", stateMachine.changeState(RobotState.INTAKE_DOWN) );
+            NamedCommands.registerCommand("Idle", stateMachine.changeState(RobotState.IDLE) );
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
-            autoChooser.addOption("a", new PathPlannerAuto("a"));
+            autoChooser.addOption("Hub_HP_Shoot", new PathPlannerAuto("Hub_And_Shoot"));
+            SmartDashboard.putData("Auto Chooser", autoChooser);
 
     }
 

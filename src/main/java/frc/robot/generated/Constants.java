@@ -140,6 +140,8 @@ public class Constants {
         public static final class Mod0 {
             public static final int driveMotorID = 17;
             public static final int angleMotorID = 12;
+
+            //TODO: Change cancoder
             public static final int canCoderID = 9;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(74.53125); //point bevel to right
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
@@ -167,6 +169,8 @@ public class Constants {
         public static final class Mod1 {
             public static final int driveMotorID = 9;
             public static final int angleMotorID = 8;
+
+            //TODO: Change
             public static final int canCoderID = 6;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(133.066407);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
@@ -221,6 +225,8 @@ public class Constants {
         public static final class Mod3 {
             public static final int driveMotorID = 0;
             public static final int angleMotorID = 1;
+
+            //TODO: Change
             public static final int canCoderID = 12;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(27.421874);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(

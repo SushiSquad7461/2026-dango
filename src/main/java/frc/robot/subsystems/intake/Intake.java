@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -39,31 +41,19 @@ public class Intake extends SubsystemBase{
         io.setState(IntakeState.IDLE);
     }
     public boolean intakeAtTargetPos(){
-        return io.isPivotAtTarget();
+        return (io.isPivotAtTarget());
     }
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
             this.state = newState;
-            //If "wiggle" command called
-            if(this.state == IntakeState.WIGGLING){
-                io.setState(IntakeState.WIGGLING);
-                Commands.waitUntil(this::intakeAtTargetPos);
-             } else{
-                    io.setState(newState);
-             }
-        }, this);
-
-    }
-    public Command runRollers(){
-         return Commands.runOnce(()->{
-             io.runRollers();
-         });
-
-    }
-    public Command stopRollers(){
-        return Commands.runOnce(()->{
-            io.stopRollers();
-        });
+            if(newState == IntakeState.DEPLOYED){
+                io.setStateRollers(newState.rollerSpeed*-1);
+            }else{
+                
+            }
+            io.setState(newState);
+        }, this).andThen(Commands.waitUntil(this::intakeAtTargetPos))
+                .andThen(Commands.runOnce(()->io.setStateRollers(newState.rollerSpeed)));
     }
 
     @Override

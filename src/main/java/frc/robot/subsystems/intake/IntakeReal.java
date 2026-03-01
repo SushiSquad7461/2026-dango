@@ -88,22 +88,15 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
         pivotTargetDeg = newState.pivotAngle;
-        
-        if(newState == IntakeState.WIGGLING){
-             leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-             Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
-         } else{
-            //leftPivotMotor.setControl(new DutyCycleOut(0));
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-             Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
-             //Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed));
-         }
-        //leftPivotMotor.set(newState.pivotSpeed);
-        //rightPivotMotor.set(newState.pivotSpeed);
-        
-        
+        //leftPivotMotor.setControl(new DutyCycleOut(0));
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
     }
 
+    @Override
+    public void setStateRollers(double rollerSpeed)
+    {
+     rollerMotor.set(rollerSpeed);
+    }
     @Override
     public void getMotorPos(){
         // Replace motor.getPosition() with your specific motor encoder method

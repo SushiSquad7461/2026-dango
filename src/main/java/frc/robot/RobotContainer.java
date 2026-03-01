@@ -60,7 +60,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
- // private final AutoCommands autos;
+  private final AutoCommands autos;
   //private boolean wiggleOn;
 
   // Controller
@@ -89,7 +89,7 @@ public class RobotContainer {
     //shooter.setDefaultCommand(Commands.runOnce(()-> shooter.removeDefaultCommand()));
     //intake.setDefaultCommand(Commands.runOnce(() -> intake.removeDefaultCommand()));
 
-    //this.autos = new AutoCommands(stateMachine, intake, shooter);
+    this.autos = new AutoCommands(stateMachine, intake, shooter);
     //this.wiggleOn = false;
     
     // Set up auto routines
@@ -168,10 +168,9 @@ public class RobotContainer {
     */
 
     driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    //driverController.rightBumper().onTrue(intake.runRollers()).onFalse(intake.stopRollers());
     driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
     driverController.rightTrigger().onFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
-    //.onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightBumper().and(driverController.rightTrigger()).onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
@@ -183,6 +182,9 @@ public class RobotContainer {
   }
   
   public Command getAutonomousCommand() {
-    return Commands.none();//autoChooser.get();
+    return autos.getAuto();
   }
+  public void resetModulesToAbsolute(){
+        swerve.resetModulesToAbsolute();
+    }
 }

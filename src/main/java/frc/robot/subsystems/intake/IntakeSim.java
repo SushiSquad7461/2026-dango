@@ -82,5 +82,11 @@ public class IntakeSim implements IntakeIO{
     public void stopRollers() {
         rollerOutput = 0.0;
     }
+
+    @Override
+    public void setStateRollers(double rollerSpeed) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setStateRollers'");
+    }
 }
 
