@@ -56,6 +56,8 @@ public class IntakeReal implements IntakeIO {
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
 
+
+
         //CHANGES THE SPEED OF THE PIVOT
         cfg.CurrentLimits.SupplyCurrentLimit = 10;
         
@@ -86,16 +88,16 @@ public class IntakeReal implements IntakeIO {
     public void setState(IntakeState newState) {
         this.state = newState;
         pivotTargetDeg = newState.pivotAngle;
-        //leftPivotMotor.setControl(new DutyCycleOut(0));
+        
         if(newState == IntakeState.WIGGLING){
+             leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+             Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
+         } else{
+            //leftPivotMotor.setControl(new DutyCycleOut(0));
             leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        } else{
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        }
+             Commands.waitUntil(()->isPivotAtTarget()).andThen(Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed)));
+             //Commands.runOnce(()->rollerMotor.set(newState.rollerSpeed));
+         }
         //leftPivotMotor.set(newState.pivotSpeed);
         //rightPivotMotor.set(newState.pivotSpeed);
         
@@ -116,7 +118,7 @@ public class IntakeReal implements IntakeIO {
     public double getPivotAngle() {
         final double motorRot = leftPivotMotor.getPosition().getValueAsDouble();
         final double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
-        return armRot * 360.0;
+        return armRot * 360.0;    
     }
     public double getPivotTargetAngle(){
         return pivotTargetDeg;

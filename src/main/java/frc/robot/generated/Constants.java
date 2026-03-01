@@ -251,14 +251,14 @@ public class Constants {
         public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
-        public static final double intakeAngleDeg = 108.334961; //+125
+        public static final double intakeAngleDeg = 125; 
         public static final double angleToleranceDeg = 5.0;
-        public static final double stowedAngleDeg = 0.446777;
+        public static final double stowedAngleDeg = 0;
 
         public static final double motorRotationsPerArmRotation = 64.0;
 
-        public static final double cruiseVelocityRps = 8;//2.0; 
-        public static final double accelRps2 =2;//2.0 
+        public static final double cruiseVelocityRps = 8;
+        public static final double accelRps2 =2;
 
         public static final double pivotP = 0.4;
         public static final double pivotI = 0.0;

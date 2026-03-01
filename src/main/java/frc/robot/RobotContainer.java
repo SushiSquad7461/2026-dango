@@ -37,6 +37,7 @@ import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.drive.ModuleIO;
@@ -59,7 +60,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
-  private final AutoCommands autos;
+ // private final AutoCommands autos;
   //private boolean wiggleOn;
 
   // Controller
@@ -85,7 +86,10 @@ public class RobotContainer {
     }
     hoodedShooter = new HoodedShooter();
     this.stateMachine = new StateMachine(intake, shooter,hopper);
-    this.autos = new AutoCommands(stateMachine, intake, shooter);
+    //shooter.setDefaultCommand(Commands.runOnce(()-> shooter.removeDefaultCommand()));
+    //intake.setDefaultCommand(Commands.runOnce(() -> intake.removeDefaultCommand()));
+
+    //this.autos = new AutoCommands(stateMachine, intake, shooter);
     //this.wiggleOn = false;
     
     // Set up auto routines
@@ -164,8 +168,9 @@ public class RobotContainer {
     */
 
     driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    //driverController.rightBumper().onTrue(intake.runRollers()).onFalse(intake.stopRollers());
     driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightTrigger().toggleOnFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
+    driverController.rightTrigger().onFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
     //.onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))

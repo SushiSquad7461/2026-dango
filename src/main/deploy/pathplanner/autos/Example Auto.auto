@@ -9,6 +9,12 @@
           "data": {
             "pathName": "Drive_up_to_hub"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
         }
       ]
     }

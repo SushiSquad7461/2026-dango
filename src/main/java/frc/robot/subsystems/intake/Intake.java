@@ -33,6 +33,7 @@ public class Intake extends SubsystemBase{
     }
     
     public Intake(IntakeIO io){
+        io.zeroPivot();
         this.io = io;
         this.state = IntakeState.IDLE;
         io.setState(IntakeState.IDLE);
@@ -54,7 +55,7 @@ public class Intake extends SubsystemBase{
 
     }
     public Command runRollers(){
-         return Commands.run(()->{
+         return Commands.runOnce(()->{
              io.runRollers();
          });
 
@@ -73,6 +74,7 @@ public class Intake extends SubsystemBase{
         //  if (!manualRoll) {
         //      io.updateRollers();
         //  }
+        SmartDashboard.putNumber("Intake/kP", IntakeConstants.pivotP);
         SmartDashboard.putString("Intake/State", state.name());
         SmartDashboard.putNumber("Intake/PivotDeg", io.getPivotAngle());
         SmartDashboard.putNumber("Intake/PivotTargetDeg", io.getPivotTargetAngle());
