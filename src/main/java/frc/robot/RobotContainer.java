@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.AutoCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -36,6 +37,7 @@ import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.drive.ModuleIO;
@@ -58,6 +60,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
+  private final AutoCommands autos;
   //private boolean wiggleOn;
 
   // Controller
@@ -83,6 +86,10 @@ public class RobotContainer {
     }
     hoodedShooter = new HoodedShooter();
     this.stateMachine = new StateMachine(intake, shooter,hopper);
+    //shooter.setDefaultCommand(Commands.runOnce(()-> shooter.removeDefaultCommand()));
+    //intake.setDefaultCommand(Commands.runOnce(() -> intake.removeDefaultCommand()));
+
+    this.autos = new AutoCommands(stateMachine, intake, shooter);
     //this.wiggleOn = false;
     
     // Set up auto routines
@@ -116,7 +123,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-
     // // Default command, normal field-relative drive
     // swerve.setDefaultCommand(
     //     DriveCommands.joystickDrive(
@@ -160,23 +166,22 @@ public class RobotContainer {
     *       while the rollers are rotating outward so that the ball would have
     *       room to escape
     */
-
-    driverController.leftTrigger().onTrue(intake.runRollers());
-    //operatorController.a().onTrue(Commands.runOnce(()->{wiggleOn=!wiggleOn;}));
-    //driverController.leftTrigger().whileTrue(intake.runRollers()).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.rightBumper().and(driverController.rightTrigger()).onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
     driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
    // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      //.onFalse(stateMachine.changeState(RobotState.IDLE));
   }
   
   public Command getAutonomousCommand() {
-    return Commands.none();//autoChooser.get();
+    return autos.getAuto();
   }
+  public void resetModulesToAbsolute(){
+        swerve.resetModulesToAbsolute();
+    }
 }
