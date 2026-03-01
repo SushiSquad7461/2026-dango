@@ -166,16 +166,13 @@ public class RobotContainer {
     *       while the rollers are rotating outward so that the ball would have
     *       room to escape
     */
-
     driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightTrigger().onFalse(stateMachine.getState()==RobotState.IDLE ? stateMachine.changeState(RobotState.SHOOT_ONLY) : stateMachine.changeState(RobotState.IDLE));
     driverController.rightBumper().and(driverController.rightTrigger()).onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
 
     driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
     driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
-                              .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
 
    // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      //.onFalse(stateMachine.changeState(RobotState.IDLE));

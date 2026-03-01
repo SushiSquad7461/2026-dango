@@ -97,6 +97,7 @@ public class IntakeReal implements IntakeIO {
     {
      rollerMotor.set(rollerSpeed);
     }
+
     @Override
     public void getMotorPos(){
         // Replace motor.getPosition() with your specific motor encoder method
