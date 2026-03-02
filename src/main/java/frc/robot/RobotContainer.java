@@ -60,7 +60,7 @@ public class RobotContainer {
   private final Hopper hopper;
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
-  private final AutoCommands autos;
+  //private final AutoCommands autos;
   //private boolean wiggleOn;
 
   // Controller
@@ -89,7 +89,7 @@ public class RobotContainer {
     //shooter.setDefaultCommand(Commands.runOnce(()-> shooter.removeDefaultCommand()));
     //intake.setDefaultCommand(Commands.runOnce(() -> intake.removeDefaultCommand()));
 
-    this.autos = new AutoCommands(stateMachine, intake, shooter);
+    //this.autos = new AutoCommands(stateMachine, intake, shooter);
     //this.wiggleOn = false;
     
     // Set up auto routines
@@ -179,7 +179,7 @@ public class RobotContainer {
   }
   
   public Command getAutonomousCommand() {
-    return autos.getAuto();
+    return Commands.none();//return autos.getAuto();
   }
   public void resetModulesToAbsolute(){
         swerve.resetModulesToAbsolute();

@@ -64,4 +64,10 @@ public class ShooterIOSim implements ShooterIO {
     public boolean isShooterReady() {
         return Math.abs(simulatedRPM - targetRPM) < RPM_TOLERANCE && feederRunning;
     }
+
+    @Override
+    public double getFlywheelTargetRPM() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
+    }
 }
