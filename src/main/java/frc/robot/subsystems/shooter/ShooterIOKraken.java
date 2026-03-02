@@ -14,6 +14,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.Constants;
 
 public class ShooterIOKraken implements ShooterIO {
@@ -113,5 +114,10 @@ public class ShooterIOKraken implements ShooterIO {
   public boolean isShooterReady() {
     return true;
     // return Math.abs(targetShooterRPM - getFlywheelRPM()) < SHOOTER_RPM_TOLERANCE;
+  }
+
+  public void periodic(){
+    SmartDashboard.putNumber("Shooter/CurrentRPM", getFlywheelRPM());
+    SmartDashboard.putNumber("Shooter/TargetRPM", getFlywheelTargetRPM());
   }
 }
