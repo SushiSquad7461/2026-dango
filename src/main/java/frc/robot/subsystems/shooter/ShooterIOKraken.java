@@ -83,7 +83,7 @@ public class ShooterIOKraken implements ShooterIO {
   @Override
   public void runFeeder() { // open-loop "good enough" for first iteration
     double rps = Constants.Shooter.FEEDER_RPM / 60;
-    krakenShooterKicker.setControl(feederRequest.withVelocity(rps));
+    krakenShooterKicker.setControl(feederRequest.withVelocity(-rps));
   }
 
   @Override
