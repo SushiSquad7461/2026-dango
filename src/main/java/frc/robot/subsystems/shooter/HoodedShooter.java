@@ -24,6 +24,6 @@ public class HoodedShooter extends SubsystemBase{
         hoodMotor.set(speed);
     }
     public void periodic(){
-        //SmartDashboard.putNumber("HoodedShooter/HoodAngle", hoodMotor.getPosition());
+        SmartDashboard.putNumber("HoodedShooter/HoodAngle", hoodMotor.getPosition().getValueAsDouble());
     }
 }
