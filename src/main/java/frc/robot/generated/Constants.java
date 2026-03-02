@@ -274,9 +274,9 @@ public class Constants {
         public static final double motorRotationsPerArmRotation = 64.0;
 
         public static final double cruiseVelocityRps = 16;
-        public static final double accelRps2 =2;
+        public static final double accelRps2 =32;
 
-        public static final double pivotP = 0.4;
+        public static final double pivotP = 0.8;
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
