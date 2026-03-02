@@ -30,7 +30,12 @@ public class AutoCommands {
             NamedCommands.registerCommand("Idle", stateMachine.changeState(RobotState.IDLE) );
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
-            autoChooser.addOption("Hub_HP_Shoot", new PathPlannerAuto("Hub_And_Shoot"));
+            autoChooser.addOption("B1_Hub_HP", new PathPlannerAuto("B1_Hub_HP"));
+            autoChooser.addOption("B2_Hub_HP", new PathPlannerAuto("B2_Hub_HP"));
+            autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
+            autoChooser.addOption("B1_Hub_HP_Shoot", new PathPlannerAuto("B1_Hub_HP_Shoot"));
+            autoChooser.addOption("B2_Hub_HP_Shoot", new PathPlannerAuto("B2_Hub_HP_Shoot"));
+            autoChooser.addOption("B3_Hub_HP_Shoot", new PathPlannerAuto("B3_Hub_HP_Shoot"));
             SmartDashboard.putData("Auto Chooser", autoChooser);
 
     }
