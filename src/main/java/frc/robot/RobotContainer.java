@@ -42,136 +42,145 @@ import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.vision.limelight_vision.Vision;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
-
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // Subsystems
-  private final Swerve swerve = new Swerve();
-  private final Intake intake;
-  private final ShooterSubsystem shooter;
-  private final Hopper hopper;
-  private final StateMachine stateMachine;
-  private final HoodedShooter hoodedShooter;
-  private final AutoCommands autos;
-  //private boolean wiggleOn;
+        // Subsystems
+        private final Swerve swerve = new Swerve();
+        private final Intake intake;
+        private final ShooterSubsystem shooter;
+        private final Hopper hopper;
+        private final StateMachine stateMachine;
+        private final HoodedShooter hoodedShooter;
+        private final AutoCommands autos;
+        @SuppressWarnings("unused")
+        private final Vision vision;
+        // private boolean wiggleOn;
 
-  // Controller
-  private final CommandXboxController driverController = new CommandXboxController(0);
- private final CommandXboxController operatorController = new CommandXboxController(1);
+        // Controller
+        private final CommandXboxController driverController = new CommandXboxController(0);
 
+        // Dashboard inputs
+        // private final LoggedDashboardChooser<Command> autoChooser;
 
-  // Dashboard inputs
-  //private final LoggedDashboardChooser<Command> autoChooser;
+        /**
+         * The container for the robot. Contains subsystems, OI devices, and commands.
+         */
+        public RobotContainer() {
+                vision = new Vision(swerve);
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    if(Robot.isReal()){
-            shooter = new ShooterSubsystem(new ShooterIOKraken());
-            intake = new Intake(new IntakeReal());
-            hopper = new Hopper( new HopperIOReal());
-            //swerve.resetGyro();
-            
-    } else{
-            shooter = new ShooterSubsystem(new ShooterIOSim());
-            intake = new Intake(new IntakeSim());
-            hopper = new Hopper(new HopperIOSim());
-    }
-    hoodedShooter = new HoodedShooter();
-    this.stateMachine = new StateMachine(intake, shooter,hopper);
+                if (Robot.isReal()) {
+                        shooter = new ShooterSubsystem(new ShooterIOKraken());
+                        intake = new Intake(new IntakeReal());
+                        hopper = new Hopper(new HopperIOReal());
+                        // swerve.resetGyro();
 
-     this.autos = new AutoCommands(stateMachine, intake, shooter);
+                } else {
+                        shooter = new ShooterSubsystem(new ShooterIOSim());
+                        intake = new Intake(new IntakeSim());
+                        hopper = new Hopper(new HopperIOSim());
+                }
+                hoodedShooter = new HoodedShooter();
+                this.stateMachine = new StateMachine(intake, shooter, hopper);
 
-    // Configure the button bindings
-    configureButtonBindings();
-  }
+                this.autos = new AutoCommands(stateMachine, intake, shooter);
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
-  private void configureButtonBindings() {
-    // // Default command, normal field-relative drive
-    // swerve.setDefaultCommand(
-    //     DriveCommands.joystickDrive(
-    //         swerve,
-    //         () -> -driverController.getLeftY(),
-    //         () -> -driverController.getLeftX(),
-    //         () -> -driverController.getRightX()
-    //     )
-    // );
+                // Configure the button bindings
+                configureButtonBindings();
+        }
 
-    // // Lock to 0° when A button is held
-    // driverController
-    //     .a()
-    //     .whileTrue(
-    //         DriveCommands.joystickDriveAtAngle(
-    //             swerve,
-    //             () -> -driverController.getLeftY(),
-    //             () -> -driverController.getLeftX(),
-    //             () -> Rotation2d.kZero
-    //             )
-    //     );
+        /**
+         * Use this method to define your button->command mappings. Buttons can be
+         * created by
+         * instantiating a {@link GenericHID} or one of its subclasses ({@link
+         * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+         * it to a {@link
+         * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+         */
+        private void configureButtonBindings() {
+                // // Default command, normal field-relative drive
+                // swerve.setDefaultCommand(
+                // DriveCommands.joystickDrive(
+                // swerve,
+                // () -> -driverController.getLeftY(),
+                // () -> -driverController.getLeftX(),
+                // () -> -driverController.getRightX()
+                // )
+                // );
 
-    // // Switch to X pattern when X button is pressed
-    // driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
+                // // Lock to 0° when A button is held
+                // driverController
+                // .a()
+                // .whileTrue(
+                // DriveCommands.joystickDriveAtAngle(
+                // swerve,
+                // () -> -driverController.getLeftY(),
+                // () -> -driverController.getLeftX(),
+                // () -> Rotation2d.kZero
+                // )
+                // );
 
-    // // Reset gyro to 0° when Y button is pressed
-    // driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
-    //                 new Pose2d(swerve.getPose().getTranslation(), Rotation2d.kZero)),swerve).ignoringDisable(true));
-    
-    swerve.setDefaultCommand(new TeleopSwerve(
-    swerve,
-        () -> -driverController.getLeftY(),
-        () -> -driverController.getLeftX(),
-        () -> -driverController.getRightX(), 
-        () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
-        
+                // // Switch to X pattern when X button is pressed
+                // driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
 
-    driverController.y().onTrue(Commands.runOnce(()->swerve.resetGyro()));
+                // // Reset gyro to 0° when Y button is pressed
+                // driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
+                // new Pose2d(swerve.getPose().getTranslation(),
+                // Rotation2d.kZero)),swerve).ignoringDisable(true));
 
+                swerve.setDefaultCommand(new TeleopSwerve(
+                                swerve,
+                                () -> -driverController.getLeftY(),
+                                () -> -driverController.getLeftX(),
+                                () -> -driverController.getRightX(),
+                                () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
+                                                                                // only while holding down the button
 
-    //Intake & Shooter
-    driverController.rightTrigger().and(driverController.rightBumper()).onTrue
-    (
-      stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
-    );
-    driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue
-    (
-      stateMachine.changeState(RobotState.INTAKE_DOWN)
-    );
-    driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue
-    (
-      stateMachine.changeState(RobotState.SHOOT_ONLY)
-    );
-    driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue
-    (
-      stateMachine.changeState(RobotState.IDLE)
-    );
+                driverController.y().onTrue(Commands.runOnce(() -> swerve.resetGyro()));
 
+                // Intake & Shooter
+                driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
+                                stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
+                driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
+                                stateMachine.changeState(RobotState.INTAKE_DOWN));
+                driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
+                                stateMachine.changeState(RobotState.SHOOT_ONLY));
+                driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
+                                stateMachine.changeState(RobotState.IDLE));
 
+                driverController.povDown().onTrue(Commands.runOnce(() -> {
+                        hoodedShooter.moveHood(-0.05);
+                }))
+                                .onFalse(Commands.runOnce(() -> {
+                                        hoodedShooter.moveHood(0);
+                                }));
+                driverController.povUp().onTrue(Commands.runOnce(() -> {
+                        hoodedShooter.moveHood(0.05);
+                }))
+                                .onFalse(Commands.runOnce(() -> {
+                                        hoodedShooter.moveHood(0);
+                                }));
+                ;
 
-    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
-                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
-    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
-                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+        }
 
-  }
-  
-  public Command getAutonomousCommand() {
-    return autos.getAuto();
-  }
-  public void resetModulesToAbsolute(){
-        swerve.resetModulesToAbsolute();
-    }
+        public Command getAutonomousCommand() {
+                return autos.getAuto();
+        }
+
+        public void resetModulesToAbsolute() {
+                swerve.resetModulesToAbsolute();
+        }
 }
