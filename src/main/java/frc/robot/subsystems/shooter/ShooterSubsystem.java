@@ -6,6 +6,7 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -65,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
+                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
             }),
             Commands.runOnce(()->{
                 shootStartTime = Timer.getFPGATimestamp();
@@ -74,7 +75,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM);
+                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
@@ -86,12 +87,16 @@ public class ShooterSubsystem extends SubsystemBase {
   }
   @Override
   public void periodic() {
+
+      SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
+       SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+
        /*  Logger.processInputs("HoodedShooter/data", data);
 
         Logger.recordOutput("HoodedShooter/state", getState());
 
         Logger.recordOutput("HoodedShooter/realAngle", getAngle().getDegrees());
-
+        
 
         Logger.recordOutput("autoStowEnabled", autoStowEnabled);
         Logger.recordOutput("stateBeforeAutoStow", stateBeforeAutoStow);*/
