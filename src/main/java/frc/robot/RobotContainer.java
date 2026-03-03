@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.lib.util.COTSTalonFXSwerveConstants.SDS.MK3.driveRatios;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
@@ -86,31 +87,8 @@ public class RobotContainer {
     }
     hoodedShooter = new HoodedShooter();
     this.stateMachine = new StateMachine(intake, shooter,hopper);
-    //shooter.setDefaultCommand(Commands.runOnce(()-> shooter.removeDefaultCommand()));
-    //intake.setDefaultCommand(Commands.runOnce(() -> intake.removeDefaultCommand()));
 
-    this.autos = new AutoCommands(stateMachine, intake, shooter);
-    //this.wiggleOn = false;
-    
-    // Set up auto routines
-    //AutoBuilder.configure(null, null, null, null, null, null, null, null);
-    //autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-    // Set up SysId routines
-    // autoChooser.addOption(
-    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(swerve));
-    // autoChooser.addOption(
-    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(swerve));
-    // autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Forward)",
-    //     swerve.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Reverse)",
-    //     swerve.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption(
-    //     "Drive SysId (Dynamic Forward)", swerve.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
-    //     "Drive SysId (Dynamic Reverse)", swerve.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+     this.autos = new AutoCommands(stateMachine, intake, shooter);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -159,62 +137,35 @@ public class RobotContainer {
         () -> -driverController.getRightX(), 
         () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative only while holding down the button
         
-    // Driver handles robot positioning, alignment, and algae
+
     driverController.y().onTrue(Commands.runOnce(()->swerve.resetGyro()));
 
 
-    driverController.leftBumper().onTrue(Commands.run(() -> {
-        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
-        } else if (driverController.rightBumper().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
-        } else if (driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
-        } else {
-            stateMachine.changeState(RobotState.WIGGLING).schedule();
-        }
-    })).onFalse(Commands.run(() -> {
-        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
-        } else if (driverController.rightBumper().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
-        } else if (driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
-        } else {
-            stateMachine.changeState(RobotState.IDLE).schedule();
-        }
-    }));
+    //Intake & Shooter
+    driverController.rightTrigger().and(driverController.rightBumper()).onTrue
+    (
+      stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
+    );
+    driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue
+    (
+      stateMachine.changeState(RobotState.INTAKE_DOWN)
+    );
+    driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue
+    (
+      stateMachine.changeState(RobotState.SHOOT_ONLY)
+    );
+    driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue
+    (
+      stateMachine.changeState(RobotState.IDLE)
+    );
 
-    driverController.rightBumper().onTrue(Commands.run(() -> {
-        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
-        } else {
-            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
-        }
-    })).onFalse(Commands.run(() -> {
-        if (driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
-        } else {
-            stateMachine.changeState(RobotState.IDLE).schedule();
-        }
-    }));
 
-    driverController.rightTrigger().onTrue(Commands.run(() -> {
-        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
-        } else {
-            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
-        }
-    })).onFalse(Commands.run(() -> {
-        if (driverController.rightBumper().getAsBoolean()) {
-            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
-        } else {
-            stateMachine.changeState(RobotState.IDLE).schedule();
-        }
-    }));
 
-   // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
-                                     //.onFalse(stateMachine.changeState(RobotState.IDLE));
+    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
+    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
+                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+
   }
   
   public Command getAutonomousCommand() {
