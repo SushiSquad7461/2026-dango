@@ -162,19 +162,56 @@ public class RobotContainer {
     // Driver handles robot positioning, alignment, and algae
     driverController.y().onTrue(Commands.runOnce(()->swerve.resetGyro()));
 
-    /*TODO: Consider scenario where intake is at "wiggleHigh" position
-    *       while the rollers are rotating outward so that the ball would have
-    *       room to escape
-    */
-    driverController.leftBumper().onTrue(stateMachine.changeState(RobotState.WIGGLING)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightBumper().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
-    driverController.rightBumper().and(driverController.rightTrigger()).onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
 
-    driverController.povDown().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(-0.05);}))
-                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));
-    driverController.povUp().onTrue(Commands.runOnce(()->{hoodedShooter.moveHood(0.05);}))
-                               .onFalse(Commands.runOnce(()->{hoodedShooter.moveHood(0);}));;
+    driverController.leftBumper().onTrue(Commands.run(() -> {
+        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
+        } else if (driverController.rightBumper().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
+        } else if (driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
+        } else {
+            stateMachine.changeState(RobotState.WIGGLING).schedule();
+        }
+    })).onFalse(Commands.run(() -> {
+        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
+        } else if (driverController.rightBumper().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
+        } else if (driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
+        } else {
+            stateMachine.changeState(RobotState.IDLE).schedule();
+        }
+    }));
+
+    driverController.rightBumper().onTrue(Commands.run(() -> {
+        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
+        } else {
+            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
+        }
+    })).onFalse(Commands.run(() -> {
+        if (driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
+        } else {
+            stateMachine.changeState(RobotState.IDLE).schedule();
+        }
+    }));
+
+    driverController.rightTrigger().onTrue(Commands.run(() -> {
+        if (driverController.rightBumper().getAsBoolean() && driverController.rightTrigger().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT).schedule();
+        } else {
+            stateMachine.changeState(RobotState.SHOOT_ONLY).schedule();
+        }
+    })).onFalse(Commands.run(() -> {
+        if (driverController.rightBumper().getAsBoolean()) {
+            stateMachine.changeState(RobotState.INTAKE_DOWN).schedule();
+        } else {
+            stateMachine.changeState(RobotState.IDLE).schedule();
+        }
+    }));
 
    // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      //.onFalse(stateMachine.changeState(RobotState.IDLE));

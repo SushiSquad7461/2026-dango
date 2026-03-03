@@ -296,7 +296,17 @@ public class Constants {
     REPLAY
   }
 
+    public static final class AutoConstants { //TODO: Need to tune constants!
+        public static final double kMaxSpeedMetersPerSecond = 3;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 3;
 
+        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
+        public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+    
+        public static final double kPTranslationController = IS_SIM ? 15 : 7;
+        public static final double kPThetaController = 10;
+    }
+    
   // Both sets of gains need to be tuned to your individual robot.
   // The steer motor uses any SwerveModule.SteerRequestType control request with
   // the
