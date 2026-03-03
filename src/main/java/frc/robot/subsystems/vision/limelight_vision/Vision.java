@@ -4,15 +4,14 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Timer;
+import frc.robot.LimelightHelpers;
+import frc.robot.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.Swerve;
 
 public class Vision extends SubsystemBase {
-    private final NetworkTable limelightLeft;
-    private final NetworkTable limelightRight;
+    private final String limelightLeftName = "limelight-left";
+    private final String limelightRightName = "limelight-right";
     private final Swerve drive;
 
     // TODO: Update these with the actual 2026 constants for the Score Pillars
@@ -25,9 +24,7 @@ public class Vision extends SubsystemBase {
 
     public Vision(Swerve drive) {
         this.drive = drive;
-        // TODO: Ensure these networktable names match the names of your Limelights
-        limelightLeft = NetworkTableInstance.getDefault().getTable("limelight-left");
-        limelightRight = NetworkTableInstance.getDefault().getTable("limelight-right");
+        // LimelightHelpers handles the NetworkTables internally
     }
 
     /**
@@ -39,29 +36,31 @@ public class Vision extends SubsystemBase {
         // alliance wall)
         // Ensure Odometry rotation is passed in degrees
         double yaw = drive.getHeading().getDegrees();
-        double[] orientationStr = new double[] { yaw, 0, 0, 0, 0, 0 };
 
-        limelightLeft.getEntry("robot_orientation_set").setDoubleArray(orientationStr);
-        limelightRight.getEntry("robot_orientation_set").setDoubleArray(orientationStr);
+        LimelightHelpers.SetRobotOrientation(limelightLeftName, yaw, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(limelightRightName, yaw, 0, 0, 0, 0, 0);
 
         // 2. Read MT2 botpose from cameras (botpose_orb_wpiblue)
-        PoseEstimate leftEstimate = getPoseEstimate(limelightLeft);
-        PoseEstimate rightEstimate = getPoseEstimate(limelightRight);
+        PoseEstimate leftEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightLeftName);
+        PoseEstimate rightEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightRightName);
 
         // 3. Choose the best pose
         PoseEstimate bestEstimate = null;
 
-        if (leftEstimate != null && rightEstimate != null) {
+        boolean leftValid = leftEstimate != null && leftEstimate.tagCount > 0;
+        boolean rightValid = rightEstimate != null && rightEstimate.tagCount > 0;
+
+        if (leftValid && rightValid) {
             // Since cameras are at angle, pick the one with the larger target area (better
             // view)
-            if (leftEstimate.targetArea > rightEstimate.targetArea) {
+            if (leftEstimate.avgTagArea > rightEstimate.avgTagArea) {
                 bestEstimate = leftEstimate;
             } else {
                 bestEstimate = rightEstimate;
             }
-        } else if (leftEstimate != null) {
+        } else if (leftValid) {
             bestEstimate = leftEstimate;
-        } else if (rightEstimate != null) {
+        } else if (rightValid) {
             bestEstimate = rightEstimate;
         }
 
@@ -74,45 +73,6 @@ public class Vision extends SubsystemBase {
 
             drive.addVisionMeasurement(bestEstimate.pose, bestEstimate.timestampSeconds,
                     VecBuilder.fill(xyStds, xyStds, degStds));
-        }
-    }
-
-    private PoseEstimate getPoseEstimate(NetworkTable table) {
-        if (table.getEntry("tv").getDouble(0) != 1.0) {
-            return null; // No target seen
-        }
-
-        // MegaTag 2 botpose array: [X, Y, Z, Roll, Pitch, Yaw(Angle)]
-        double[] botpose = table.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[6]);
-        if (botpose.length < 6)
-            return null; // Malformed data
-
-        // Sometimes tv is 1 but botpose is all 0s
-        if (botpose[0] == 0 && botpose[1] == 0)
-            return null;
-
-        double latency = table.getEntry("tl").getDouble(0) + table.getEntry("cl").getDouble(0);
-        double timestampSeconds = Timer.getFPGATimestamp() - (latency / 1000.0);
-
-        // Use Target Area to approximate the quality of the view
-        double targetArea = table.getEntry("ta").getDouble(0);
-
-        Pose2d pose = new Pose2d(
-                botpose[0], botpose[1],
-                Rotation2d.fromDegrees(botpose[5]));
-
-        return new PoseEstimate(pose, timestampSeconds, targetArea);
-    }
-
-    private static class PoseEstimate {
-        public Pose2d pose;
-        public double timestampSeconds;
-        public double targetArea;
-
-        public PoseEstimate(Pose2d pose, double timestampSeconds, double targetArea) {
-            this.pose = pose;
-            this.timestampSeconds = timestampSeconds;
-            this.targetArea = targetArea;
         }
     }
 
