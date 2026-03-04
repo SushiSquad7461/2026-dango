@@ -18,7 +18,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.drive.PhoenixOdometryThread;
-import frc.robot.subsystems.drive.SwerveNew;
 
 import java.util.Queue;
 

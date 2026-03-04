@@ -37,7 +37,6 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.PhoenixOdometryThread;
-import frc.robot.subsystems.drive.SwerveNew;
 import frc.robot.subsystems.drive.ModuleIO.ModuleIOInputs;
 
 import java.util.Queue;

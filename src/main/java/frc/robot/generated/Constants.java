@@ -70,7 +70,14 @@ public class Constants {
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 200;
   }
- public static final class Swerve {
+
+    public static final class Vision{
+
+        public static final double KP = 0;
+        public static final double ERROR_DEGREES = 0;
+
+    }
+    public static final class Swerve {
         public static final int pigeonID = 20;
         public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
