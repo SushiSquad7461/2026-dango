@@ -5,6 +5,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,6 +15,7 @@ import frc.robot.generated.Constants;
 
 public class ShooterSubsystem extends SubsystemBase {
   private double shootStartTime = 0; // could come in useful later, especially for logging
+  private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
 
   public enum ShooterState {
     IDLE, // shooter inactive
@@ -90,6 +92,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
       SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
       SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+      
+      //System.out.println(io.getFlywheelRPM());
 
        /*  Logger.processInputs("HoodedShooter/data", data);
 
@@ -100,5 +104,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         Logger.recordOutput("autoStowEnabled", autoStowEnabled);
         Logger.recordOutput("stateBeforeAutoStow", stateBeforeAutoStow);*/
+      SmartDashboard.putData("Shooter/Shooter_PID_Controller", shooterPidController);
+
   }
 }

@@ -42,11 +42,11 @@ public class Constants {
     public static final double FLYWHEELRPM = 0.8;
     public static final double TARGET_RPM_0 = 4500;
       // TODO: tune shooter flywheel PID
-    public static final double SHOOTER_KS = 0.1;
-    public static final double SHOOTER_KV = 0.12;
-    public static final double SHOOTER_KP = 0.0;
-    public static final double SHOOTER_KI = 0;
-    public static final double SHOOTER_KD = 0;
+    public static double SHOOTER_KS = 0.0;
+    public static double SHOOTER_KV = 0.01167; //0.012
+    public static double SHOOTER_KP = 0.0;
+    public static double SHOOTER_KI = 0;
+    public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
     public static final double SHOOTER_INTAKE_KS = 0.1;
     public static final double SHOOTER_INTAKE_KV = 0.12;
