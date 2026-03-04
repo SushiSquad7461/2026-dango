@@ -405,7 +405,7 @@ public class Swerve extends SubsystemBase {
             velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
         }
 
-        updateOdom();
+        // updateOdom();
 
         Pose2d currentPose = getPose();
         currentPose = getPose();
@@ -457,9 +457,9 @@ public class Swerve extends SubsystemBase {
         return simCurrentDrawAmps;
     }
 
-    private void updateOdom() {
-        gyroYaw.refresh();
-        poseEstimator.update(getGyroYaw(), getModulePositions());
+    // private void updateOdom() {
+    //     gyroYaw.refresh();
+    //     poseEstimator.update(getGyroYaw(), getModulePositions());
         
-    }
+    // }
 }

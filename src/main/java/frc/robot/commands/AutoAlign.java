@@ -13,19 +13,16 @@ public class AutoAlign extends Command {
     private final Vision vision;
     private final boolean isRed;
 
-    public AutoAlign(Swerve drive, Vision vision, boolean isRed) {
-        this.swerve = drive;
+    public AutoAlign(Swerve swerve, Vision vision, boolean isRed) {
+        this.swerve = swerve;
         this.vision = vision;
         this.isRed = isRed;
-        addRequirements(drive);
+        addRequirements(this.swerve);
     }
 
     @Override
     public void execute() {
- 
-        Rotation2d rotationError = vision.getHeadingToScorePillar(isRed).minus(swerve.getHeading());
-        double rotation = rotationError.getRadians() * Constants.Vision.KP;
-        swerve.drive(new Translation2d(0, 0), rotation, true, true);
+        swerve.drive(new Translation2d(0, 0),  vision.getHeadingToScorePillar(isRed).getRadians(), true, true);
     }
 
     @Override
