@@ -89,7 +89,7 @@ public class ShooterSubsystem extends SubsystemBase {
   public void periodic() {
 
       SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
-       SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
 
        /*  Logger.processInputs("HoodedShooter/data", data);
 

@@ -15,12 +15,11 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class AutoCommands {
-    private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<Command> autoChooser=new SendableChooser<Command>();;
     private final StringPublisher selectedAuto;
     private final NetworkTable autoNetworkTable;
 
     public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter){
-            autoChooser= new SendableChooser<Command>();
             autoNetworkTable = NetworkTableInstance.getDefault().getTable("Auto");
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
@@ -30,6 +29,7 @@ public class AutoCommands {
             NamedCommands.registerCommand("Idle", stateMachine.changeState(RobotState.IDLE) );
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
+            autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
             autoChooser.addOption("B1_Hub_HP", new PathPlannerAuto("B1_Hub_HP"));
             autoChooser.addOption("B2_Hub_HP", new PathPlannerAuto("B2_Hub_HP"));
             autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
