@@ -49,7 +49,6 @@ public class ShooterIOSim implements ShooterIO {
         return simulatedRPM;
     }
 
-    @Override
     public double getHoodPos() {
         return hoodPos;
     }
