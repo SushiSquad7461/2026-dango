@@ -16,6 +16,7 @@ import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
+import frc.robot.generated.Constants;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.hopper.HopperIOSim;
@@ -55,6 +56,7 @@ public class RobotContainer {
 
         // Controller
         private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
 
         // Dashboard inputs
         // private final LoggedDashboardChooser<Command> autoChooser;
@@ -144,6 +146,8 @@ public class RobotContainer {
                 driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
                                 stateMachine.changeState(RobotState.IDLE));
 
+                operatorController.rightBumper().onTrue(shooter.runFeeder()).onFalse(shooter.stopFeeder());
+                
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);
                 })).onFalse(Commands.runOnce(() -> {

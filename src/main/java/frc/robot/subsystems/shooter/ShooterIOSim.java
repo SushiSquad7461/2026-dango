@@ -69,4 +69,5 @@ public class ShooterIOSim implements ShooterIO {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
     }
+
 }
