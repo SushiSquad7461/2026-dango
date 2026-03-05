@@ -38,6 +38,10 @@ public class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
 
+  public static final class Vision {
+    public static final String primaryLimelightName = "limelight-left";
+    public static final String secondaryLimelightName = "limelight-right";
+  }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
     public static final double TARGET_RPM_0 = 4500;

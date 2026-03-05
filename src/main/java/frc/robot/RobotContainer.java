@@ -66,7 +66,7 @@ public class RobotContainer {
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
   private final AutoCommands autos;
-  private final Vision vision = new Vision();
+  private final Vision vision = new Vision(swerve);
   //private boolean wiggleOn;
 
     // Controller
