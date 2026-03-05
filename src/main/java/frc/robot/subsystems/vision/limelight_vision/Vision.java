@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.generated.Constants;
@@ -47,9 +48,9 @@ public class Vision extends SubsystemBase {
             return new Rotation2d();
         }
         if (isRed) {
-            return new Rotation2d(Math.atan2(y, x));
+            return new Rotation2d(Math.atan2(y, x) + 30);
         } else {
-            return new Rotation2d(Math.atan2(-y, -x));
+            return new Rotation2d(Math.atan2(-y, -x) - 30);
         }
     }
     public double getDistanceToScorePillar() {
@@ -69,13 +70,19 @@ public class Vision extends SubsystemBase {
         if(tvLeft == 1.0 && tvRight == 1.0) {
             x = tagPoseLeft[0] + tagPoseRight[0] / 2;
             y = tagPoseLeft[1] + tagPoseRight[1] / 2;
+            return Math.hypot(x, y);
         } else if (tvLeft == 1.0) {
             x = tagPoseLeft[0];
             y = tagPoseLeft[1];
+            return Math.hypot(x, y);
         } else {
             x = tagPoseRight[0];
             y = tagPoseRight[1];
+            return Math.hypot(x, y);
         }// Limelight's 2D pose has Y as the forward direction
-        return Math.hypot(x, y);
+    }
+
+    public void periodic() {
+        SmartDashboard.putData("Vision/AutoAlignPID", Constants.Vision.rotationPID);
     }
 }

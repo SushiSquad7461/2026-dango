@@ -16,6 +16,7 @@ import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -43,6 +44,7 @@ public class Constants {
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
     public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
     public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    public static PIDController rotationPID = new PIDController(0.1, 0, 0);;
   }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
@@ -52,6 +54,7 @@ public class Constants {
     public static double SHOOTER_KV = 0.12; //0.12
     public static double SHOOTER_KP = 0.167;
     public static double SHOOTER_KI = 0;
+    
     public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
     public static final double SHOOTER_INTAKE_KS = 0.1;

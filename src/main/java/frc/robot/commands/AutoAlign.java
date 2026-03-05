@@ -3,6 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
@@ -18,7 +19,7 @@ public class AutoAlign extends Command {
         this.swerve = swerve;
         this.vision = vision;
         this.isRed = isRed;
-        rotationPID = new PIDController(0.15, 0, 0);
+        rotationPID = Constants.Vision.rotationPID;
         rotationPID.setTolerance(2.0);
         rotationPID.enableContinuousInput(-180, 180);
         addRequirements(this.swerve);
