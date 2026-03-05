@@ -12,15 +12,13 @@ import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 
 public class Vision extends SubsystemBase {
-    // Reads from the primary Limelight which has been configured in the UI as a
-    // "Limelight Vision Array". This camera will pull tag corners from the
-    // secondary
-    // camera and compute a single, unified MegaTag pose.
-    private final NetworkTable limelightTable;
+    private final NetworkTable limelightLeft;
+    private final NetworkTable limelightRight;
     private final Swerve swerve;
     public Vision(Swerve swerve) {
         this.swerve = swerve;
-        limelightTable = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
+        limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
+        limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, 4);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 4);
         LimelightHelpers.SetIMUAssistAlpha(Constants.Vision.primaryLimelightName, 0.01);
@@ -28,17 +26,28 @@ public class Vision extends SubsystemBase {
     }
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
         // make sure a valid target exists
-        double tv = limelightTable.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
-        if (tv < 0.5) {
+        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        double tvRight = limelightRight.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        if (tvLeft < 0.5 && tvRight < 0.5) {
             return new Rotation2d(); // no target
         }
-        double[] tagPose = limelightTable.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
-        if (tagPose == null || tagPose.length < 6) {
+        double[] tagPoseLeft = limelightLeft.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
+        double[] tagPoseRight = limelightRight.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
+        if ((tagPoseLeft == null || tagPoseLeft.length < 6) && (tagPoseRight == null || tagPoseRight.length < 6)) {
             return new Rotation2d();
         }
-
-        double x = tagPose[0];
-        double y = tagPose[1]; // Limelight's 2D pose has Y as the forward direction
+        double x;
+        double y;
+        if(tvLeft == 1.0 && tvRight == 1.0) {
+            x = tagPoseLeft[0] + tagPoseRight[0] / 2;
+            y = tagPoseLeft[1] + tagPoseRight[1] / 2;
+        } else if (tvLeft == 1.0) {
+            x = tagPoseLeft[0];
+            y = tagPoseLeft[1];
+        } else {
+            x = tagPoseRight[0];
+            y = tagPoseRight[1];
+        }
         if (isRed) {
             return new Rotation2d(Math.atan2(y, x));
         } else {
@@ -46,16 +55,29 @@ public class Vision extends SubsystemBase {
         }
     }
     public double getDistanceToScorePillar() {
-        double tv = limelightTable.getEntry("tv").getDouble(0.0);
-        if (tv < 0.5) {
+        // make sure a valid target exists
+        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        double tvRight = limelightRight.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        if (tvLeft < 0.5 && tvRight < 0.5) {
+            return Double.NaN; // no target
+        }
+        double[] tagPoseLeft = limelightLeft.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
+        double[] tagPoseRight = limelightRight.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
+        if ((tagPoseLeft == null || tagPoseLeft.length < 6) && (tagPoseRight == null || tagPoseRight.length < 6)) {
             return Double.NaN;
         }
-        double[] tagPose = limelightTable.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
-        if (tagPose == null || tagPose.length < 6) {
-            return Double.NaN;
-        }
-        double x = tagPose[0];
-        double y = tagPose[1]; // Limelight's 2D pose has Y as the forward direction
+        double x;
+        double y;
+        if(tvLeft == 1.0 && tvRight == 1.0) {
+            x = tagPoseLeft[0] + tagPoseRight[0] / 2;
+            y = tagPoseLeft[1] + tagPoseRight[1] / 2;
+        } else if (tvLeft == 1.0) {
+            x = tagPoseLeft[0];
+            y = tagPoseLeft[1];
+        } else {
+            x = tagPoseRight[0];
+            y = tagPoseRight[1];
+        }// Limelight's 2D pose has Y as the forward direction
         return Math.hypot(x, y);
     }
     @Override
