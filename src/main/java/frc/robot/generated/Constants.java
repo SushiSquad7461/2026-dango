@@ -40,6 +40,9 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
+    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
+    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
+    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
   }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
