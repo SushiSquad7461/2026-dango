@@ -38,9 +38,26 @@ public class Constants {
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
 
-  public static final class Vision {
-    public static final String primaryLimelightName = "limelight-left";
-    public static final String secondaryLimelightName = "limelight-right";
+    public static final class Vision {
+    public static final double HUB_SHOOTING_DISTANCE_METERS = 3.05; // 10ft
+
+    public static final double BLUE_HUB_X = 4.115;
+    public static final double BLUE_HUB_Y = 4.024;
+    public static final double RED_HUB_X  = 12.435;
+    public static final double RED_HUB_Y  = 4.024;
+
+    public static final double LEFT_CAM_FORWARD  =  0.2635;
+    public static final double LEFT_CAM_RIGHT    =  0.2635;
+    public static final double RIGHT_CAM_FORWARD = -0.2635;
+    public static final double RIGHT_CAM_RIGHT   = -0.2635;
+
+    public static final double LEFT_CAM_YAW  = -150.0;
+    public static final double RIGHT_CAM_YAW =  150.0;
+
+    public static final double DISTANCE_KP = 0.5;
+    public static final double DISTANCE_KI = 0.0;
+    public static final double DISTANCE_KD = 0.0;
+    public static final double DISTANCE_TOLERANCE_METERS = 0.1;
   }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
@@ -482,6 +499,8 @@ public class Constants {
 
   private static final Distance kBackRightXPos = Inches.of(-10);
   private static final Distance kBackRightYPos = Inches.of(-10);
+
+
 
 //   public static final SwerveModuleConstants<
 //           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>

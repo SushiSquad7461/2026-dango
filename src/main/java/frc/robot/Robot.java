@@ -21,6 +21,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import edu.wpi.first.math.geometry.Pose3d;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -95,7 +96,15 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
-    SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime()); 
+    SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+    
+    Pose3d visionPose = robotContainer.getVision().getEstimatedGlobalPose();
+    double timestamp = robotContainer.getVision().getTimestamp();
+    if (visionPose != null && timestamp > 0) {
+        robotContainer.getSwerve().addVisionMeasurement(
+            visionPose.toPose2d(), timestamp
+        );
+    }
 
     // Return to non-RT thread priority (do not modify the first argument)
     // Threads.setCurrentThreadPriority(false, 10);

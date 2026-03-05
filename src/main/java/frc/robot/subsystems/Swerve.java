@@ -55,7 +55,7 @@ public class Swerve extends SubsystemBase {
     private final SysIdRoutine steerSysIdRoutine;
 
 
-    private final PIDController alignmentPID;
+    public final PIDController alignmentPID;
 
     
     private final NetworkTable table;
@@ -461,5 +461,13 @@ public class Swerve extends SubsystemBase {
 
     private void updateOdom() {
         poseEstimator.update(getGyroYaw(), getModulePositions());
+    }
+
+    public void addVisionMeasurement(Pose2d visionPose, double timestamp) {
+    poseEstimator.addVisionMeasurement(visionPose, timestamp);
+    }
+
+    public PIDController getAlignmentPID() {
+        return alignmentPID;
     }
 }

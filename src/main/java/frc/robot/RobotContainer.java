@@ -43,10 +43,13 @@ import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.commands.AlignToHub;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
+
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -66,7 +69,7 @@ public class RobotContainer {
   private final StateMachine stateMachine;
   private final HoodedShooter hoodedShooter;
   private final AutoCommands autos;
-  private final Vision vision = new Vision(swerve);
+  private final Vision vision = new Vision();
   //private boolean wiggleOn;
 
     // Controller
@@ -217,6 +220,12 @@ public class RobotContainer {
         }
     }));
 
+    driverController.leftTrigger().whileTrue(new AlignToHub(
+    swerve,
+    vision,
+    () -> -driverController.getLeftX()
+    ));
+
    // operatorController.rightTrigger().onTrue(stateMachine.changeState(RobotState.INTAKE_DOWN).andThen(stateMachine.changeState(RobotState.INTAKE_WIGGLE)))
                                      //.onFalse(stateMachine.changeState(RobotState.IDLE));
   }
@@ -226,5 +235,14 @@ public class RobotContainer {
   }
   public void resetModulesToAbsolute(){
         swerve.resetModulesToAbsolute();
+    }
+
+
+    public Swerve getSwerve() {
+        return swerve;
+    }
+
+    public Vision getVision() {
+        return vision;
     }
 }
