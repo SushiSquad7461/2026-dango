@@ -19,7 +19,7 @@ public class Vision extends SubsystemBase {
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
-        limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
+        limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.secondaryLimelightName);
     }
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
         // make sure a valid target exists
@@ -36,8 +36,8 @@ public class Vision extends SubsystemBase {
         double x;
         double y;
         if(tvLeft == 1.0 && tvRight == 1.0) {
-            x = tagPoseLeft[0] + tagPoseRight[0] / 2;
-            y = tagPoseLeft[1] + tagPoseRight[1] / 2;
+            x = (tagPoseLeft[0] + tagPoseRight[0]) / 2;
+            y = (tagPoseLeft[1] + tagPoseRight[1]) / 2;
         } else if (tvLeft == 1.0) {
             x = tagPoseLeft[0];
             y = tagPoseLeft[1];
@@ -48,9 +48,9 @@ public class Vision extends SubsystemBase {
             return new Rotation2d();
         }
         if (isRed) {
-            return new Rotation2d(Math.atan2(y, x) + 30);
+            return new Rotation2d(Math.atan2(y, x) + Math.toRadians(30));
         } else {
-            return new Rotation2d(Math.atan2(-y, -x) - 30);
+            return new Rotation2d(Math.atan2(-y, -x) - Math.toRadians(30));
         }
     }
     public double getDistanceToScorePillar() {
@@ -68,8 +68,8 @@ public class Vision extends SubsystemBase {
         double x;
         double y;
         if(tvLeft == 1.0 && tvRight == 1.0) {
-            x = tagPoseLeft[0] + tagPoseRight[0] / 2;
-            y = tagPoseLeft[1] + tagPoseRight[1] / 2;
+            x = (tagPoseLeft[0] + tagPoseRight[0]) / 2;
+            y = (tagPoseLeft[1] + tagPoseRight[1]) / 2;
             return Math.hypot(x, y);
         } else if (tvLeft == 1.0) {
             x = tagPoseLeft[0];
