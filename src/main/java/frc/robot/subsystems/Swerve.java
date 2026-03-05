@@ -1,15 +1,16 @@
 package frc.robot.subsystems;
 
 import frc.robot.util.AllianceUtil;
+import frc.robot.commands.AutoAlign;
 import frc.robot.generated.Constants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
 
 import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
@@ -21,7 +22,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.Waypoint;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,8 +35,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -60,7 +58,6 @@ public class Swerve extends SubsystemBase {
 
     private final DoublePublisher gyroDoublePublisher;
     private final Field2d field;
-
     private final DoublePublisher[] cancoderPubs;
     private final DoublePublisher[] anglePubs;
     private final DoublePublisher[] velocityPubs;
@@ -84,16 +81,17 @@ public class Swerve extends SubsystemBase {
         alignmentPID = new PIDController(0.15, 0, 0);
         alignmentPID.setTolerance(10, 10);
         mSwerveMods = new SwerveModule[] {
-                new SwerveModule(0, Constants.Swerve.Mod0.constants),
-                new SwerveModule(1, Constants.Swerve.Mod1.constants),
-                new SwerveModule(2, Constants.Swerve.Mod2.constants),
-                new SwerveModule(3, Constants.Swerve.Mod3.constants)
+                new SwerveModule(0, Constants.Swerve.Mod0.constants), //Front Left Module
+                new SwerveModule(1, Constants.Swerve.Mod1.constants), //Front Right Module
+                new SwerveModule(2, Constants.Swerve.Mod2.constants), //Back Left Module
+                new SwerveModule(3, Constants.Swerve.Mod3.constants) //Back Right Module
         };
         poseEstimator = new SwerveDrivePoseEstimator(
                 Constants.Swerve.swerveKinematics,
                 getGyroYaw(),
                 getModulePositions(),
                 new Pose2d());
+
 
         modStatusSignals = new BaseStatusSignal[] {
                 mSwerveMods[0].getDrivePosition(),
@@ -275,14 +273,13 @@ public class Swerve extends SubsystemBase {
         setModuleStates(states);
     }
 
-    private void stop() {
-        for (SwerveModule mod : mSwerveMods) {
-            mod.setDriveVoltage(0);
-            mod.setSteerVoltage(0);
+     private void stop() {
+         for (SwerveModule mod : mSwerveMods) {
+             mod.setDriveVoltage(0);
+             mod.setSteerVoltage(0);
 
         }
     }
-
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -326,6 +323,7 @@ public class Swerve extends SubsystemBase {
                             AllianceUtil.isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()));
         });
     }
+    
 
     public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
@@ -407,7 +405,7 @@ public class Swerve extends SubsystemBase {
             velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
         }
 
-        updateOdom();
+        // updateOdom();
 
         Pose2d currentPose = getPose();
         currentPose = getPose();
@@ -459,7 +457,9 @@ public class Swerve extends SubsystemBase {
         return simCurrentDrawAmps;
     }
 
-    private void updateOdom() {
-        poseEstimator.update(getGyroYaw(), getModulePositions());
-    }
+    // private void updateOdom() {
+    //     gyroYaw.refresh();
+    //     poseEstimator.update(getGyroYaw(), getModulePositions());
+        
+    // }
 }

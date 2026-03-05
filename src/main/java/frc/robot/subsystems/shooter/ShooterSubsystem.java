@@ -1,7 +1,6 @@
 // Shooter Subsystem: controls shooter state using a state machine, switches between IDLE, PRESHOOT, and SHOOT
 package frc.robot.subsystems.shooter;
 
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -87,6 +86,14 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
   }
+
+  public Command runFeeder(){
+   return Commands.runOnce(()->io.setFlywheelRPM((Constants.Shooter.TARGET_RPM_0)*(-1)));
+  }
+  public Command stopFeeder() {
+   return Commands.runOnce(()->io.setFlywheelRPM(0));
+  }
+
   @Override
   public void periodic() {
 

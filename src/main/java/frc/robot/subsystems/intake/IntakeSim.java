@@ -2,7 +2,6 @@ package frc.robot.subsystems.intake;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 

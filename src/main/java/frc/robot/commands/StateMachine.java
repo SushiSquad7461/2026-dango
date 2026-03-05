@@ -1,6 +1,4 @@
 package frc.robot.commands;
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;

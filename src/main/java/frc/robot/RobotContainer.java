@@ -7,45 +7,30 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.lib.util.COTSTalonFXSwerveConstants.SDS.MK3.driveRatios;
+import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
-import frc.robot.commands.DriveCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.generated.Constants;
-import frc.robot.subsystems.drive.SwerveNew;
-import frc.robot.subsystems.drive.gyro.GyroIO;
-import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
-import frc.robot.subsystems.drive.real.ModuleIOTalonFX;
-import frc.robot.subsystems.drive.sim.ModuleIOSim;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
-import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.vision.limelight_vision.Vision;
-
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.util.AllianceUtil;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -65,12 +50,13 @@ public class RobotContainer {
         private final StateMachine stateMachine;
         private final HoodedShooter hoodedShooter;
         private final AutoCommands autos;
-        @SuppressWarnings("unused")
+        //@SuppressWarnings("unused")
         private final Vision vision;
         // private boolean wiggleOn;
 
         // Controller
         private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
 
         // Dashboard inputs
         // private final LoggedDashboardChooser<Command> autoChooser;
@@ -160,12 +146,12 @@ public class RobotContainer {
                 driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
                                 stateMachine.changeState(RobotState.IDLE));
 
+                operatorController.rightBumper().onTrue(shooter.runFeeder()).onFalse(shooter.stopFeeder());
+                
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);
-                }))
-                                .onFalse(Commands.runOnce(() -> {
-                                        hoodedShooter.moveHood(0);
-                                }));
+                })).onFalse(Commands.runOnce(() -> {
+                        hoodedShooter.moveHood(0);}));
                 driverController.povUp().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(0.05);
                 }))
@@ -173,6 +159,8 @@ public class RobotContainer {
                                         hoodedShooter.moveHood(0);
                                 }));
                 ;
+
+                driverController.leftTrigger().onTrue(new AutoAlign(swerve, vision, AllianceUtil.isRedAlliance()));
 
         }
 

@@ -2,7 +2,7 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
+//import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -10,9 +10,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.Constants;
 import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
@@ -28,7 +26,7 @@ public class IntakeReal implements IntakeIO {
 
 
     private final MotionMagicVoltage pivotControl = new MotionMagicVoltage(0);
-    private final DutyCycleOut rollerControl = new DutyCycleOut(0);
+    //private final DutyCycleOut rollerControl = new DutyCycleOut(0);
 
     // Current pivot setpoint in degrees (converted to motor rotations when commanded).
     private double pivotTargetDeg = Constants.IntakeConstants.stowedAngleDeg;
