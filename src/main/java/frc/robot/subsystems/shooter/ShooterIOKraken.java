@@ -9,7 +9,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -24,8 +24,8 @@ public class ShooterIOKraken implements ShooterIO {
   private final TalonFX krakenShooterLeft = new TalonFX(5, rioCanBus);
   private final TalonFX krakenShooterRight = new TalonFX(2, rioCanBus);
   private final TalonFX krakenShooterKicker = new TalonFX(14, rioCanBus);
-  private final VelocityDutyCycle shooterRequest = new VelocityDutyCycle(0).withSlot(0); // create a velocity closed-loop request, voltage output, slot 0 configs
-  private final VelocityDutyCycle feederRequest = new VelocityDutyCycle(0).withSlot(0);
+  private final VelocityVoltage shooterRequest = new VelocityVoltage(0).withSlot(0); // create a velocity closed-loop request, voltage output, slot 0 configs
+  private final VelocityVoltage feederRequest = new VelocityVoltage(0).withSlot(0);
 
   public ShooterIOKraken() {
     // shooter flywheel motor config
@@ -44,7 +44,7 @@ public class ShooterIOKraken implements ShooterIO {
     // setup PID
     Slot0Configs shooterPID = new Slot0Configs();
     shooterPID.kS = Constants.Shooter.SHOOTER_KS;
-    shooterPID.kV = Constants.Shooter.SHOOTER_KV; 
+    shooterPID.kV = Constants.Shooter.SHOOTER_KV;
     shooterPID.kP = Constants.Shooter.SHOOTER_KP;
     shooterPID.kI = Constants.Shooter.SHOOTER_KI; 
     shooterPID.kD = Constants.Shooter.SHOOTER_KD;
