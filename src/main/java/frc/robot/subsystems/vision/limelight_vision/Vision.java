@@ -12,19 +12,11 @@ import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 
 public class Vision extends SubsystemBase {
-    // Reads from the primary Limelight which has been configured in the UI as a
-    // "Limelight Vision Array". This camera will pull tag corners from the
-    // secondary
-    // camera and compute a single, unified MegaTag pose.
     private final NetworkTable limelightTable;
     private final Swerve swerve;
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightTable = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
-        LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, 4);
-        LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 4);
-        LimelightHelpers.SetIMUAssistAlpha(Constants.Vision.primaryLimelightName, 0.01);
-        LimelightHelpers.SetIMUAssistAlpha(Constants.Vision.secondaryLimelightName, 0.01);
     }
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
         // make sure a valid target exists
@@ -57,10 +49,5 @@ public class Vision extends SubsystemBase {
         double x = tagPose[0];
         double y = tagPose[1]; // Limelight's 2D pose has Y as the forward direction
         return Math.hypot(x, y);
-    }
-    @Override
-    public void periodic() {
-        LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName, swerve.getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, swerve.getGyroYaw().getDegrees(), 0, 0, 0, 0, 0);
     }
 }
