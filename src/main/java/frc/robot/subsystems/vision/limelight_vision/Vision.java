@@ -40,9 +40,11 @@ public class Vision extends SubsystemBase {
         } else if (tvLeft == 1.0) {
             x = tagPoseLeft[0];
             y = tagPoseLeft[1];
-        } else {
+        } else if (tvRight == 1.0) {
             x = tagPoseRight[0];
             y = tagPoseRight[1];
+        } else {
+            return new Rotation2d();
         }
         if (isRed) {
             return new Rotation2d(Math.atan2(y, x));

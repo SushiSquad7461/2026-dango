@@ -160,7 +160,7 @@ public class RobotContainer {
                                 }));
                 ;
 
-                driverController.leftTrigger().onTrue(new AutoAlign(swerve, vision, AllianceUtil.isRedAlliance()));
+                driverController.leftTrigger().whileTrue(new AutoAlign(swerve, vision, AllianceUtil.isRedAlliance()));
 
         }
 
