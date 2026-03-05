@@ -56,15 +56,18 @@ public class AlignToHub extends Command {
         double currentAngleDeg = robotPose.getRotation().getDegrees();
         double rotation = -rotationPID.calculate(currentAngleDeg, shooterAngleDeg);
 
-        double currentDistance = robotPose.getTranslation().getDistance(hub);
-        double forwardSpeed = distancePID.calculate(
-            currentDistance,
-            Constants.Vision.HUB_SHOOTING_DISTANCE_METERS
-        );
+        // double currentDistance = robotPose.getTranslation().getDistance(hub);
+        // double forwardSpeed = distancePID.calculate(
+            //currentDistance,
+           // Constants.Vision.HUB_SHOOTING_DISTANCE_METERS
+        //);
 
         double angle = Math.atan2(dy, dx);
-        double forwardX = forwardSpeed * Math.cos(angle);
-        double forwardY = forwardSpeed * Math.sin(angle);
+        //double forwardX = forwardSpeed * Math.cos(angle);
+        //double forwardY = forwardSpeed * Math.sin(angle);
+
+        double forwardX = 0;
+        double forwardY = 0;
 
         double perpAngle = angle + Math.PI / 2.0;
         double strafeVal = strafeInput.getAsDouble();
