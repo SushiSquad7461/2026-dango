@@ -37,14 +37,20 @@ public class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
-
+  public static final class Vision {
+    public static final String primaryLimelightName = "limelight-left";
+    public static final String secondaryLimelightName = "limelight-right";
+    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
+    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
+    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+  }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
     public static final double TARGET_RPM_0 = 4500;
       // TODO: tune shooter flywheel PID
     public static double SHOOTER_KS = 0.0;
-    public static double SHOOTER_KV = 0.01167; //0.012
-    public static double SHOOTER_KP = 0.0;
+    public static double SHOOTER_KV = 0.12; //0.12
+    public static double SHOOTER_KP = 0.167;
     public static double SHOOTER_KI = 0;
     public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
@@ -70,13 +76,6 @@ public class Constants {
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 200;
   }
-
-    public static final class Vision{
-
-        public static final double KP = 0;
-        public static final double ERROR_DEGREES = 0;
-
-    }
     public static final class Swerve {
         public static final int pigeonID = 20;
         public static final boolean REDUCE_SPEED = true;
