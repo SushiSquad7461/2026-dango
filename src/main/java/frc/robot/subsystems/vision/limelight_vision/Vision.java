@@ -1,6 +1,5 @@
 package frc.robot.subsystems.vision.limelight_vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -10,7 +9,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.LimelightHelpers;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 
@@ -18,56 +16,54 @@ public class Vision extends SubsystemBase {
     private final NetworkTable limelightLeft;
     private final NetworkTable limelightRight;
     private final Swerve swerve;
+    private final Pose3d camPosePrimary;
+    private final Pose3d camPoseSecondary;
+
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
         limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.secondaryLimelightName);
-
-        // write camera mount poses (camera in robot coordinates) into each Limelight if provided
-        if (Constants.Vision.cameraPosePrimary != null) {
-            double[] primaryPoseArr = LimelightHelpers.pose3dToArray(Constants.Vision.cameraPosePrimary);
-            LimelightHelpers.setLimelightNTDoubleArray(Constants.Vision.primaryLimelightName, "camerapose_robotspace_set", primaryPoseArr);
-        }
-
-        if (Constants.Vision.cameraPoseSecondary != null) {
-            double[] secondaryPoseArr = LimelightHelpers.pose3dToArray(Constants.Vision.cameraPoseSecondary);
-            LimelightHelpers.setLimelightNTDoubleArray(Constants.Vision.secondaryLimelightName, "camerapose_robotspace_set", secondaryPoseArr);
-        }
-
-        LimelightHelpers.Flush();
+        // Fall back to identity pose (camera at robot center) if constants aren't filled in
+        camPosePrimary = Constants.Vision.cameraPosePrimary != null ? Constants.Vision.cameraPosePrimary : new Pose3d();
+        camPoseSecondary = Constants.Vision.cameraPoseSecondary != null ? Constants.Vision.cameraPoseSecondary : new Pose3d();
     }
+
+    /**
+     * Converts a tag pose from camera space to robot space using the camera's mount pose.
+     * poseArr is [x_m, y_m, z_m, roll_deg, pitch_deg, yaw_deg] in camera frame.
+     */
+    private Pose3d tagCamToRobotSpace(double[] poseArr, Pose3d camPose) {
+        Pose3d tagInCam = new Pose3d(
+            new Translation3d(poseArr[0], poseArr[1], poseArr[2]),
+            new Rotation3d(Math.toRadians(poseArr[3]), Math.toRadians(poseArr[4]), Math.toRadians(poseArr[5]))
+        );
+        return camPose.transformBy(new Transform3d(tagInCam.getTranslation(), tagInCam.getRotation()));
+    }
+
+    /**
+     * Returns the absolute field heading the robot should face to point toward the score pillar.
+     * Reads raw camera-space data and manually converts to robot frame.
+     */
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
-        // make sure a valid target exists
-        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
-        double tvRight = limelightRight.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
+        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
         if (tvLeft < 0.5 && tvRight < 0.5) {
-            return new Rotation2d(); // no target
+            return new Rotation2d();
         }
-        double[] tagPoseLeft = limelightLeft.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
-        double[] tagPoseRight = limelightRight.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
 
         Pose3d leftRobot = null;
         Pose3d rightRobot = null;
 
         if (tvLeft == 1.0) {
-            Pose3d leftCam = new Pose3d(
-                new Translation3d(tagPoseLeft[0], tagPoseLeft[1], tagPoseLeft[2]),
-                new Rotation3d(Math.toRadians(tagPoseLeft[3]), Math.toRadians(tagPoseLeft[4]), Math.toRadians(tagPoseLeft[5]))
-            );
-            leftRobot = Constants.Vision.cameraPosePrimary.transformBy(new Transform3d(leftCam.getTranslation(), leftCam.getRotation()));
+            double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+            leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
         }
-
         if (tvRight == 1.0) {
-            Pose3d rightCam = new Pose3d(
-                new Translation3d(tagPoseRight[0], tagPoseRight[1], tagPoseRight[2]),
-                new Rotation3d(Math.toRadians(tagPoseRight[3]), Math.toRadians(tagPoseRight[4]), Math.toRadians(tagPoseRight[5]))
-            );
-            rightRobot = Constants.Vision.cameraPoseSecondary.transformBy(new Transform3d(rightCam.getTranslation(), rightCam.getRotation()));
+            double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+            rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
         }
 
-        double tx;
-        double ty;
-
+        double tx, ty;
         if (leftRobot != null && rightRobot != null) {
             tx = (leftRobot.getX() + rightRobot.getX()) / 2.0;
             ty = (leftRobot.getY() + rightRobot.getY()) / 2.0;
@@ -81,41 +77,33 @@ public class Vision extends SubsystemBase {
             return new Rotation2d();
         }
 
-        double angleRad = Math.atan2(ty, tx);
-        return swerve.getHeading().plus(new Rotation2d(angleRad));
+        // bearing in robot frame + robot's field heading = absolute target heading
+        return swerve.getHeading().plus(new Rotation2d(Math.atan2(ty, tx)));
     }
+
+    /**
+     * Returns the 2D distance (meters) from the robot to the score pillar, or NaN if no target.
+     */
     public double getDistanceToScorePillar() {
-        // make sure a valid target exists
-        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
-        double tvRight = limelightRight.getEntry("tv").getDouble(0.0); // 1.0 when a target is valid
+        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
+        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
         if (tvLeft < 0.5 && tvRight < 0.5) {
-            return Double.NaN; // no target
+            return Double.NaN;
         }
-        double[] tagPoseLeft = limelightLeft.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
-        double[] tagPoseRight = limelightRight.getEntry("targetpose_robotspace").getDoubleArray(new double[6]);
 
         Pose3d leftRobot = null;
         Pose3d rightRobot = null;
 
         if (tvLeft == 1.0) {
-            Pose3d leftCam = new Pose3d(
-                new Translation3d(tagPoseLeft[0], tagPoseLeft[1], tagPoseLeft[2]),
-                new Rotation3d(Math.toRadians(tagPoseLeft[3]), Math.toRadians(tagPoseLeft[4]), Math.toRadians(tagPoseLeft[5]))
-            );
-            leftRobot = Constants.Vision.cameraPosePrimary.transformBy(new Transform3d(leftCam.getTranslation(), leftCam.getRotation()));
+            double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+            leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
         }
-
         if (tvRight == 1.0) {
-            Pose3d rightCam = new Pose3d(
-                new Translation3d(tagPoseRight[0], tagPoseRight[1], tagPoseRight[2]),
-                new Rotation3d(Math.toRadians(tagPoseRight[3]), Math.toRadians(tagPoseRight[4]), Math.toRadians(tagPoseRight[5]))
-            );
-            rightRobot = Constants.Vision.cameraPoseSecondary.transformBy(new Transform3d(rightCam.getTranslation(), rightCam.getRotation()));
+            double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+            rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
         }
 
-        double dx;
-        double dy;
-
+        double dx, dy;
         if (leftRobot != null && rightRobot != null) {
             dx = (leftRobot.getX() + rightRobot.getX()) / 2.0;
             dy = (leftRobot.getY() + rightRobot.getY()) / 2.0;
@@ -129,7 +117,7 @@ public class Vision extends SubsystemBase {
             return Double.NaN;
         }
 
-        return Math.hypot(dx, dy); // Limelight's 2D pose has Y as the forward direction
+        return Math.hypot(dx, dy);
     }
 
     public void periodic() {

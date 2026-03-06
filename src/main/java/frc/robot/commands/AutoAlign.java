@@ -1,9 +1,9 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
@@ -26,12 +26,18 @@ public class AutoAlign extends Command {
     }
 
     @Override
+    public void initialize() {
+        rotationPID.reset();
+    }
+
+    @Override
     public void execute() {
         Rotation2d targetHeading = vision.getHeadingToScorePillar(isRed);
         double rotation = rotationPID.calculate(
             swerve.getHeading().getDegrees(),
             targetHeading.getDegrees()
         );
+        rotation = MathUtil.clamp(rotation, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
         swerve.drive(new Translation2d(0, 0), rotation, true, true);
     }
 
