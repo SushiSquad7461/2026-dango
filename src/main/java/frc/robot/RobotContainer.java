@@ -17,7 +17,6 @@ import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
-import frc.robot.generated.Constants;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.hopper.HopperIOSim;
@@ -31,7 +30,6 @@ import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 import frc.robot.subsystems.vision.limelight_vision.Vision;
-import frc.robot.util.AllianceUtil;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -191,7 +189,7 @@ public class RobotContainer {
                 driverController.leftTrigger().whileTrue(new AutoAlign(
                     swerve,
                     vision,
-                    DriverStation.getAlliance().isPresent() &&
+                    () -> DriverStation.getAlliance().isPresent() &&
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));
         }

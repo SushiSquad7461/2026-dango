@@ -32,6 +32,21 @@ public class Vision extends SubsystemBase {
         camPoseSecondary = Constants.Vision.cameraPoseSecondary != null ? Constants.Vision.cameraPoseSecondary : new Pose3d();
     }
 
+    /** Returns true if at least one camera currently sees a valid hub tag for the given alliance. */
+    public boolean hasHubTarget(boolean isRed) {
+        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
+        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
+        if (tvLeft == 1.0) {
+            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) return true;
+        }
+        if (tvRight == 1.0) {
+            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) return true;
+        }
+        return false;
+    }
+
     /** Returns true if the given tag ID belongs to the correct alliance's hub. */
     private boolean isHubTag(int tagId, boolean isRed) {
         int[] hubTags = isRed ? Constants.Vision.RED_HUB_TAGS : Constants.Vision.BLUE_HUB_TAGS;
@@ -105,7 +120,8 @@ public class Vision extends SubsystemBase {
         lastTagRobotY = ty;
         lastBearingDeg = Math.toDegrees(bearingRad);
 
-        return swerve.getHeading().plus(new Rotation2d(bearingRad + Math.toRadians(180)));
+        // +180° because the launcher faces the back of the robot
+        return swerve.getHeading().plus(new Rotation2d(bearingRad + Math.PI));
     }
 
     /**
