@@ -17,6 +17,7 @@ import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -44,7 +45,9 @@ public class Constants {
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
     public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
     public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
-    public static PIDController rotationPID = new PIDController(0.1, 0, 0);;
+    public static PIDController rotationPID = new PIDController(0.1, 0, 0);
+    public static Pose3d cameraPosePrimary; // TODO: fill in camera pose relative to robot center for limelights (used for pose estimation and target position calculation)
+    public static Pose3d cameraPoseSecondary;
   }
   public static final class Shooter{
     public static final double FLYWHEELRPM = 0.8;
