@@ -50,8 +50,7 @@ public class AutoAlign extends Command {
         rotation = MathUtil.clamp(rotation, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
         swerve.drive(new Translation2d(0, 0), rotation, true, true);
 
-        SmartDashboard.putNumber("Vision/Distance", vision.getDistanceToScorePillar(isRed));
-        SmartDashboard.putNumber("Vision/TargetHeading", targetHeading.getDegrees());
+        
     }
 
     @Override

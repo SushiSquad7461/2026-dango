@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
@@ -86,14 +87,14 @@ public class Vision extends SubsystemBase {
         Pose3d leftRobot = null;
         Pose3d rightRobot = null;
 
-        if (tvLeft == 1.0) {
+        if (tvLeft > 0.5) {
             int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
                 double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
                 leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
             }
         }
-        if (tvRight == 1.0) {
+        if (tvRight >0.5 ) {
             int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
                 double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
@@ -138,14 +139,14 @@ public class Vision extends SubsystemBase {
         Pose3d leftRobot = null;
         Pose3d rightRobot = null;
 
-        if (tvLeft == 1.0) {
+        if (tvLeft > 0.5) {
             int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
                 double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
                 leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
             }
         }
-        if (tvRight == 1.0) {
+        if (tvRight > 0.5) {
             int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
                 double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
@@ -176,5 +177,9 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putNumber("Vision/BearingDeg", lastBearingDeg);
         SmartDashboard.putNumber("Vision/RobotHeadingDeg", swerve.getHeading().getDegrees());
         SmartDashboard.putData("Vision/AutoAlignPID", Constants.Vision.rotationPID);
+        SmartDashboard.putNumber("Vision/Distance", getDistanceToScorePillar(DriverStation.getAlliance().get()==DriverStation.Alliance.Red));
+        SmartDashboard.putNumber("Vision/TargetHeading", getHeadingToScorePillar(DriverStation.getAlliance().get()==DriverStation.Alliance.Red).getDegrees());
+        
+        
     }
 }
