@@ -84,44 +84,43 @@ public class Vision extends SubsystemBase {
             return new Rotation2d();
         }
 
-        Pose3d leftRobot = null;
-        Pose3d rightRobot = null;
+        // Use tx (horizontal angle, positive=right) + camera yaw to get bearing in robot frame.
+        // bearing_robot_deg = camera_yaw_deg - tx_deg  (tx positive = clockwise from camera center)
+        double sumSin = 0, sumCos = 0;
+        int count = 0;
 
         if (tvLeft > 0.5) {
             int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
-                double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-                leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
+                double txDeg = limelightLeft.getEntry("tx").getDouble(0.0);
+                double camYawDeg = Math.toDegrees(camPosePrimary.getRotation().getZ());
+                double bearingRad = Math.toRadians(camYawDeg - txDeg);
+                sumSin += Math.sin(bearingRad);
+                sumCos += Math.cos(bearingRad);
+                count++;
             }
         }
-        if (tvRight >0.5 ) {
+
+        if (tvRight > 0.5) {
             int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
             if (isHubTag(tagId, isRed)) {
-                double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-                rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
+                double txDeg = limelightRight.getEntry("tx").getDouble(0.0);
+                double camYawDeg = Math.toDegrees(camPoseSecondary.getRotation().getZ());
+                double bearingRad = Math.toRadians(camYawDeg - txDeg);
+                sumSin += Math.sin(bearingRad);
+                sumCos += Math.cos(bearingRad);
+                count++;
             }
         }
 
-        double tx, ty;
-        if (leftRobot != null && rightRobot != null) {
-            tx = (leftRobot.getX() + rightRobot.getX()) / 2.0;
-            ty = (leftRobot.getY() + rightRobot.getY()) / 2.0;
-        } else if (leftRobot != null) {
-            tx = leftRobot.getX();
-            ty = leftRobot.getY();
-        } else if (rightRobot != null) {
-            tx = rightRobot.getX();
-            ty = rightRobot.getY();
-        } else {
-            return new Rotation2d();
-        }
+        if (count == 0) return new Rotation2d();
 
-        double bearingRad = Math.atan2(ty, tx);
-        lastTagRobotX = tx;
-        lastTagRobotY = ty;
+        double bearingRad = Math.atan2(sumSin, sumCos);
         lastBearingDeg = Math.toDegrees(bearingRad);
+        lastTagRobotX = 0;
+        lastTagRobotY = 0;
 
-        // +180° because the launcher faces the back of the robot
+        // +PI because the launcher faces the back of the robot
         return swerve.getHeading().plus(new Rotation2d(bearingRad + Math.PI));
     }
 
