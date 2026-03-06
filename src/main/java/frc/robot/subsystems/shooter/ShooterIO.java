@@ -6,6 +6,7 @@ public interface ShooterIO {
     void setFlywheelRPM(double rpm);
     void stopFlywheel();
     void runFeeder();
+    void runFeederBack();
     void stopFeeder();
     double getFlywheelRPM();
     double getFlywheelTargetRPM();

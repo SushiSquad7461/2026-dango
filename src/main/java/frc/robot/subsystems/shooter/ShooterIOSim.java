@@ -70,4 +70,10 @@ public class ShooterIOSim implements ShooterIO {
         throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
     }
 
+    @Override
+    public void runFeederBack() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'runFeederBack'");
+    }
+
 }

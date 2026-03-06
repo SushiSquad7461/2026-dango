@@ -88,10 +88,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public Command runFeeder(){
-   return Commands.runOnce(()->io.setFlywheelRPM((Constants.Shooter.TARGET_RPM_0)*(-1)));
+   return Commands.runOnce(()->io.runFeederBack());
   }
   public Command stopFeeder() {
-   return Commands.runOnce(()->io.setFlywheelRPM(0));
+   return Commands.runOnce(()->io.stopFeeder());
   }
 
   @Override

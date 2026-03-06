@@ -53,6 +53,8 @@ public class RobotContainer {
         private final AutoCommands autos;
         //@SuppressWarnings("unused")
         private final Vision vision;
+        private boolean intakeDown= false;
+
         // private boolean wiggleOn;
 
         // Controller
@@ -146,6 +148,31 @@ public class RobotContainer {
                                 stateMachine.changeState(RobotState.SHOOT_ONLY));
                 driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
                                 stateMachine.changeState(RobotState.IDLE));
+
+                 // Intake & Shooter
+                // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
+                //                 intakeDown?stateMachine.changeState(RobotState.SHOOT_ONLY)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
+                //                 stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
+
+                // driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
+                //                  intakeDown?stateMachine.changeState(RobotState.IDLE)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
+                //                 stateMachine.changeState(RobotState.INTAKE_DOWN)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
+
+                // driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
+                //                  intakeDown?stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
+                //                 stateMachine.changeState(RobotState.SHOOT_ONLY)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
+
+                // driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
+                //                  intakeDown?stateMachine.changeState(RobotState.INTAKE_DOWN)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
+                //                 stateMachine.changeState(RobotState.IDLE)
+                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
 
                 operatorController.rightBumper().onTrue(shooter.runFeeder()).onFalse(shooter.stopFeeder());
                 
