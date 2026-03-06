@@ -19,30 +19,39 @@ public class Vision extends SubsystemBase {
     private final Pose3d camPosePrimary;
     private final Pose3d camPoseSecondary;
 
+    // Cached for SmartDashboard logging
+    private double lastBearingDeg = 0;
+    private double lastTagRobotX = 0;
+    private double lastTagRobotY = 0;
+
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
         limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.secondaryLimelightName);
-        // Fall back to identity pose (camera at robot center) if constants aren't filled in
         camPosePrimary = Constants.Vision.cameraPosePrimary != null ? Constants.Vision.cameraPosePrimary : new Pose3d();
         camPoseSecondary = Constants.Vision.cameraPoseSecondary != null ? Constants.Vision.cameraPoseSecondary : new Pose3d();
     }
 
     /**
      * Converts a tag pose from camera space to robot space using the camera's mount pose.
-     * poseArr is [x_m, y_m, z_m, roll_deg, pitch_deg, yaw_deg] in camera frame.
+     * Returns null if the pose data is invalid (all-zero default, meaning NT hasn't been
+     * updated yet this frame even though tv=1).
      */
-    private Pose3d tagCamToRobotSpace(double[] poseArr, Pose3d camPose) {
+    private Pose3d tagCamToRobotSpace(double[] arr, Pose3d camPose) {
+        // Reject zero/near-zero arrays — these are the NT default value, not real target data
+        if (arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] < 0.01) {
+            return null;
+        }
         Pose3d tagInCam = new Pose3d(
-            new Translation3d(poseArr[0], poseArr[1], poseArr[2]),
-            new Rotation3d(Math.toRadians(poseArr[3]), Math.toRadians(poseArr[4]), Math.toRadians(poseArr[5]))
+            new Translation3d(arr[0], arr[1], arr[2]),
+            new Rotation3d(Math.toRadians(arr[3]), Math.toRadians(arr[4]), Math.toRadians(arr[5]))
         );
         return camPose.transformBy(new Transform3d(tagInCam.getTranslation(), tagInCam.getRotation()));
     }
 
     /**
-     * Returns the absolute field heading the robot should face to point toward the score pillar.
-     * Reads raw camera-space data and manually converts to robot frame.
+     * Returns the absolute field heading the robot should face to point its launcher toward
+     * the score pillar. Reads raw camera-space data and manually transforms to robot frame.
      */
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
         double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
@@ -77,8 +86,13 @@ public class Vision extends SubsystemBase {
             return new Rotation2d();
         }
 
-        // bearing in robot frame + robot's field heading = absolute target heading
-        return swerve.getHeading().plus(new Rotation2d(Math.atan2(ty, tx)));
+        double bearingRad = Math.atan2(ty, tx);
+        lastTagRobotX = tx;
+        lastTagRobotY = ty;
+        lastBearingDeg = Math.toDegrees(bearingRad);
+
+        // bearing in robot frame + robot's absolute field heading = absolute target heading
+        return swerve.getHeading().plus(new Rotation2d(bearingRad));
     }
 
     /**
@@ -121,6 +135,10 @@ public class Vision extends SubsystemBase {
     }
 
     public void periodic() {
+        SmartDashboard.putNumber("Vision/TagRobotX", lastTagRobotX);
+        SmartDashboard.putNumber("Vision/TagRobotY", lastTagRobotY);
+        SmartDashboard.putNumber("Vision/BearingDeg", lastBearingDeg);
+        SmartDashboard.putNumber("Vision/RobotHeadingDeg", swerve.getHeading().getDegrees());
         SmartDashboard.putData("Vision/AutoAlignPID", Constants.Vision.rotationPID);
     }
 }

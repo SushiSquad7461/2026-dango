@@ -47,7 +47,7 @@ public class Constants {
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
     public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
     public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
-    public static PIDController rotationPID = new PIDController(0.1, 0, 0);
+    public static PIDController rotationPID = new PIDController(0.05, 0, 0);
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
