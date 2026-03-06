@@ -82,8 +82,7 @@ public class Vision extends SubsystemBase {
         }
 
         double angleRad = Math.atan2(ty, tx);
-        if (!isRed) angleRad = Math.atan2(-ty, -tx);
-        return new Rotation2d(angleRad);
+        return swerve.getHeading().plus(new Rotation2d(angleRad));
     }
     public double getDistanceToScorePillar() {
         // make sure a valid target exists
@@ -123,9 +122,11 @@ public class Vision extends SubsystemBase {
         } else if (leftRobot != null) {
             dx = leftRobot.getX();
             dy = leftRobot.getY();
-        } else {
+        } else if (rightRobot != null) {
             dx = rightRobot.getX();
             dy = rightRobot.getY();
+        } else {
+            return Double.NaN;
         }
 
         return Math.hypot(dx, dy); // Limelight's 2D pose has Y as the forward direction
