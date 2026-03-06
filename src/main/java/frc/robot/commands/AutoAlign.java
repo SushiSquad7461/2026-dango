@@ -43,7 +43,7 @@ public class AutoAlign extends Command {
     public void execute() {
         if (!vision.hasHubTarget(isRed)) {
             swerve.drive(new Translation2d(0, 0), 0, true, true);
-            shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_0);
+            shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
             return;
         }
         Rotation2d targetHeading = vision.getHeadingToScorePillar(isRed);
@@ -64,13 +64,13 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_0);
+        shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
         return rotationPID.atSetpoint();
     }
 
     @Override
     public void end(boolean interrupted) {
-        shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_0);
+        shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
         swerve.drive(new Translation2d(0, 0), 0, true, true);
     }
 }

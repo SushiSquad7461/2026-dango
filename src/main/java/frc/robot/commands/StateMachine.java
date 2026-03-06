@@ -18,12 +18,12 @@ public class StateMachine extends SubsystemBase {
 
 
         IDLE(IntakeState.IDLE,ShooterState.IDLE,HopperState.IDLE),
-        SHOOT_ONLY(IntakeState.IDLE,ShooterState.SHOOT,HopperState.RUNNING),
+        SHOOT_ONLY(IntakeState.IDLE,ShooterState.PRESHOOT,HopperState.RUNNING),
         WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
         INTAKE_DOWN(IntakeState.DEPLOYED, ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED,ShooterState.SHOOT,HopperState.RUNNING);
+        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED,ShooterState.PRESHOOT,HopperState.RUNNING);
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
@@ -104,7 +104,7 @@ public class StateMachine extends SubsystemBase {
                     : intake.changeState(newState.intakeState)
                 ),
                 shooter.changeState(newState.shooterState))
-                .andThen(Commands.waitSeconds(1))
+                .andThen(Commands.waitUntil(() -> shooter.isShooterReady()))
                 .andThen(hopper.changeState(newState.hopperState))
         );
     }

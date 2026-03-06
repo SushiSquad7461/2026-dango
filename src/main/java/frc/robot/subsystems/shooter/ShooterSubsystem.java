@@ -13,9 +13,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
 
 public class ShooterSubsystem extends SubsystemBase {
-  private double shootStartTime = 0; // could come in useful later, especially for logging
+  // private double shootStartTime = 0; // could come in useful later, especially for logging
   private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
-  private double targetRPM = Constants.Shooter.TARGET_RPM_0;
+  private double targetRPM = Constants.Shooter.TARGET_RPM_DEFAULT;
 
   public enum ShooterState {
     IDLE, // shooter inactive
@@ -59,25 +59,20 @@ public class ShooterSubsystem extends SubsystemBase {
       case IDLE:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.stopFlywheel();    
+                io.stopShooter();    
             }),
             Commands.runOnce(()->{
                 io.stopFeeder();
             }));
 
-      case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
+      case PRESHOOT:
         return Commands.parallel(
-            Commands.runOnce(()->{
-                io.setFlywheelRPM(targetRPM);
-            }),
-            Commands.runOnce(()->{
-                shootStartTime = Timer.getFPGATimestamp();
-            }));
-        
+          Commands.runOnce(()->io.runShooter(targetRPM)),
+           Commands.waitUntil(() -> isShooterReady()).andThen(changeState(ShooterState.SHOOT)));
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(targetRPM);
+                io.runShooter(targetRPM);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
@@ -97,6 +92,9 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setTargetRPM(double distance) {
     double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
     this.targetRPM = rpm;
+  }
+  public boolean isShooterReady() {
+    return io.isShooterReady();
   }
 
   @Override

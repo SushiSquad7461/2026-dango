@@ -3,8 +3,8 @@ package frc.robot.subsystems.shooter;
 
 public interface ShooterIO {
     
-    void setFlywheelRPM(double rpm);
-    void stopFlywheel();
+    void runShooter(double rpm);
+    void stopShooter();
     void runFeeder();
     void runFeederBack();
     void stopFeeder();

@@ -62,7 +62,7 @@ public class Constants {
     );
   }
   public static final class Shooter{
-    public static final double TARGET_RPM_0 = 4500;
+    public static final double TARGET_RPM_DEFAULT = 4500;
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
     public static double SHOOTER_KP = 0.167;
@@ -79,14 +79,12 @@ public class Constants {
     public static final double HOOD_KI = 0;
     public static final double HOOD_KD = 0.1;
     // TODO: tune shooter presets
-    public static final double TARGET_RPM_1 = 0;
-    public static final double TARGET_RPM_2 = 0;
-    public static final double TARGET_RPM_3 = 0;
-    public static final double TARGET_RPM_4 = 0;
-    public static final double TARGET_HOOD_1 = 0;
-    public static final double TARGET_HOOD_2 = 0;
-    public static final double TARGET_HOOD_3 = 0;
-    public static final double TARGET_HOOD_4 = 0;
+    public static final double TARGET_RPM_TRENCH = 0;
+    public static final double TARGET_RPM_OUTPOST = 0;
+    public static final double TARGET_RPM_HUB = 0;
+    public static final double TARGET_HOOD_TRENCH = 0;
+    public static final double TARGET_HOOD_OUTPOST = 0;
+    public static final double TARGET_HOOD_HUB = 0;
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 200;

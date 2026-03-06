@@ -19,13 +19,13 @@ public class ShooterIOSim implements ShooterIO {
     private final double RPM_TOLERANCE = 50;
 
     @Override
-    public void setFlywheelRPM(double rpm) {
+    public void runShooter(double rpm) {
         targetRPM = rpm;
         data.appliedVolts = rpm / 5000.0 * 12.0; 
     }
 
     @Override
-    public void stopFlywheel() {
+    public void stopShooter() {
         targetRPM = 0;
         data.appliedVolts = 0;
     }

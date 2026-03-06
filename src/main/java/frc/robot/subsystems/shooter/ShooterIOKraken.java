@@ -72,13 +72,13 @@ public class ShooterIOKraken implements ShooterIO {
   }
 
   @Override
-  public void setFlywheelRPM(double rpm) {
+  public void runShooter(double rpm) {
     double rps = rpm / 60;
     krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps));
   }
 
   @Override
-  public void stopFlywheel() {
+  public void stopShooter() {
     krakenShooterLeft.setControl(shooterRequest.withVelocity(0));
   }
 
