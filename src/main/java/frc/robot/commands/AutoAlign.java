@@ -63,7 +63,7 @@ public class AutoAlign extends Command {
 
         Translation2d translation = new Translation2d(0, 0);
         if (!Double.isNaN(distance)) {
-            double translationSpeed = distancePID.calculate(distance, Constants.Vision.targetDistanceMeters);
+            double translationSpeed = -distancePID.calculate(distance, Constants.Vision.targetDistanceMeters);
             translationSpeed = MathUtil.clamp(translationSpeed, -Constants.Swerve.maxSpeed, Constants.Swerve.maxSpeed);
             // targetHeading has +PI for rear launcher, so subtract PI to get the direction toward the tag
             Rotation2d directionToTag = targetHeading.minus(new Rotation2d(Math.PI));
