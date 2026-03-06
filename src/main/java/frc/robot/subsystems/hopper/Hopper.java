@@ -25,4 +25,7 @@ public class Hopper extends SubsystemBase{
     public Command changeState(HopperState newState){
         return runOnce(()->{io.changeState(newState);});
     }
+    public Command runHopper(){
+        return runOnce(()->{io.setSpeed(-0.5);});
+    }
 }

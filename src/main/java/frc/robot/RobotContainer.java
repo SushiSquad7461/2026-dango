@@ -174,7 +174,7 @@ public class RobotContainer {
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
 
-                operatorController.rightBumper().onTrue(shooter.runFeeder()).onFalse(shooter.stopFeeder());
+                operatorController.rightBumper().onTrue(shooter.runFeederBack()).onFalse(shooter.stopFeeder());
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);

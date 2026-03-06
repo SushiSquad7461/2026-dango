@@ -105,7 +105,7 @@ public class Vision extends SubsystemBase {
         lastTagRobotY = ty;
         lastBearingDeg = Math.toDegrees(bearingRad);
 
-        return swerve.getHeading().plus(new Rotation2d(bearingRad));
+        return swerve.getHeading().plus(new Rotation2d(bearingRad + Math.toRadians(180)));
     }
 
     /**
