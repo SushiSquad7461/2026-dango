@@ -87,7 +87,7 @@ public class StateMachine extends SubsystemBase {
             Commands.parallel(
                 Commands.sequence(
                     //If the new state's change is the "wiggle" state
-                    state.intakeState == IntakeState.WIGGLING ?
+                    newState.intakeState == IntakeState.WIGGLING ?
                     //Depoly the intake
                     intake.changeState(IntakeState.DEPLOYED)
                         //Wait until the intake is in position
@@ -104,7 +104,9 @@ public class StateMachine extends SubsystemBase {
                     : intake.changeState(newState.intakeState)
                 ),
                 shooter.changeState(newState.shooterState))
-                .andThen(Commands.waitUntil(() -> shooter.isShooterReady()))
+                .andThen(newState.shooterState != ShooterState.IDLE
+                    ? Commands.waitUntil(() -> shooter.isShooterReady())
+                    : Commands.none())
                 .andThen(hopper.changeState(newState.hopperState))
         );
     }

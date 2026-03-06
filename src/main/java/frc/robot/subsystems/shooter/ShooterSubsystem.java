@@ -68,7 +68,11 @@ public class ShooterSubsystem extends SubsystemBase {
       case PRESHOOT:
         return Commands.parallel(
           Commands.runOnce(()->io.runShooter(targetRPM)),
-           Commands.waitUntil(() -> isShooterReady()).andThen(changeState(ShooterState.SHOOT)));
+           Commands.waitUntil(() -> isShooterReady()).andThen(Commands.runOnce(() -> {
+               this.state = ShooterState.SHOOT;
+               io.runShooter(targetRPM);
+               io.runFeeder();
+           })));
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{

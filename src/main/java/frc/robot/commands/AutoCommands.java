@@ -24,12 +24,12 @@ public class AutoCommands {
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
-             NamedCommands.registerCommand("Shoot", 
-            new InstantCommand(() -> stateMachine.changeState(RobotState.SHOOT_ONLY)));
-        NamedCommands.registerCommand("Intake", 
-            new InstantCommand(() -> stateMachine.changeState(RobotState.INTAKE_DOWN)));
-        NamedCommands.registerCommand("Idle", 
-            new InstantCommand(() -> stateMachine.changeState(RobotState.IDLE)));
+             NamedCommands.registerCommand("Shoot",
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
+        NamedCommands.registerCommand("Intake",
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN)));
+        NamedCommands.registerCommand("Idle",
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
