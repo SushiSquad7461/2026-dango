@@ -320,6 +320,15 @@ public class Constants {
     REPLAY
   }
 
+    public static final class HoodedShooterConstants{
+        public static final double cruiseVelocityRps = .25;
+        public static final double accelRps2 =.125;
+
+        public static final double pivotP = 0.8;
+        public static final double pivotI = 0.0;
+        public static final double pivotD = 0.0;
+    }
+
     public static final class AutoConstants { //TODO: Need to tune constants!
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;

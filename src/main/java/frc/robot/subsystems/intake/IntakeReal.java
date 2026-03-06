@@ -53,10 +53,6 @@ public class IntakeReal implements IntakeIO {
 
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
-
-
-
-        //CHANGES THE SPEED OF THE PIVOT
         cfg.CurrentLimits.SupplyCurrentLimit = 10;
         
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
