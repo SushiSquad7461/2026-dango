@@ -32,13 +32,21 @@ public class Vision extends SubsystemBase {
         camPoseSecondary = Constants.Vision.cameraPoseSecondary != null ? Constants.Vision.cameraPoseSecondary : new Pose3d();
     }
 
+    /** Returns true if the given tag ID belongs to the correct alliance's hub. */
+    private boolean isHubTag(int tagId, boolean isRed) {
+        int[] hubTags = isRed ? Constants.Vision.RED_HUB_TAGS : Constants.Vision.BLUE_HUB_TAGS;
+        for (int id : hubTags) {
+            if (id == tagId) return true;
+        }
+        return false;
+    }
+
     /**
      * Converts a tag pose from camera space to robot space using the camera's mount pose.
-     * Returns null if the pose data is invalid (all-zero default, meaning NT hasn't been
-     * updated yet this frame even though tv=1).
+     * Returns null if the pose data is invalid (all-zero NT default).
      */
     private Pose3d tagCamToRobotSpace(double[] arr, Pose3d camPose) {
-        // Reject zero/near-zero arrays — these are the NT default value, not real target data
+        // Reject zero/near-zero arrays — NT default before real data arrives
         if (arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] < 0.01) {
             return null;
         }
@@ -51,7 +59,7 @@ public class Vision extends SubsystemBase {
 
     /**
      * Returns the absolute field heading the robot should face to point its launcher toward
-     * the score pillar. Reads raw camera-space data and manually transforms to robot frame.
+     * the score pillar. Only uses readings from the correct alliance's hub tags.
      */
     public Rotation2d getHeadingToScorePillar(boolean isRed) {
         double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
@@ -64,12 +72,18 @@ public class Vision extends SubsystemBase {
         Pose3d rightRobot = null;
 
         if (tvLeft == 1.0) {
-            double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-            leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
+            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) {
+                double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+                leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
+            }
         }
         if (tvRight == 1.0) {
-            double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-            rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
+            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) {
+                double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+                rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
+            }
         }
 
         double tx, ty;
@@ -91,14 +105,14 @@ public class Vision extends SubsystemBase {
         lastTagRobotY = ty;
         lastBearingDeg = Math.toDegrees(bearingRad);
 
-        // bearing in robot frame + robot's absolute field heading = absolute target heading
         return swerve.getHeading().plus(new Rotation2d(bearingRad));
     }
 
     /**
      * Returns the 2D distance (meters) from the robot to the score pillar, or NaN if no target.
+     * Only uses readings from the correct alliance's hub tags.
      */
-    public double getDistanceToScorePillar() {
+    public double getDistanceToScorePillar(boolean isRed) {
         double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
         double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
         if (tvLeft < 0.5 && tvRight < 0.5) {
@@ -109,12 +123,18 @@ public class Vision extends SubsystemBase {
         Pose3d rightRobot = null;
 
         if (tvLeft == 1.0) {
-            double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-            leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
+            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) {
+                double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+                leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
+            }
         }
         if (tvRight == 1.0) {
-            double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-            rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
+            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
+            if (isHubTag(tagId, isRed)) {
+                double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
+                rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
+            }
         }
 
         double dx, dy;
