@@ -177,8 +177,10 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putNumber("Vision/BearingDeg", lastBearingDeg);
         SmartDashboard.putNumber("Vision/RobotHeadingDeg", swerve.getHeading().getDegrees());
         SmartDashboard.putData("Vision/AutoAlignPID", Constants.Vision.rotationPID);
-        SmartDashboard.putNumber("Vision/Distance", getDistanceToScorePillar(DriverStation.getAlliance().get()==DriverStation.Alliance.Red));
-        SmartDashboard.putNumber("Vision/TargetHeading", getHeadingToScorePillar(DriverStation.getAlliance().get()==DriverStation.Alliance.Red).getDegrees());
+        boolean isRed = DriverStation.getAlliance().isPresent() &&
+            DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+        SmartDashboard.putNumber("Vision/Distance", getDistanceToScorePillar(isRed));
+        SmartDashboard.putNumber("Vision/TargetHeading", getHeadingToScorePillar(isRed).getDegrees());
         
         
     }
