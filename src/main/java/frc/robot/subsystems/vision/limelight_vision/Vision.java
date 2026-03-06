@@ -66,8 +66,10 @@ public class Vision extends SubsystemBase {
         if (arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] < 0.01) {
             return null;
         }
+        // Limelight targetpose_cameraspace: X=right, Y=up, Z=forward
+        // WPILib camera frame:              X=forward, Y=left, Z=up
         Pose3d tagInCam = new Pose3d(
-            new Translation3d(arr[0], arr[1], arr[2]),
+            new Translation3d(arr[2], -arr[0], arr[1]),
             new Rotation3d(Math.toRadians(arr[3]), Math.toRadians(arr[4]), Math.toRadians(arr[5]))
         );
         return camPose.transformBy(new Transform3d(tagInCam.getTranslation(), tagInCam.getRotation()));
