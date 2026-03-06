@@ -38,19 +38,29 @@ public class Vision extends SubsystemBase {
         if(tvLeft == 1.0 && tvRight == 1.0) {
             x = (tagPoseLeft[0] + tagPoseRight[0]) / 2;
             y = (tagPoseLeft[1] + tagPoseRight[1]) / 2;
+            if (isRed) {
+                return new Rotation2d(Math.atan2(y, x));
+            } else {
+                return new Rotation2d(Math.atan2(-y, -x));
+            }
         } else if (tvLeft == 1.0) {
             x = tagPoseLeft[0];
             y = tagPoseLeft[1];
+            if (isRed) {
+                return new Rotation2d(Math.atan2(y, x) - Math.toRadians(30));
+            } else {
+                return new Rotation2d(Math.atan2(-y, -x) - Math.toRadians(30));
+            }
         } else if (tvRight == 1.0) {
             x = tagPoseRight[0];
-            y = tagPoseRight[1];
+            y = tagPoseRight[1];  
+            if (isRed) {
+                return new Rotation2d(Math.atan2(y, x) + Math.toRadians(30));
+            } else {
+                return new Rotation2d(Math.atan2(-y, -x) + Math.toRadians(30));
+            }
         } else {
             return new Rotation2d();
-        }
-        if (isRed) {
-            return new Rotation2d(Math.atan2(y, x) + Math.toRadians(30));
-        } else {
-            return new Rotation2d(Math.atan2(-y, -x) - Math.toRadians(30));
         }
     }
     public double getDistanceToScorePillar() {
