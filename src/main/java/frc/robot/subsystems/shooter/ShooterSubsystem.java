@@ -15,6 +15,7 @@ import frc.robot.generated.Constants;
 public class ShooterSubsystem extends SubsystemBase {
   private double shootStartTime = 0; // could come in useful later, especially for logging
   private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
+  private double targetRPM = Constants.Shooter.TARGET_RPM_0;
 
   public enum ShooterState {
     IDLE, // shooter inactive
@@ -67,7 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case PRESHOOT: // TODO: check whether shooter is at rpm before going to SHOOT state
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
+                io.setFlywheelRPM(targetRPM);
             }),
             Commands.runOnce(()->{
                 shootStartTime = Timer.getFPGATimestamp();
@@ -76,7 +77,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.setFlywheelRPM(Constants.Shooter.TARGET_RPM_0);
+                io.setFlywheelRPM(targetRPM);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
@@ -92,6 +93,10 @@ public class ShooterSubsystem extends SubsystemBase {
   }
   public Command stopFeeder() {
    return Commands.runOnce(()->io.stopFeeder());
+  }
+  public void setTargetRPM(double distance) {
+    double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
+    this.targetRPM = rpm;
   }
 
   @Override

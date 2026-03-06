@@ -62,14 +62,11 @@ public class Constants {
     );
   }
   public static final class Shooter{
-    public static final double FLYWHEELRPM = 0.8;
     public static final double TARGET_RPM_0 = 4500;
-      // TODO: tune shooter flywheel PID
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
     public static double SHOOTER_KP = 0.167;
     public static double SHOOTER_KI = 0;
-    
     public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
     public static final double SHOOTER_INTAKE_KS = 0.1;
@@ -93,6 +90,8 @@ public class Constants {
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 200;
+    public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
+    public static final double RPM_DISTANCE_OFFSET = 2000;
   }
     public static final class Swerve {
         public static final int pigeonID = 20;
