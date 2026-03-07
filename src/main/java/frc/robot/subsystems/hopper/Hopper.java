@@ -28,4 +28,10 @@ public class Hopper extends SubsystemBase{
     public Command runHopper(){
         return runOnce(()->{io.setSpeed(-0.5);});
     }
+    public Command runHopperBack(){
+        return runOnce(()->{io.setSpeed(0.5);});
+    }
+    public Command stopHopper(){
+        return runOnce(()->{io.setSpeed(0);});
+    }
 }

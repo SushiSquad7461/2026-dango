@@ -23,6 +23,7 @@ import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -80,7 +81,7 @@ public class RobotContainer {
                         hopper = new Hopper(new HopperIOSim());
                 }
                 hoodedShooter = new HoodedShooter();
-                this.stateMachine = new StateMachine(intake, shooter, hopper);
+                this.stateMachine = new StateMachine(shooter, hopper);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter);
 
@@ -138,14 +139,19 @@ public class RobotContainer {
                 driverController.y().onTrue(Commands.runOnce(() -> swerve.resetGyro()));
 
                 // Intake & Shooter
-                driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
-                                stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT));
-                driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
-                                stateMachine.changeState(RobotState.INTAKE_DOWN));
-                driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
-                                stateMachine.changeState(RobotState.SHOOT_ONLY));
-                driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
-                                stateMachine.changeState(RobotState.IDLE));
+                // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
+                //                 stateMachine.changeState(RobotState.SHOOT_ONLY));
+                // driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
+                //                 stateMachine.changeState(RobotState.IDLE));
+                // driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
+                //                 stateMachine.changeState(RobotState.SHOOT_ONLY));
+                // driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
+                //                 stateMachine.changeState(RobotState.IDLE));
+
+                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+                driverController.rightBumper().onTrue(
+                        intakeDown?Commands.parallel(intake.changeState(IntakeState.IDLE),Commands.runOnce(()->intakeDown=!intakeDown)):
+                                   Commands.parallel(intake.changeState(IntakeState.DEPLOYED),Commands.runOnce(()->intakeDown=!intakeDown)));
 
                  // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
@@ -172,7 +178,11 @@ public class RobotContainer {
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
 
-                operatorController.rightBumper().onTrue(shooter.runFeederBack()).onFalse(shooter.stopFeeder());
+                operatorController.rightBumper().onTrue(
+                        Commands.parallel( shooter.runFeederBack(), hopper.runHopperBack())
+                       ).onFalse(
+                        Commands.parallel( shooter.stopFeeder(), hopper.stopHopper())
+                       );
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);

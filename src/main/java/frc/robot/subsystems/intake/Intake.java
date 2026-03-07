@@ -9,16 +9,11 @@ import frc.robot.generated.Constants.IntakeConstants;
 public class Intake extends SubsystemBase{
     private IntakeIO io;
     private IntakeState state;
+    
     public enum IntakeState {
             IDLE(false, 0,IntakeConstants.stowedAngleDeg),
             DEPLOYED(true, 0.35,IntakeConstants.intakeAngleDeg),
-            //ROLLERS_IN(true, 0.5),
-            //ROLLERS_OUT(true, -0.5),
-
-            //TODO: Tune wiggle angle
             WIGGLING(true, 0,80);
-            // UPPER_WIGGLE(true, 0.35),
-            // SLAM_DOWN(true,0.35);
 
             public final boolean intakeExtended;
             public final double rollerSpeed;
