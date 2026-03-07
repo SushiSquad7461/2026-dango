@@ -89,8 +89,8 @@ public class Constants {
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 200;
-    public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
-    public static final double RPM_DISTANCE_OFFSET = 2000;
+    // public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
+    // public static final double RPM_DISTANCE_OFFSET = 2000;
   }
     public static final class Swerve {
         public static final int pigeonID = 20;

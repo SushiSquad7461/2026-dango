@@ -209,13 +209,13 @@ public class RobotContainer {
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));
                 
-                operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
-                operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
-                operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
-                operatorController.y().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("trench"), shooter));
+                // operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
+                // operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
+                // operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
+                // operatorController.y().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("trench"), shooter));
 
-                operatorController.a().or(operatorController.b()).or(operatorController.x()).or(operatorController.y())
-                        .onFalse(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
+                // operatorController.a().or(operatorController.b()).or(operatorController.x()).or(operatorController.y())
+                //         .onFalse(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
         }
 
         public Command getAutonomousCommand() {

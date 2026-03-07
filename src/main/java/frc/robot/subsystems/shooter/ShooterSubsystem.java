@@ -82,10 +82,10 @@ public class ShooterSubsystem extends SubsystemBase {
   public Command stopFeeder() {
    return Commands.runOnce(()->io.stopFeeder());
   }
-  public void setTargetRPM(double distance) {
-    double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
-    this.targetRPM = rpm;
-  }
+  // public void setTargetRPM(double distance) {
+  //   double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
+  //   this.targetRPM = rpm;
+  // }
   public void setTargetRPM(String location) {
     switch (location) {
       case "hub":

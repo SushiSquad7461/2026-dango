@@ -9,23 +9,23 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
-import frc.robot.subsystems.shooter.*;
+// import frc.robot.subsystems.shooter.*;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.vision.limelight_vision.Vision;
 
 public class AutoAlign extends Command {
     private final Swerve swerve;
     private final Vision vision;
-    private final ShooterSubsystem shooter;
+    // private final ShooterSubsystem shooter;
     private final BooleanSupplier isRedSupplier;
     private final PIDController rotationPID;
     private final PIDController distancePID;
     private boolean isRed;
 
-    public AutoAlign(Swerve swerve, Vision vision, ShooterSubsystem shooter, BooleanSupplier isRedSupplier) {
+    public AutoAlign(Swerve swerve, Vision vision, /*ShooterSubsystem shooter,*/ BooleanSupplier isRedSupplier) {
         this.swerve = swerve;
         this.vision = vision;
-        this.shooter = shooter;
+        // this.shooter = shooter;
         this.isRedSupplier = isRedSupplier;
         rotationPID = Constants.Vision.rotationPID;
         rotationPID.setTolerance(2.0);
@@ -82,7 +82,7 @@ public class AutoAlign extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
+        // shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
         swerve.drive(new Translation2d(0, 0), 0, true, true);
     }
 }
