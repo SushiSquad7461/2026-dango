@@ -83,7 +83,7 @@ public class RobotContainer {
                 hoodedShooter = new HoodedShooter();
                 this.stateMachine = new StateMachine(shooter, hopper);
 
-                this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
+                this.autos = new AutoCommands(stateMachine, intake, shooter, hoodedShooter, swerve, vision);
 
                 // Configure the button bindings
                 configureButtonBindings();
@@ -204,6 +204,8 @@ public class RobotContainer {
                 driverController.leftTrigger().whileTrue(new AutoAlign(
                     swerve,
                     vision,
+                    shooter,
+                    hoodedShooter,
                     () -> DriverStation.getAlliance().isPresent() &&
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));

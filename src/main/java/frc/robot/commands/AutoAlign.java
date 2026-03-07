@@ -9,23 +9,26 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
-// import frc.robot.subsystems.shooter.*;
+import frc.robot.subsystems.shooter.HoodedShooter;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.vision.limelight_vision.Vision;
 
 public class AutoAlign extends Command {
     private final Swerve swerve;
     private final Vision vision;
-    // private final ShooterSubsystem shooter;
+    private final ShooterSubsystem shooter;
+    private final HoodedShooter hoodedShooter;
     private final BooleanSupplier isRedSupplier;
     private final PIDController rotationPID;
     private final PIDController distancePID;
     private boolean isRed;
 
-    public AutoAlign(Swerve swerve, Vision vision, /*ShooterSubsystem shooter,*/ BooleanSupplier isRedSupplier) {
+    public AutoAlign(Swerve swerve, Vision vision, ShooterSubsystem shooter, HoodedShooter hoodedShooter, BooleanSupplier isRedSupplier) {
         this.swerve = swerve;
         this.vision = vision;
-        // this.shooter = shooter;
+        this.shooter = shooter;
+        this.hoodedShooter = hoodedShooter;
         this.isRedSupplier = isRedSupplier;
         rotationPID = Constants.Vision.rotationPID;
         rotationPID.setTolerance(2.0);
@@ -52,7 +55,10 @@ public class AutoAlign extends Command {
 
         Rotation2d targetHeading = vision.getHeadingToScorePillar(isRed);
         double distance = vision.getDistanceToScorePillar(isRed);
-        // shooter.setTargetRPM(distance); // TODO: enable variable RPM once tuned
+        if (!Double.isNaN(distance)) {
+            shooter.setTargetRPM(distance);
+            hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(distance, shooter.getTargetSpeedMS()));
+        }
 
         double rotation = rotationPID.calculate(
             swerve.getHeading().getDegrees(),
@@ -82,7 +88,8 @@ public class AutoAlign extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        // shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
+        shooter.setTargetRPM(Constants.Vision.targetDistanceMeters);
+        hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(Constants.Vision.targetDistanceMeters, shooter.getTargetSpeedMS()));
         swerve.drive(new Translation2d(0, 0), 0, true, true);
     }
 }
