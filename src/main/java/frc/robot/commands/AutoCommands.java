@@ -47,6 +47,7 @@ public class AutoCommands {
             autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
             autoChooser.addOption("B1_Hub_HP_Shoot", new PathPlannerAuto("B1_Hub_HP_Shoot"));
             autoChooser.addOption("B2_Hub_HP_Shoot", new PathPlannerAuto("B2_Hub_HP_Shoot"));
+            autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
             autoChooser.addOption("B3_Hub_HP_Shoot", new PathPlannerAuto("B3_Hub_HP_Shoot"));
             SmartDashboard.putData("Auto Chooser", autoChooser);
 

@@ -49,7 +49,7 @@ public class Constants {
     public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
     public static PIDController distancePID = new PIDController(1.3, 0, 0);
-    public static final double targetDistanceMeters = Units.feetToMeters(7);
+    public static final double targetDistanceMeters = Units.feetToMeters(9);
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
