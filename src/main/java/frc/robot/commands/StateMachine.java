@@ -24,7 +24,7 @@ public class StateMachine extends SubsystemBase {
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
-
+        //AUTO_ALIGN()
     
         public final ShooterState shooterState;
         public final HopperState hopperState;
@@ -32,6 +32,8 @@ public class StateMachine extends SubsystemBase {
         private RobotState( ShooterState shooterState,HopperState hopperState) {
             this.shooterState = shooterState;
             this.hopperState = hopperState;
+
+
         }
     }
 
