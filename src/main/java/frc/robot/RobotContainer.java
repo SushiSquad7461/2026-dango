@@ -150,8 +150,10 @@ public class RobotContainer {
 
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
                 driverController.rightBumper().onTrue(
-                        intake.getState()==IntakeState.DEPLOYED?intake.changeState(IntakeState.IDLE):
-                                   intake.changeState(IntakeState.DEPLOYED));
+                        Commands.either(
+                                intake.changeState(IntakeState.IDLE),
+                                intake.changeState(IntakeState.DEPLOYED),
+                                () -> intake.getState() == IntakeState.DEPLOYED));
 
                  // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
