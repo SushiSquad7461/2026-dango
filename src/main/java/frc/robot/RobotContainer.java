@@ -83,7 +83,7 @@ public class RobotContainer {
                 hoodedShooter = new HoodedShooter();
                 this.stateMachine = new StateMachine(shooter, hopper);
 
-                this.autos = new AutoCommands(stateMachine, intake, shooter);
+                this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
 
                 // Configure the button bindings
                 configureButtonBindings();
