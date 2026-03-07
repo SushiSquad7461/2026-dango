@@ -35,6 +35,9 @@ public class Intake extends SubsystemBase{
     public boolean intakeAtTargetPos(){
         return (io.isPivotAtTarget());
     }
+    public IntakeState getState(){
+        return this.state;
+    }
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
             this.state = newState;

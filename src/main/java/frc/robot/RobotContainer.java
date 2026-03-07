@@ -52,7 +52,7 @@ public class RobotContainer {
         private final AutoCommands autos;
         //@SuppressWarnings("unused")
         private final Vision vision;
-        private boolean intakeDown= false;
+
 
         // private boolean wiggleOn;
 
@@ -150,8 +150,8 @@ public class RobotContainer {
 
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
                 driverController.rightBumper().onTrue(
-                        intakeDown?Commands.parallel(intake.changeState(IntakeState.IDLE),Commands.runOnce(()->intakeDown=!intakeDown)):
-                                   Commands.parallel(intake.changeState(IntakeState.DEPLOYED),Commands.runOnce(()->intakeDown=!intakeDown)));
+                        intake.getState()==IntakeState.DEPLOYED?intake.changeState(IntakeState.IDLE):
+                                   intake.changeState(IntakeState.DEPLOYED));
 
                  // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
