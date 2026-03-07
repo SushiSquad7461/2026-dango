@@ -19,7 +19,7 @@ public class AutoAlign extends Command {
     private final ShooterSubsystem shooter;
     private final BooleanSupplier isRedSupplier;
     private final PIDController rotationPID;
-    private final PIDController distancePID;
+    // private final PIDController distancePID;
     private boolean isRed;
 
     public AutoAlign(Swerve swerve, Vision vision, ShooterSubsystem shooter, BooleanSupplier isRedSupplier) {
@@ -30,8 +30,8 @@ public class AutoAlign extends Command {
         rotationPID = Constants.Vision.rotationPID;
         rotationPID.setTolerance(2.0);
         rotationPID.enableContinuousInput(-180, 180);
-        distancePID = Constants.Vision.distancePID;
-        distancePID.setTolerance(0.1);
+        // distancePID = Constants.Vision.distancePID;
+        // distancePID.setTolerance(0.1);
         addRequirements(this.swerve);
     }
 
@@ -40,7 +40,7 @@ public class AutoAlign extends Command {
         // Evaluate alliance now, when FMS is actually connected
         isRed = isRedSupplier.getAsBoolean();
         rotationPID.reset();
-        distancePID.reset();
+        // distancePID.reset();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class AutoAlign extends Command {
             targetHeading.getDegrees()
         );
         rotation = MathUtil.clamp(rotation, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
-
+        /*
         Translation2d translation = new Translation2d(0, 0);
         if (!Double.isNaN(distance)) {
             double translationSpeed = -distancePID.calculate(distance, Constants.Vision.targetDistanceMeters);
@@ -69,8 +69,8 @@ public class AutoAlign extends Command {
             Rotation2d directionToTag = targetHeading.minus(new Rotation2d(Math.PI));
             translation = new Translation2d(translationSpeed, directionToTag);
         }
-
-        swerve.drive(translation, rotation, true, true);
+        */
+        swerve.drive(new Translation2d(0, 0), rotation, true, true);
 
         SmartDashboard.putNumber("Vision/Distance", Double.isNaN(distance) ? -1 : distance);
         SmartDashboard.putNumber("Vision/TargetHeading", targetHeading.getDegrees());
@@ -80,7 +80,7 @@ public class AutoAlign extends Command {
     @Override
     public boolean isFinished() {
         shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT);
-        return rotationPID.atSetpoint() && distancePID.atSetpoint();
+        return rotationPID.atSetpoint();// && distancePID.atSetpoint();
     }
 
     @Override
