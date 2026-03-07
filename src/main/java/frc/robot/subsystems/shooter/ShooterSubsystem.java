@@ -83,6 +83,22 @@ public class ShooterSubsystem extends SubsystemBase {
     double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
     this.targetRPM = rpm;
   }
+  public void setTargetRPM(String location) {
+    switch (location) {
+      case "hub":
+        this.targetRPM = Constants.Shooter.TARGET_RPM_HUB;
+        break;
+      case "outpost":
+        this.targetRPM = Constants.Shooter.TARGET_RPM_OUTPOST;
+        break;
+      case "trench":
+        this.targetRPM = Constants.Shooter.TARGET_RPM_TRENCH;
+        break;
+      default:
+        this.targetRPM = Constants.Shooter.TARGET_RPM_DEFAULT;
+        break;
+    }
+  }
   public boolean isShooterReady() {
     return io.isShooterReady();
   }
