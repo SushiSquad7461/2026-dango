@@ -181,10 +181,13 @@ public class RobotContainer {
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
 
                 operatorController.rightBumper().onTrue(
-                        Commands.parallel( shooter.runFeederBack(), hopper.runHopperBack())
-                       ).onFalse(
-                        Commands.parallel( shooter.stopFeeder(), hopper.stopHopper())
-                       );
+                        Commands.parallel(shooter.runFeederBack(), hopper.runHopperBack())
+                ).onFalse(
+                        Commands.either(
+                                Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
+                                Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
+                                () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
+                                      stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);

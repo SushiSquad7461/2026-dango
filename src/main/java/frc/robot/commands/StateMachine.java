@@ -78,9 +78,8 @@ public class StateMachine extends SubsystemBase {
             state = newState
             ),
             Commands.parallel(
-                shooter.changeState(newState.shooterState))
-                .andThen(Commands.waitSeconds(1))
-                .andThen(hopper.changeState(newState.hopperState))
+                shooter.changeState(newState.shooterState),
+                hopper.changeState(newState.hopperState))
         );
     }
 

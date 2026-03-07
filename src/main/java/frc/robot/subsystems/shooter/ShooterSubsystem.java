@@ -73,6 +73,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   }
 
+  public Command runFeeder() {
+   return Commands.runOnce(()->io.runFeeder());
+  }
   public Command runFeederBack(){
    return Commands.runOnce(()->io.runFeederBack());
   }
