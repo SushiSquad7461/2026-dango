@@ -1,11 +1,9 @@
 package frc.robot.subsystems;
 
 import frc.robot.util.AllianceUtil;
-import frc.robot.commands.AutoAlign;
 import frc.robot.generated.Constants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;

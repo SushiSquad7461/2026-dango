@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD
 // license that can be found in the LICENSE file
 // at the root directory of this project.
-
+/*
 package frc.robot.subsystems.drive.real;
 
 import static frc.robot.util.PhoenixUtil.*;
@@ -40,14 +40,14 @@ import frc.robot.subsystems.drive.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.ModuleIO.ModuleIOInputs;
 
 import java.util.Queue;
-
+*/
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
  * CANcoder. Configured using a set of module constants from Phoenix.
  *
  * <p>Device configuration and other behaviors not exposed by Constants can be customized here.
  */
-public class ModuleIOTalonFX implements ModuleIO {
+//public class ModuleIOTalonFX implements ModuleIO {
 //   private final SwerveModuleConstants<
 //           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
 //       constants;
@@ -266,4 +266,4 @@ public class ModuleIOTalonFX implements ModuleIO {
 //               positionTorqueCurrentRequest.withPosition(rotation.getRotations());
 //         });
 //   }
-}
+//}

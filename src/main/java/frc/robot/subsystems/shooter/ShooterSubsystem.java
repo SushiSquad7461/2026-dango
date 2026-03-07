@@ -2,10 +2,7 @@
 package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,17 +29,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public ShooterSubsystem(ShooterIO io) {
     this.io = io;
-
-    LoggedNetworkNumber voltage = new LoggedNetworkNumber("HoodedShooter/voltage", 0);
-    LoggedNetworkNumber kG = new LoggedNetworkNumber("HoodedShooter/kG", 0);
-    LoggedNetworkNumber kP = new LoggedNetworkNumber("HoodedShooter/kP", 0);
-    LoggedNetworkNumber kI = new LoggedNetworkNumber("HoodedShooter/kI", 0);
-    LoggedNetworkNumber kD = new LoggedNetworkNumber("HoodedShooter/kD", 0);
-    LoggedNetworkNumber kS = new LoggedNetworkNumber("HoodedShooter/kS", 0);
-    LoggedNetworkNumber kV = new LoggedNetworkNumber("HoodedShooter/kV", 0);
-    LoggedNetworkNumber kA = new LoggedNetworkNumber("HoodedShooter/kA", 0);
-
-
   }
 
   public void startShoot() {
