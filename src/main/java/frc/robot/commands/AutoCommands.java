@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class AutoCommands {
@@ -27,7 +28,7 @@ public class AutoCommands {
              NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
-            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN)));
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
         NamedCommands.registerCommand("Idle",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
     
