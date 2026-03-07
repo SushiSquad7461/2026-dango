@@ -204,7 +204,6 @@ public class RobotContainer {
                 driverController.leftTrigger().whileTrue(new AutoAlign(
                     swerve,
                     vision,
-                    shooter,
                     () -> DriverStation.getAlliance().isPresent() &&
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));
