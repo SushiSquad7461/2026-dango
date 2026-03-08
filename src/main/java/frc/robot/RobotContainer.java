@@ -81,7 +81,7 @@ public class RobotContainer {
                         hopper = new Hopper(new HopperIOSim());
                 }
                 hoodedShooter = new HoodedShooter();
-                this.stateMachine = new StateMachine(shooter, hopper);
+                this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
 
@@ -148,7 +148,7 @@ public class RobotContainer {
                 // driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
                 //                 stateMachine.changeState(RobotState.IDLE));
 
-                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.INTAKE_DOWN));
                 driverController.rightBumper().onTrue(
                         Commands.either(
                                 intake.changeState(IntakeState.IDLE),
@@ -180,7 +180,7 @@ public class RobotContainer {
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
 
-                operatorController.rightBumper().onTrue(
+                driverController.leftBumper().onTrue(
                         Commands.parallel(shooter.runFeederBack(), hopper.runHopperBack())
                 ).onFalse(
                         Commands.either(
@@ -204,7 +204,6 @@ public class RobotContainer {
                 driverController.leftTrigger().whileTrue(new AutoAlign(
                     swerve,
                     vision,
-                    shooter,
                     () -> DriverStation.getAlliance().isPresent() &&
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));
