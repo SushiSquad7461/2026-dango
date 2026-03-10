@@ -26,4 +26,7 @@ public class HopperIOReal implements HopperIO{
     public void changeState(HopperState newState){
         motor.set(newState.speed);
     }
+    public void setSpeed(double speed){
+        motor.set(speed);
+    }
 }

@@ -1,9 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.generated.Constants;
-import frc.robot.subsystems.Swerve;
-import frc.robot.util.AllianceUtil;
-
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 

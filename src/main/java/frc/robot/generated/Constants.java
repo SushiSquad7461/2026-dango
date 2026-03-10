@@ -16,7 +16,11 @@ import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
@@ -37,29 +41,58 @@ public class Constants {
   public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
-
+  public static final class Vision {
+    public static final String primaryLimelightName = "limelight-left";
+    public static final String secondaryLimelightName = "limelight-right";
+    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
+    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
+    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
+    public static PIDController distancePID = new PIDController(1.3, 0, 0);
+    public static final double targetDistanceMeters = Units.feetToMeters(9);
+    // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
+    // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
+    public static Pose3d cameraPosePrimary = new Pose3d(
+        new Translation3d(-0.263525, 0.263525, 0.2439162),
+        new Rotation3d(0, Math.toRadians(20), Math.toRadians(150))
+    );
+    // limelight-right (secondary): forward=-0.263525m, right=0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=-150°
+    public static Pose3d cameraPoseSecondary = new Pose3d(
+        new Translation3d(-0.263525, -0.263525, 0.2439162),
+        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
+    );
+  }
   public static final class Shooter{
-    public static final double FLYWHEELRPM = 0.8;
-    public static final double TARGET_RPM = 4500;
-      // TODO: tune shooter flywheel PID
-    public static final double SHOOTER_KS = 0.1;
-    public static final double SHOOTER_KV = 0.12;
-    public static final double SHOOTER_KP = 0.11;
-    public static final double SHOOTER_KI = 0;
-    public static final double SHOOTER_KD = 0;
+    public static final double TARGET_RPM_DEFAULT = 4500;
+    public static double SHOOTER_KS = 0.0;
+    public static double SHOOTER_KV = 0.12; //0.12
+    public static double SHOOTER_KP = 0.167;
+    public static double SHOOTER_KI = 0;
+    public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
     public static final double SHOOTER_INTAKE_KS = 0.1;
     public static final double SHOOTER_INTAKE_KV = 0.12;
-    public static final double SHOOTER_INTAKE_KP = 0.11;
+    public static final double SHOOTER_INTAKE_KP = 0.0;
     public static final double SHOOTER_INTAKE_KI = 0;
     public static final double SHOOTER_INTAKE_KD = 0;
     // TODO: tune hood PID
     public static final double HOOD_KP = 2.4;
     public static final double HOOD_KI = 0;
-    public static
-     final double HOOD_KD = 0.1;
+    public static final double HOOD_KD = 0.1;
+    // TODO: tune shooter presets
+    public static final double TARGET_RPM_TRENCH = 0;
+    public static final double TARGET_RPM_OUTPOST = 0;
+    public static final double TARGET_RPM_HUB = 0;
+    public static final double TARGET_HOOD_TRENCH = 0;
+    public static final double TARGET_HOOD_OUTPOST = 0;
+    public static final double TARGET_HOOD_HUB = 0;
+
+    public static final double FEEDER_RPM = 1000;
+    public static final double SHOOTER_RPM_TOLERANCE = 200;
+    // public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
+    // public static final double RPM_DISTANCE_OFFSET = 2000;
   }
- public static final class Swerve {
+    public static final class Swerve {
         public static final int pigeonID = 20;
         public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
@@ -140,6 +173,8 @@ public class Constants {
         public static final class Mod0 {
             public static final int driveMotorID = 17;
             public static final int angleMotorID = 12;
+
+            //TODO: Change cancoder
             public static final int canCoderID = 9;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(74.53125); //point bevel to right
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
@@ -167,6 +202,8 @@ public class Constants {
         public static final class Mod1 {
             public static final int driveMotorID = 9;
             public static final int angleMotorID = 8;
+
+            //TODO: Change
             public static final int canCoderID = 6;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(133.066407);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
@@ -221,6 +258,8 @@ public class Constants {
         public static final class Mod3 {
             public static final int driveMotorID = 0;
             public static final int angleMotorID = 1;
+
+            //TODO: Change
             public static final int canCoderID = 12;
             public static final Rotation2d angleOffset = Rotation2d.fromDegrees(27.421874);
             public static final SwerveModuleConstants constants = new SwerveModuleConstants(
@@ -251,20 +290,20 @@ public class Constants {
         public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
-        public static final double intakeAngleDeg = 108.334961; //+125
+        public static final double intakeAngleDeg = 135; 
         public static final double angleToleranceDeg = 5.0;
-        public static final double stowedAngleDeg = 0.446777;
+        public static final double stowedAngleDeg = 0;
 
         public static final double motorRotationsPerArmRotation = 64.0;
 
-        public static final double cruiseVelocityRps = 8;//2.0; 
-        public static final double accelRps2 =2;//2.0 
+        public static final double cruiseVelocityRps = 16;
+        public static final double accelRps2 =32;
 
-        public static final double pivotP = 0.4;
+        public static final double pivotP = 0.8;
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
-        public static final double rollerSpeed = 0.35;//0.60;
+        public static final double rollerSpeed = -0.35;//0.60;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;
@@ -280,7 +319,26 @@ public class Constants {
     REPLAY
   }
 
+    public static final class HoodedShooterConstants{
+        public static final double cruiseVelocityRps = .25;
+        public static final double accelRps2 =.125;
 
+        public static final double pivotP = 0.8;
+        public static final double pivotI = 0.0;
+        public static final double pivotD = 0.0;
+    }
+
+    public static final class AutoConstants { //TODO: Need to tune constants!
+        public static final double kMaxSpeedMetersPerSecond = 3;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 3;
+
+        public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
+        public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+    
+        public static final double kPTranslationController = IS_SIM ? 15 : 7;
+        public static final double kPThetaController = 10;
+    }
+    
   // Both sets of gains need to be tuned to your individual robot.
   // The steer motor uses any SwerveModule.SteerRequestType control request with
   // the

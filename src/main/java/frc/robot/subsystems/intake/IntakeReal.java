@@ -2,7 +2,7 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
+//import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -10,9 +10,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.generated.Constants;
 import frc.robot.generated.Constants.IntakeConstants;
 import frc.robot.subsystems.intake.Intake.IntakeState;
@@ -28,7 +26,7 @@ public class IntakeReal implements IntakeIO {
 
 
     private final MotionMagicVoltage pivotControl = new MotionMagicVoltage(0);
-    private final DutyCycleOut rollerControl = new DutyCycleOut(0);
+    //private final DutyCycleOut rollerControl = new DutyCycleOut(0);
 
     // Current pivot setpoint in degrees (converted to motor rotations when commanded).
     private double pivotTargetDeg = Constants.IntakeConstants.stowedAngleDeg;
@@ -55,8 +53,6 @@ public class IntakeReal implements IntakeIO {
 
         cfg.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         cfg.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
-
-        //CHANGES THE SPEED OF THE PIVOT
         cfg.CurrentLimits.SupplyCurrentLimit = 10;
         
         cfg.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -87,19 +83,13 @@ public class IntakeReal implements IntakeIO {
         this.state = newState;
         pivotTargetDeg = newState.pivotAngle;
         //leftPivotMotor.setControl(new DutyCycleOut(0));
-        if(newState == IntakeState.WIGGLING){
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        } else{
-            leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
-            Commands.waitUntil(this::isPivotAtTarget);
-            rollerMotor.set(newState.rollerSpeed);
-        }
-        //leftPivotMotor.set(newState.pivotSpeed);
-        //rightPivotMotor.set(newState.pivotSpeed);
-        
-        
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+    }
+
+    @Override
+    public void setStateRollers(double rollerSpeed)
+    {
+     rollerMotor.set(rollerSpeed);
     }
 
     @Override
@@ -116,7 +106,7 @@ public class IntakeReal implements IntakeIO {
     public double getPivotAngle() {
         final double motorRot = leftPivotMotor.getPosition().getValueAsDouble();
         final double armRot = motorRot / IntakeConstants.motorRotationsPerArmRotation;
-        return armRot * 360.0;
+        return armRot * 360.0;    
     }
     public double getPivotTargetAngle(){
         return pivotTargetDeg;

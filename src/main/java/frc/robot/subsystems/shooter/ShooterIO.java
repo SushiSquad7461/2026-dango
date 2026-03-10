@@ -1,15 +1,14 @@
 // Exposes methods for shooter control
 package frc.robot.subsystems.shooter;
 
-import org.littletonrobotics.junction.AutoLog;
-
 public interface ShooterIO {
     
-    void setFlywheelRPM(double rpm);
-    void stopFlywheel();
+    void runShooter(double rpm);
+    void stopShooter();
     void runFeeder();
+    void runFeederBack();
     void stopFeeder();
     double getFlywheelRPM();
-    double getHoodPos();
+    double getFlywheelTargetRPM();
     boolean isShooterReady();
 }

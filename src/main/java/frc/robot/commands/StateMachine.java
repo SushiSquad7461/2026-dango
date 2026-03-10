@@ -1,6 +1,4 @@
 package frc.robot.commands;
-import java.util.function.BooleanSupplier;
-
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -19,43 +17,43 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(IntakeState.IDLE,ShooterState.IDLE,HopperState.IDLE),
-        SHOOT_ONLY(IntakeState.IDLE,ShooterState.SHOOT,HopperState.RUNNING),
-        WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN(IntakeState.DEPLOYED, ShooterState.IDLE,HopperState.IDLE);
+        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.IDLE),
+        SHOOT_ONLY(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.DEPLOYED),
+        INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
+        //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        //INTAKE_ROLL_IN_AND_SHOOT(IntakeState.ROLLERS_IN,ShooterState.SHOOT,HopperState.RUNNING),
+        INTAKE_DOWN_AND_SHOOT(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.DEPLOYED);
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
     
-        public final IntakeState intakeState;
         public final ShooterState shooterState;
         public final HopperState hopperState;
+        public final IntakeState intakeState;
 
-        private RobotState(IntakeState intakeState, ShooterState shooterState,HopperState hopperState) {
-            this.intakeState = intakeState;
+        private RobotState( ShooterState shooterState,HopperState hopperState,IntakeState intakeState) {
             this.shooterState = shooterState;
             this.hopperState = hopperState;
+            this.intakeState = intakeState;
         }
     }
 
     private RobotState state;
-    private final Intake intake;
     private final ShooterSubsystem shooter;
     private final Hopper hopper;
+    private final Intake intake;
     private final NetworkTable stateTable;
     private final StringPublisher currentStatePub;
 
     /**
      * Constructs the State Machine
      */
-    public StateMachine(Intake intake, ShooterSubsystem shooter, Hopper hopper) {
-        this.intake = intake;
+    public StateMachine(ShooterSubsystem shooter, Hopper hopper, Intake intake) {
         this.shooter = shooter;
         this.hopper = hopper;
+        this.intake = intake;
         this.state = RobotState.IDLE;
 
        
@@ -75,6 +73,10 @@ public class StateMachine extends SubsystemBase {
         changeState(newState).schedule();
     }
 
+    public RobotState getState(){
+        return this.state;
+    }
+
     //TODO: Combine
     public Command changeState(RobotState newState) {
         
@@ -83,27 +85,9 @@ public class StateMachine extends SubsystemBase {
             state = newState
             ),
             Commands.parallel(
-                Commands.sequence(
-                    //If the new state's change is the "wiggle" state
-                    state.intakeState == IntakeState.WIGGLING ?
-                    //Depoly the intake
-                    intake.changeState(IntakeState.DEPLOYED)
-                        //Wait until the intake is in position
-                        .andThen(Commands.waitUntil(intake::intakeAtTargetPos))
-                        //Only then chagne the sate to wiggling
-                        .andThen(intake.changeState(IntakeState.WIGGLING))
-                        //Waits until the intake is at the wiggling height
-                        .andThen(Commands.waitUntil(intake::intakeAtTargetPos))
-                        //Slams the intake back down
-                        .andThen(intake.changeState(IntakeState.DEPLOYED))
-                        //ensures that the intake is in its deployed position before another command is scheduled
-                        .andThen(Commands.waitUntil(intake::intakeAtTargetPos))
-                    //If the new state isn't wiggle, act normally
-                    : intake.changeState(newState.intakeState)
-                ),
-                shooter.changeState(newState.shooterState))
-                .andThen(Commands.waitSeconds(2))
-                .andThen(hopper.changeState(newState.hopperState))
+                shooter.changeState(newState.shooterState),
+                hopper.changeState(newState.hopperState),
+                intake.changeState(newState.intakeState))
         );
     }
 
