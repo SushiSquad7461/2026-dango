@@ -38,7 +38,7 @@ public class IntakeReal implements IntakeIO {
         
         configurePivot();
         configureRoller();
-        setState(IntakeState.IDLE);
+        setState(IntakeState.IDLE.pivotAngle);
     }
 
     // Apply Motion Magic + PID + current limit + brake mode for the pivot.
@@ -79,11 +79,9 @@ public class IntakeReal implements IntakeIO {
     }
 
     // Set high-level state; updates pivot setpoint and roller behavior.
-    public void setState(IntakeState newState) {
-        this.state = newState;
-        pivotTargetDeg = newState.pivotAngle;
+    public void setState(double pos) {
         //leftPivotMotor.setControl(new DutyCycleOut(0));
-        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pivotTargetDeg)));
+        leftPivotMotor.setControl(pivotControl.withPosition(degreesToMotorRotations(pos)));
     }
 
     @Override
@@ -115,6 +113,10 @@ public class IntakeReal implements IntakeIO {
     // True when pivot is within tolerance of current target.
     public boolean isPivotAtTarget() {
         return Math.abs(getPivotAngle() - pivotTargetDeg) <= IntakeConstants.angleToleranceDeg;
+    }
+
+    public boolean isPivotAtSetpoint(double targetDeg) {
+        return Math.abs(getPivotAngle() - targetDeg) <= IntakeConstants.angleToleranceDeg;
     }
 
     

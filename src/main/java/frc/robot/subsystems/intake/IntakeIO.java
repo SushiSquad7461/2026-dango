@@ -15,7 +15,8 @@ public interface IntakeIO {
     void zeroPivot();
     void runRollers();
     void stopRollers();
-    void setState(IntakeState newState);
+    void setState(double pos);
     void getMotorPos();
      void setStateRollers(double rollerSpeed);
+     boolean isPivotAtSetpoint(double targetDeg); 
 }
