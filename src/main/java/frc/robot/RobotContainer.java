@@ -68,7 +68,6 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                vision = new Vision(swerve);
 
                 if (Robot.isReal()) {
                         shooter = new ShooterSubsystem(new ShooterIOKraken());
@@ -82,6 +81,7 @@ public class RobotContainer {
                         hopper = new Hopper(new HopperIOSim());
                 }
                 hoodedShooter = new HoodedShooter();
+                vision = new Vision(swerve, shooter);
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
@@ -210,10 +210,10 @@ public class RobotContainer {
                 ));
                 
                 // bind to copilot D-pad
-                operatorController.povUp().onTrue(Commands.runOnce(() -> shotCalc.adjustOffset(25)));
-                operatorController.povDown().onTrue(Commands.runOnce(() -> shotCalc.adjustOffset(-25)));
+                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25)));
+                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-25)));
                 // reset on mode change so trim doesn't carry over
-                shotCalc.resetOffset();
+                vision.resetOffset();
                 // operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
                 // operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
                 // operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
