@@ -58,10 +58,34 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName, swerve.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, swerve.getPose().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate leftPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.primaryLimelightName);
-        LimelightHelpers.PoseEstimate rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.secondaryLimelightName);
-        swerve.addVisionMeasurement(leftPose.pose, leftPose.timestampSeconds, VecBuilder.fill(0.01, 0.01, 9999999.0));
-        swerve.addVisionMeasurement(rightPose.pose, rightPose.timestampSeconds, VecBuilder.fill(0.01, 0.01, 9999999.0));
+        // 1. Fetch the poses
+LimelightHelpers.PoseEstimate leftPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.primaryLimelightName);
+LimelightHelpers.PoseEstimate rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.secondaryLimelightName);
+
+// 2. Process Left Limelight
+if (leftPose != null && leftPose.tagCount > 0) {
+    // Start with a baseline trust (e.g., 0.5 meters)
+    double xyStdDev = 0.5;
+    
+    // If it sees multiple tags, we trust it WAY more
+    if (leftPose.tagCount > 1) xyStdDev = 0.1;
+    
+    // Add penalty based on distance (farther = less trust)
+    xyStdDev += Math.pow(leftPose.avgTagDist, 2.0) * 0.1;
+
+    // 9999999.0 is still strictly required to prevent MegaTag2 gyro feedback loops
+    swerve.addVisionMeasurement(leftPose.pose, leftPose.timestampSeconds, VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+}
+
+// 3. Process Right Limelight
+if (rightPose != null && rightPose.tagCount > 0) {
+    double xyStdDev = 0.5;
+    if (rightPose.tagCount > 1) xyStdDev = 0.1;
+    xyStdDev += Math.pow(rightPose.avgTagDist, 2.0) * 0.1;
+
+    swerve.addVisionMeasurement(rightPose.pose, rightPose.timestampSeconds, VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+}
+
         Translation2d hubCenter = new Translation2d(4.6, 4.0);  // your target
         Translation2d hubForward = new Translation2d(1, 0);       // which way the hub faces
 
