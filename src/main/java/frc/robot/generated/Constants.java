@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.vision.ProjectileSimulator.SimParameters;
 import frc.robot.Robot;
 
 
@@ -44,12 +45,8 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
-    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    public static final double ERROR_DEGREES = 5.0;
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
-    public static PIDController distancePID = new PIDController(1.3, 0, 0);
-    public static final double targetDistanceMeters = Units.feetToMeters(9);
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
@@ -60,6 +57,20 @@ public class Constants {
     public static Pose3d cameraPoseSecondary = new Pose3d(
         new Translation3d(-0.263525, -0.263525, 0.2439162),
         new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
+    );
+    public static final SimParameters SOTM_PARAMETERS = new SimParameters(
+        0.215,   // ball mass kg
+        0.1501,  // ball diameter m
+        0.47,    // drag coeff (smooth sphere)
+        0.2,     // Magnus coeff
+        1.225,   // air density kg/m^3
+        0.43,    // exit height from floor, measure from CAD
+        0.1016,  // wheel diameter, measure with calipers
+        1.83,    // target height, from game manual
+        0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
+        45.0,    // launch angle degrees from horizontal
+        0.001,   // sim timestep
+        1500, 6000, 25, 5.0  // RPM range, search iters, max sim time
     );
   }
   public static final class Shooter{

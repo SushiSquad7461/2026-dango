@@ -261,8 +261,13 @@ public class Swerve extends SubsystemBase {
         RIGHT
     }
 
-    private ChassisSpeeds getRobotRelativeSpeeds() {
+    public ChassisSpeeds getRobotRelativeSpeeds() {
         return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
+    }
+    
+    public ChassisSpeeds getFieldVelocity() { // Added this new method
+        // Uses your existing methods to get the robot speeds and the gyro heading
+        return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getHeading());
     }
 
     private void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {

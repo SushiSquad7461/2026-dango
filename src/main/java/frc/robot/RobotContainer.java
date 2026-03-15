@@ -28,9 +28,10 @@ import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.vision.ShotCalculator;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
-import frc.robot.subsystems.vision.limelight_vision.Vision;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -208,6 +209,11 @@ public class RobotContainer {
                         DriverStation.getAlliance().get() == DriverStation.Alliance.Red
                 ));
                 
+                // bind to copilot D-pad
+                operatorController.povUp().onTrue(Commands.runOnce(() -> shotCalc.adjustOffset(25)));
+                operatorController.povDown().onTrue(Commands.runOnce(() -> shotCalc.adjustOffset(-25)));
+                // reset on mode change so trim doesn't carry over
+                shotCalc.resetOffset();
                 // operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
                 // operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
                 // operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
