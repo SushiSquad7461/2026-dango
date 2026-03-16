@@ -323,9 +323,9 @@ public class Constants {
         public static final double cruiseVelocityRps = .25;
         public static final double accelRps2 =.125;
 
-        public static final double pivotP = 0.8;
-        public static final double pivotI = 0.0;
-        public static final double pivotD = 0.0;
+        public static final double hoodP = 0.8;
+        public static final double hoodI = 0.0;
+        public static final double hoodD = 0.0;
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!

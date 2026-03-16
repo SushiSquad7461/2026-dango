@@ -1,19 +1,25 @@
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.Constants;
 import frc.robot.generated.Constants.IntakeConstants;
 
 
 
 public class HoodedShooter extends SubsystemBase{
     private TalonFX hoodMotor;
+    private final MotionMagicVelocityVoltage hoodControlV = new MotionMagicVelocityVoltage(0);
     private final MotionMagicVoltage hoodControl = new MotionMagicVoltage(0);
 
     public HoodedShooter(){
@@ -21,14 +27,14 @@ public class HoodedShooter extends SubsystemBase{
         TalonFXConfiguration hoodMotorConfig = new TalonFXConfiguration();
         hoodMotorConfig.CurrentLimits.StatorCurrentLimit = 20.0;
         hoodMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        hoodMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        hoodMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         hoodMotorConfig.Voltage.PeakForwardVoltage = 12.0;
         hoodMotorConfig.Voltage.PeakReverseVoltage = -12.0;
         
         Slot0Configs slot0 = hoodMotorConfig.Slot0;
-        slot0.kP = IntakeConstants.pivotP;
-        slot0.kI = IntakeConstants.pivotI;
-        slot0.kD = IntakeConstants.pivotD;
+        slot0.kP = Constants.HoodedShooterConstants.hoodP;
+        slot0.kI = Constants.HoodedShooterConstants.hoodI;
+        slot0.kD = Constants.HoodedShooterConstants.hoodD;
         hoodMotorConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.cruiseVelocityRps;
         hoodMotorConfig.MotionMagic.MotionMagicAcceleration = IntakeConstants.accelRps2;
         hoodMotorConfig.CurrentLimits.SupplyCurrentLimit = 10;
@@ -79,10 +85,11 @@ public class HoodedShooter extends SubsystemBase{
     // }
 
     public void moveHood(double speed){
-        hoodMotor.set(speed);
+            hoodMotor.setControl(hoodControlV.withVelocity((speed)));
     }
 
     public void periodic(){
         SmartDashboard.putNumber("HoodedShooter/HoodAngle", (hoodMotor.getPosition().getValueAsDouble())/360.0);
+        SmartDashboard.putNumber("HoodedShooter/HoodTarget", (hoodControl.getPositionMeasure().in(Degrees)));
     }
 }
