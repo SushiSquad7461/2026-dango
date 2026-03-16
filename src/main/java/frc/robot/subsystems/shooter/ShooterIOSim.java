@@ -24,11 +24,6 @@ public class ShooterIOSim implements ShooterIO {
         data.appliedVolts = rpm / 5000.0 * 12.0; 
     }
 
-    @Override
-    public void stopShooter() {
-        targetRPM = 0;
-        data.appliedVolts = 0;
-    }
 
     @Override
     public void runFeeder() {
@@ -74,6 +69,12 @@ public class ShooterIOSim implements ShooterIO {
     public void runFeederBack() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'runFeederBack'");
+    }
+
+    @Override
+    public void stopShooter(double rpm) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'stopShooter'");
     }
 
 }

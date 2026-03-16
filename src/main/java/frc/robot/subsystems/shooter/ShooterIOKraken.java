@@ -20,9 +20,9 @@ public class ShooterIOKraken implements ShooterIO {
   CANBus rioCanBus = new CANBus("rio");
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(5, rioCanBus);
+  private final TalonFX krakenShooterLeft = new TalonFX(14, rioCanBus);
   private final TalonFX krakenShooterRight = new TalonFX(2, rioCanBus);
-  private final TalonFX krakenShooterKicker = new TalonFX(14, rioCanBus);
+  private final TalonFX krakenShooterKicker = new TalonFX(5, rioCanBus);
   private final VelocityVoltage shooterRequest = new VelocityVoltage(0).withSlot(0); // create a velocity closed-loop request, voltage output, slot 0 configs
   private final VelocityVoltage feederRequest = new VelocityVoltage(0).withSlot(0);
 
@@ -63,11 +63,11 @@ public class ShooterIOKraken implements ShooterIO {
 
     // setup PID
     Slot0Configs shooterIntakePID = new Slot0Configs();
-    shooterIntakePID.kS = Constants.Shooter.SHOOTER_INTAKE_KS;
-    shooterIntakePID.kV = Constants.Shooter.SHOOTER_INTAKE_KV; 
-    shooterIntakePID.kP = Constants.Shooter.SHOOTER_INTAKE_KP;
-    shooterIntakePID.kI = Constants.Shooter.SHOOTER_INTAKE_KI; 
-    shooterIntakePID.kD = Constants.Shooter.SHOOTER_INTAKE_KD;
+    shooterIntakePID.kS = Constants.Shooter.KICKER_KS;
+    shooterIntakePID.kV = Constants.Shooter.KICKER_KV; 
+    shooterIntakePID.kP = Constants.Shooter.KICKER_KP;
+    shooterIntakePID.kI = Constants.Shooter.KICKER_KI; 
+    shooterIntakePID.kD = Constants.Shooter.KICKER_KD;
     krakenShooterKicker.getConfigurator().apply(shooterIntakePID);
   }
 
@@ -78,8 +78,9 @@ public class ShooterIOKraken implements ShooterIO {
   }
 
   @Override
-  public void stopShooter() {
-    krakenShooterLeft.set(0);
+  public void stopShooter(double rpm) {
+    double rps = rpm / 60;
+    krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps/2));
   }
 
   @Override

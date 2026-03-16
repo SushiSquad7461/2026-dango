@@ -45,7 +45,7 @@ public class ShooterSubsystem extends SubsystemBase {
       case IDLE:
         return Commands.parallel(
             Commands.runOnce(()->{
-                io.stopShooter();    
+                io.stopShooter(targetRPM);    
             }),
             Commands.runOnce(()->{
                 io.stopFeeder();

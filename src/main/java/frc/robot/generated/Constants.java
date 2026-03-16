@@ -66,15 +66,15 @@ public class Constants {
     public static final double TARGET_RPM_DEFAULT = 4500;
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
-    public static double SHOOTER_KP = 0.167;
+    public static double SHOOTER_KP = 0.1;
     public static double SHOOTER_KI = 0;
     public static double SHOOTER_KD = 0;
     // TODO: tune shooter intake PID
-    public static final double SHOOTER_INTAKE_KS = 0.1;
-    public static final double SHOOTER_INTAKE_KV = 0.12;
-    public static final double SHOOTER_INTAKE_KP = 0.0;
-    public static final double SHOOTER_INTAKE_KI = 0;
-    public static final double SHOOTER_INTAKE_KD = 0;
+    public static final double KICKER_KS = 0.1;
+    public static final double KICKER_KV = 0.12;
+    public static final double KICKER_KP = 0.0;
+    public static final double KICKER_KI = 0;
+    public static final double KICKER_KD = 0;
     // TODO: tune hood PID
     public static final double HOOD_KP = 2.4;
     public static final double HOOD_KI = 0;
