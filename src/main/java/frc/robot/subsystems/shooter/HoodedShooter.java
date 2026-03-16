@@ -52,7 +52,7 @@ public class HoodedShooter extends SubsystemBase{
     //Use this method to set HoodedShooter angle based on these
     public double calculateDesiredAngle(double distanceToHub, double speed){
         //TODO: Change y (height between shooter and hub) 
-        return Math.toDegrees(getLowAngle(distanceToHub, 8, speed));
+        return Math.toDegrees(getLowAngle(distanceToHub, 1.3288, speed));
     }
 
     /*
@@ -83,6 +83,6 @@ public class HoodedShooter extends SubsystemBase{
     }
 
     public void periodic(){
-        SmartDashboard.putNumber("HoodedShooter/HoodAngle", (hoodMotor.getPosition().getValueAsDouble())/360.0);
+        SmartDashboard.putNumber("HoodedShooter/HoodAngle", hoodMotor.getPosition().getValueAsDouble() * 360.0);
     }
 }

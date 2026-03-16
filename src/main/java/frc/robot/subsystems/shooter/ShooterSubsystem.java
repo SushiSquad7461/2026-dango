@@ -86,6 +86,12 @@ public class ShooterSubsystem extends SubsystemBase {
     this.targetRPM = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
   }
 
+  /** Sets RPM from distance AND immediately sends it to the motor. Use this in AutoAlign. */
+  public void applyRPMFromDistance(double distance) {
+    this.targetRPM = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
+    io.runShooter(this.targetRPM);
+  }
+
   public double getTargetSpeedMS() {
     return targetRPM * (2 * Math.PI * Constants.Shooter.FLYWHEEL_RADIUS_METERS) / 60.0;
   }

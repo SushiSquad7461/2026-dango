@@ -21,7 +21,6 @@ public class AutoAlign extends Command {
     private final HoodedShooter hoodedShooter;
     private final BooleanSupplier isRedSupplier;
     private final PIDController rotationPID;
-    private final PIDController distancePID;
     private boolean isRed;
 
     public AutoAlign(Swerve swerve, Vision vision, ShooterSubsystem shooter, HoodedShooter hoodedShooter, BooleanSupplier isRedSupplier) {
@@ -33,32 +32,22 @@ public class AutoAlign extends Command {
         rotationPID = Constants.Vision.rotationPID;
         rotationPID.setTolerance(2.0);
         rotationPID.enableContinuousInput(-180, 180);
-        distancePID = Constants.Vision.distancePID;
-        distancePID.setTolerance(0.1);
         addRequirements(this.swerve);
     }
 
     @Override
     public void initialize() {
-        // Evaluate alliance now, when FMS is actually connected
         isRed = isRedSupplier.getAsBoolean();
         rotationPID.reset();
-        distancePID.reset();
     }
 
     @Override
     public void execute() {
-        if (!vision.hasHubTarget(isRed)) {
-            swerve.drive(new Translation2d(0, 0), 0, true, true);
-            return;
-        }
+        Rotation2d targetHeading = vision.getHeadingToHub(isRed);
+        double distance = vision.getDistanceToHub(isRed);
 
-        Rotation2d targetHeading = vision.getHeadingToScorePillar(isRed);
-        double distance = vision.getDistanceToScorePillar(isRed);
-        if (!Double.isNaN(distance)) {
-            shooter.setTargetRPM(distance);
-            hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(distance, shooter.getTargetSpeedMS()));
-        }
+        shooter.applyRPMFromDistance(distance);
+        hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(distance, shooter.getTargetSpeedMS()));
 
         double rotation = rotationPID.calculate(
             swerve.getHeading().getDegrees(),
@@ -66,30 +55,21 @@ public class AutoAlign extends Command {
         );
         rotation = MathUtil.clamp(rotation, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
 
-        Translation2d translation = new Translation2d(0, 0);
-        if (!Double.isNaN(distance)) {
-            double translationSpeed = -distancePID.calculate(distance, Constants.Vision.targetDistanceMeters);
-            translationSpeed = MathUtil.clamp(translationSpeed, -Constants.Swerve.maxSpeed, Constants.Swerve.maxSpeed);
-            // targetHeading has +PI for rear launcher, so subtract PI to get the direction toward the tag
-            Rotation2d directionToTag = targetHeading.minus(new Rotation2d(Math.PI));
-            translation = new Translation2d(translationSpeed, directionToTag);
-        }
-        swerve.drive(translation, rotation, true, true);
+        swerve.drive(new Translation2d(0, 0), rotation, true, true);
 
-        SmartDashboard.putNumber("Vision/Distance", Double.isNaN(distance) ? -1 : distance);
+        SmartDashboard.putNumber("Vision/Distance", distance);
         SmartDashboard.putNumber("Vision/TargetHeading", targetHeading.getDegrees());
         SmartDashboard.putNumber("Vision/CurrentHeading", swerve.getHeading().getDegrees());
+        SmartDashboard.putBoolean("Vision/HasPoseEstimate", vision.hasPoseEstimate());
     }
 
     @Override
     public boolean isFinished() {
-        return rotationPID.atSetpoint() && distancePID.atSetpoint();
+        return rotationPID.atSetpoint();
     }
 
     @Override
     public void end(boolean interrupted) {
-        shooter.setTargetRPM(Constants.Vision.targetDistanceMeters);
-        hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(Constants.Vision.targetDistanceMeters, shooter.getTargetSpeedMS()));
         swerve.drive(new Translation2d(0, 0), 0, true, true);
     }
 }

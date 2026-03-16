@@ -44,12 +44,11 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
-    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    // Hub center positions on the field (WPILib blue-alliance origin).
+    // TODO: Verify these coordinates against the 2026 field layout.
+    public static final Translation2d BLUE_HUB_POSITION = new Translation2d(4.626, 4.03);
+    public static final Translation2d RED_HUB_POSITION = new Translation2d(11.915, 4.03);
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
-    public static PIDController distancePID = new PIDController(1.3, 0, 0);
-    public static final double targetDistanceMeters = Units.feetToMeters(9);
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(

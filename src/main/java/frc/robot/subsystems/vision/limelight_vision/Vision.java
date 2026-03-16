@@ -1,13 +1,15 @@
 package frc.robot.subsystems.vision.limelight_vision;
 
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
@@ -17,172 +19,114 @@ public class Vision extends SubsystemBase {
     private final NetworkTable limelightLeft;
     private final NetworkTable limelightRight;
     private final Swerve swerve;
-    private final Pose3d camPosePrimary;
-    private final Pose3d camPoseSecondary;
 
-    // Cached for SmartDashboard logging
-    private double lastBearingDeg = 0;
-    private double lastTagRobotX = 0;
-    private double lastTagRobotY = 0;
+    private boolean hasPoseLeft = false;
+    private boolean hasPoseRight = false;
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
         limelightRight = NetworkTableInstance.getDefault().getTable(Constants.Vision.secondaryLimelightName);
-        camPosePrimary = Constants.Vision.cameraPosePrimary != null ? Constants.Vision.cameraPosePrimary : new Pose3d();
-        camPoseSecondary = Constants.Vision.cameraPoseSecondary != null ? Constants.Vision.cameraPoseSecondary : new Pose3d();
-    }
 
-    /** Returns true if at least one camera currently sees a valid hub tag for the given alliance. */
-    public boolean hasHubTarget(boolean isRed) {
-        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
-        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
-        if (tvLeft == 1.0) {
-            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) return true;
-        }
-        if (tvRight == 1.0) {
-            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) return true;
-        }
-        return false;
-    }
-
-    /** Returns true if the given tag ID belongs to the correct alliance's hub. */
-    private boolean isHubTag(int tagId, boolean isRed) {
-        int[] hubTags = isRed ? Constants.Vision.RED_HUB_TAGS : Constants.Vision.BLUE_HUB_TAGS;
-        for (int id : hubTags) {
-            if (id == tagId) return true;
-        }
-        return false;
+        // Set camera poses in robot space so MegaTag2 can do accurate pose estimation.
+        // Format: [forward_m, side_m (left+), up_m, roll_deg, pitch_deg, yaw_deg]
+        limelightLeft.getEntry("camerapose_robotspace_set").setDoubleArray(new double[]{
+            -0.263525, 0.263525, 0.2439162, 0, 20, 150
+        });
+        limelightRight.getEntry("camerapose_robotspace_set").setDoubleArray(new double[]{
+            -0.263525, -0.263525, 0.2439162, 0, 20, -150
+        });
     }
 
     /**
-     * Converts a tag pose from camera space to robot space using the camera's mount pose.
-     * Returns null if the pose data is invalid (all-zero NT default).
+     * Push the robot's current gyro yaw to both limelights every loop.
+     * MegaTag2 requires this to constrain its pose estimate.
      */
-    private Pose3d tagCamToRobotSpace(double[] arr, Pose3d camPose) {
-        // Reject zero/near-zero arrays — NT default before real data arrives
-        if (arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] < 0.01) {
-            return null;
-        }
-        // Limelight targetpose_cameraspace: X=right, Y=up, Z=forward
-        // WPILib camera frame:              X=forward, Y=left, Z=up
-        Pose3d tagInCam = new Pose3d(
-            new Translation3d(arr[2], -arr[0], arr[1]),
-            new Rotation3d(Math.toRadians(arr[3]), Math.toRadians(arr[4]), Math.toRadians(arr[5]))
-        );
-        return camPose.transformBy(new Transform3d(tagInCam.getTranslation(), tagInCam.getRotation()));
+    private void sendRobotOrientation() {
+        double yawDeg = swerve.getHeading().getDegrees();
+        // Format: [yaw, yawRate, pitch, pitchRate, roll, rollRate]
+        double[] orientation = new double[]{yawDeg, 0, 0, 0, 0, 0};
+        limelightLeft.getEntry("robot_orientation_set").setDoubleArray(orientation);
+        limelightRight.getEntry("robot_orientation_set").setDoubleArray(orientation);
     }
 
     /**
-     * Returns the absolute field heading the robot should face to point its launcher toward
-     * the score pillar. Only uses readings from the correct alliance's hub tags.
+     * Read MegaTag2 pose from one limelight and feed it into the swerve pose estimator.
+     * Returns true if a valid pose was received.
      */
-    public Rotation2d getHeadingToScorePillar(boolean isRed) {
-        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
-        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
-        if (tvLeft < 0.5 && tvRight < 0.5) {
-            return new Rotation2d();
-        }
+    private boolean processMegaTag2(NetworkTable limelight) {
+        // botpose_orb_wpiblue: [x, y, z, roll, pitch, yaw, latency_ms, tagCount, tagSpan, avgDist, avgArea]
+        double[] botpose = limelight.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
+        if (botpose.length < 11) return false; // need indices 0-10 (x/y/z/rpy/latency/tagCount/tagSpan/avgDist/avgArea)
 
-        // Use tx (horizontal angle, positive=right) + camera yaw to get bearing in robot frame.
-        // bearing_robot_deg = camera_yaw_deg - tx_deg  (tx positive = clockwise from camera center)
-        double sumSin = 0, sumCos = 0;
-        int count = 0;
+        int tagCount = (int) botpose[7];
+        if (tagCount < 1) return false;
 
-        if (tvLeft > 0.5) {
-            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) {
-                double txDeg = limelightLeft.getEntry("tx").getDouble(0.0);
-                double camYawDeg = Math.toDegrees(camPosePrimary.getRotation().getZ());
-                double bearingRad = Math.toRadians(camYawDeg - txDeg);
-                sumSin += Math.sin(bearingRad);
-                sumCos += Math.cos(bearingRad);
-                count++;
-            }
-        }
+        double x = botpose[0];
+        double y = botpose[1];
+        double yawDeg = botpose[5];
+        double latencyMs = botpose[6];
+        double timestamp = Timer.getFPGATimestamp() - (latencyMs / 1000.0);
 
-        if (tvRight > 0.5) {
-            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) {
-                double txDeg = limelightRight.getEntry("tx").getDouble(0.0);
-                double camYawDeg = Math.toDegrees(camPoseSecondary.getRotation().getZ());
-                double bearingRad = Math.toRadians(camYawDeg - txDeg);
-                sumSin += Math.sin(bearingRad);
-                sumCos += Math.cos(bearingRad);
-                count++;
-            }
-        }
+        // Reject poses outside field bounds
+        if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return false;
 
-        if (count == 0) return new Rotation2d();
-
-        double bearingRad = Math.atan2(sumSin, sumCos);
-        lastBearingDeg = Math.toDegrees(bearingRad);
-        lastTagRobotX = 0;
-        lastTagRobotY = 0;
-
-        // +PI because the launcher faces the back of the robot
-        return swerve.getHeading().plus(new Rotation2d(bearingRad + Math.PI));
-    }
-
-    /**
-     * Returns the 2D distance (meters) from the robot to the score pillar, or NaN if no target.
-     * Only uses readings from the correct alliance's hub tags.
-     */
-    public double getDistanceToScorePillar(boolean isRed) {
-        double tvLeft = limelightLeft.getEntry("tv").getDouble(0.0);
-        double tvRight = limelightRight.getEntry("tv").getDouble(0.0);
-        if (tvLeft < 0.5 && tvRight < 0.5) {
-            return Double.NaN;
-        }
-
-        Pose3d leftRobot = null;
-        Pose3d rightRobot = null;
-
-        if (tvLeft > 0.5) {
-            int tagId = (int) limelightLeft.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) {
-                double[] arr = limelightLeft.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-                leftRobot = tagCamToRobotSpace(arr, camPosePrimary);
-            }
-        }
-        if (tvRight > 0.5) {
-            int tagId = (int) limelightRight.getEntry("tid").getDouble(-1);
-            if (isHubTag(tagId, isRed)) {
-                double[] arr = limelightRight.getEntry("targetpose_cameraspace").getDoubleArray(new double[6]);
-                rightRobot = tagCamToRobotSpace(arr, camPoseSecondary);
-            }
-        }
-
-        double dx, dy;
-        if (leftRobot != null && rightRobot != null) {
-            dx = (leftRobot.getX() + rightRobot.getX()) / 2.0;
-            dy = (leftRobot.getY() + rightRobot.getY()) / 2.0;
-        } else if (leftRobot != null) {
-            dx = leftRobot.getX();
-            dy = leftRobot.getY();
-        } else if (rightRobot != null) {
-            dx = rightRobot.getX();
-            dy = rightRobot.getY();
+        // Standard deviations: trust x/y position, ignore vision yaw (gyro is more accurate).
+        // With multiple tags we trust the estimate more; single tag at distance is less reliable.
+        Matrix<N3, N1> stdDevs;
+        if (tagCount >= 2) {
+            stdDevs = VecBuilder.fill(0.3, 0.3, 999);
         } else {
-            return Double.NaN;
+            double avgDist = botpose[9];
+            if (avgDist > 4.0) return false; // single far tag is too noisy
+            stdDevs = VecBuilder.fill(1.0, 1.0, 999);
         }
 
-        return Math.hypot(dx, dy);
+        swerve.addVisionMeasurement(new Pose2d(x, y, Rotation2d.fromDegrees(yawDeg)), timestamp, stdDevs);
+        return true;
     }
 
+    /** Returns true if at least one limelight has a valid MegaTag2 pose this loop. */
+    public boolean hasPoseEstimate() {
+        return hasPoseLeft || hasPoseRight;
+    }
+
+    /**
+     * Returns the field-relative heading the robot should face to point its launcher at the hub.
+     * Computed from the robot's current pose — does not require hub tags to be visible.
+     */
+    public Rotation2d getHeadingToHub(boolean isRed) {
+        Pose2d robotPose = swerve.getPose();
+        Translation2d hubPos = isRed ? Constants.Vision.RED_HUB_POSITION : Constants.Vision.BLUE_HUB_POSITION;
+        double dx = hubPos.getX() - robotPose.getX();
+        double dy = hubPos.getY() - robotPose.getY();
+        // +PI because the launcher faces the back of the robot
+        return new Rotation2d(Math.atan2(dy, dx) + Math.PI);
+    }
+
+    /**
+     * Returns the 2D distance (meters) from the robot to the hub.
+     * Computed from the robot's current pose — does not require hub tags to be visible.
+     */
+    public double getDistanceToHub(boolean isRed) {
+        Pose2d robotPose = swerve.getPose();
+        Translation2d hubPos = isRed ? Constants.Vision.RED_HUB_POSITION : Constants.Vision.BLUE_HUB_POSITION;
+        return robotPose.getTranslation().getDistance(hubPos);
+    }
+
+    @Override
     public void periodic() {
-        SmartDashboard.putNumber("Vision/TagRobotX", lastTagRobotX);
-        SmartDashboard.putNumber("Vision/TagRobotY", lastTagRobotY);
-        SmartDashboard.putNumber("Vision/BearingDeg", lastBearingDeg);
-        SmartDashboard.putNumber("Vision/RobotHeadingDeg", swerve.getHeading().getDegrees());
+        sendRobotOrientation();
+
+        hasPoseLeft = processMegaTag2(limelightLeft);
+        hasPoseRight = processMegaTag2(limelightRight);
+
+        Pose2d pose = swerve.getPose();
+        SmartDashboard.putBoolean("Vision/HasPoseLeft", hasPoseLeft);
+        SmartDashboard.putBoolean("Vision/HasPoseRight", hasPoseRight);
+        SmartDashboard.putNumber("Vision/RobotX", pose.getX());
+        SmartDashboard.putNumber("Vision/RobotY", pose.getY());
+        SmartDashboard.putNumber("Vision/RobotHeadingDeg", pose.getRotation().getDegrees());
         SmartDashboard.putData("Vision/AutoAlignPID", Constants.Vision.rotationPID);
-        boolean isRed = DriverStation.getAlliance().isPresent() &&
-            DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
-        SmartDashboard.putNumber("Vision/Distance", getDistanceToScorePillar(isRed));
-        SmartDashboard.putNumber("Vision/TargetHeading", getHeadingToScorePillar(isRed).getDegrees());
-        
-        
     }
 }
