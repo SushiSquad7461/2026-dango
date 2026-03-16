@@ -195,10 +195,9 @@ public class RobotContainer {
                         hoodedShooter.moveHood(0);}));
                 driverController.povUp().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(0.05);
-                }))
-                                .onFalse(Commands.runOnce(() -> {
-                                        hoodedShooter.moveHood(0);
-                                }));
+                })).onFalse(Commands.runOnce(() -> {
+                        hoodedShooter.moveHood(0);
+                }));
                 ;
 
                 driverController.leftTrigger().whileTrue(
