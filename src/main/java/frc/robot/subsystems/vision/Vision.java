@@ -88,13 +88,18 @@ public class Vision extends SubsystemBase {
         // Consider tightening this or making it distance-dependent during tuning.
         rotationPID.setTolerance(2.0);
 
-        LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, 4);
-        LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 4);
     }
 
     @Override
     public void periodic() {
-        // 1. Alliance-aware hub selection.
+        // 1. IMU mode: seed internal IMU from external gyro while disabled (mode 1),
+        //    switch to fused internal+external mode while enabled (mode 4).
+        //    Docs: mode 1 seeds each frame; mode 4 uses LL4's 1kHz IMU + gentle external correction.
+        int imuMode = DriverStation.isEnabled() ? 4 : 1;
+        LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, imuMode);
+        LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, imuMode);
+
+        // 3. Alliance-aware hub selection.
         //    Must live in periodic() so it picks up FMS alliance assignment after init.
         Translation2d hubCenter  = BLUE_HUB_CENTER;
         Translation2d hubForward = BLUE_HUB_FORWARD;
@@ -105,13 +110,13 @@ public class Vision extends SubsystemBase {
             hubForward = RED_HUB_FORWARD;
         }
 
-        // 2. Feed heading and yaw rate to both Limelights for MegaTag2.
+        // 4. Feed heading and yaw rate to both Limelights for MegaTag2.
         double headingDeg    = swerve.getPose().getRotation().getDegrees();
         double yawRateDegPerSec = Math.toDegrees(swerve.getRobotRelativeSpeeds().omegaRadiansPerSecond);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
 
-        // 3. Fetch MegaTag2 pose estimates.
+        // 5. Fetch MegaTag2 pose estimates.
         LimelightHelpers.PoseEstimate leftPose  = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.primaryLimelightName);
         LimelightHelpers.PoseEstimate rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.secondaryLimelightName);
 
@@ -120,10 +125,10 @@ public class Vision extends SubsystemBase {
         double visionConfidence = 0.0;
 
         // Limelight docs: reject vision updates when spinning too fast.
-        // Fast rotation makes pose estimates unreliable; 720°/s is the recommended threshold.
-        boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 720.0;
+        // Fast rotation makes pose estimates unreliable; 360°/s is the recommended threshold.
+        boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 360.0;
 
-        // 4. Process left Limelight.
+        // 6. Process left Limelight.
         if (!spinningTooFast && leftPose != null && leftPose.tagCount > 0) {
             visionConfidence += 0.5;
 
@@ -136,7 +141,7 @@ public class Vision extends SubsystemBase {
                     VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
         }
 
-        // 5. Process right Limelight.
+        // 7. Process right Limelight.
         if (!spinningTooFast && rightPose != null && rightPose.tagCount > 0) {
             visionConfidence += 0.5;
 
