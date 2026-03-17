@@ -130,8 +130,12 @@ public class Vision extends SubsystemBase {
         // Note: this is NOT the same scale as LaunchParameters.confidence(), which is 0–100.
         double visionConfidence = 0.0;
 
+        // Limelight docs: reject vision updates when spinning too fast.
+        // Fast rotation makes pose estimates unreliable; 720°/s is the recommended threshold.
+        boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 720.0;
+
         // 4. Process left Limelight.
-        if (leftPose != null && leftPose.tagCount > 0) {
+        if (!spinningTooFast && leftPose != null && leftPose.tagCount > 0) {
             visionConfidence += 0.5;
 
             // Base std dev is tighter with multiple tags, and increases with distance.
@@ -144,7 +148,7 @@ public class Vision extends SubsystemBase {
         }
 
         // 5. Process right Limelight.
-        if (rightPose != null && rightPose.tagCount > 0) {
+        if (!spinningTooFast && rightPose != null && rightPose.tagCount > 0) {
             visionConfidence += 0.5;
 
             double xyStdDev = rightPose.tagCount > 1 ? 0.1 : 0.5;
@@ -167,6 +171,10 @@ public class Vision extends SubsystemBase {
 
     public void resetOffset() {
         shotCalc.resetOffset();
+    }
+
+    public void resetWarmStart() {
+        shotCalc.resetWarmStart();
     }
 
     public void adjustOffset(double offset) {

@@ -133,16 +133,6 @@ public class Swerve extends SubsystemBase {
             yPosEntry = null;
             rotEntry = null;
         }
-        // gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
-        // cancoderPubs = new DoublePublisher[4];
-        // anglePubs = new DoublePublisher[4];
-        // velocityPubs = new DoublePublisher[4];
-
-        for (int i = 0; i < 4; i++) {
-            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
-            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
-            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
-        }
         driveSysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         null, // Use default ramp rate (1 V/s)
