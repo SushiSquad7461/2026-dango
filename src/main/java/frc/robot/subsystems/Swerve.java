@@ -358,7 +358,7 @@ public class Swerve extends SubsystemBase {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
         return Commands.sequence(
                 runOnce(() -> {
-                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0))
+                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
                             : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
                     resetGyro();
                 }));
@@ -369,6 +369,7 @@ public class Swerve extends SubsystemBase {
         // if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
         // else
         gyro.setYaw(0);
+        setPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     /**

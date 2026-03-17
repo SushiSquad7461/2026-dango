@@ -189,3 +189,7 @@ compile_commands.json
 # Build-time generated constants
 src/main/java/frc/robot/BuildConstants.java
 src/main/java/frc/robot/.BuildConstants.java.swp
+
+# Local planning and AI assistant files (not for repo)
+docs/
+.claude/
