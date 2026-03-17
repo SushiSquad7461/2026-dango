@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -137,7 +136,7 @@ public class RobotContainer {
                                 () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
                                                                                 // only while holding down the button
 
-                driverController.y().onTrue(Commands.runOnce(() -> swerve.resetGyro()));
+                driverController.y().onTrue(Commands.parallel(Commands.runOnce(() -> swerve.resetGyro()), Commands.runOnce(() -> vision.resetOffset())));
 
                 // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
@@ -202,18 +201,17 @@ public class RobotContainer {
                                 }));
                 ;
 
-                driverController.leftTrigger().whileTrue(new AutoAlign(
-                    swerve,
-                    vision,
-                    () -> DriverStation.getAlliance().isPresent() &&
-                        DriverStation.getAlliance().get() == DriverStation.Alliance.Red
-                ));
+                driverController.leftTrigger().whileTrue(
+                        vision.shootOnTheMove(
+                                () -> -driverController.getLeftY(), // X translation 
+                                () -> -driverController.getLeftX(), // Y translation 
+                                () -> -driverController.getRightX() // Driver Rotation!
+                        )
+                );
                 
                 // bind to copilot D-pad
-                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25)));
-                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-25)));
-                // reset on mode change so trim doesn't carry over
-                vision.resetOffset();
+                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25.0)));
+                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-25.0)));
                 // operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
                 // operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
                 // operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
