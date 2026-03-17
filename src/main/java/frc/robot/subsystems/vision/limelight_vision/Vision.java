@@ -22,6 +22,9 @@ public class Vision extends SubsystemBase {
 
     private boolean hasPoseLeft = false;
     private boolean hasPoseRight = false;
+    // Whether we've seeded the pose estimator from MegaTag1 yet.
+    // MegaTag2 requires the gyro to already match the field heading — seeding fixes that.
+    private boolean positionSeeded = false;
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
@@ -36,6 +39,35 @@ public class Vision extends SubsystemBase {
         limelightRight.getEntry("camerapose_robotspace_set").setDoubleArray(new double[]{
             -0.263525, -0.263525, 0.2439162, 0, 20, -150
         });
+    }
+
+    /**
+     * Reads a MegaTag1 pose (botpose_wpiblue — no gyro needed) from one limelight
+     * and calls swerve.setPose() to seed the pose estimator.
+     * After this, MegaTag2 works correctly because the gyro offset is calibrated.
+     * Returns true if a valid seed pose was found.
+     */
+    private boolean trySeedPose(NetworkTable limelight) {
+        // MegaTag1: pure visual pose, does not require robot_orientation_set
+        double[] botpose = limelight.getEntry("botpose_wpiblue").getDoubleArray(new double[0]);
+        if (botpose.length < 11) return false;
+
+        int tagCount = (int) botpose[7];
+        if (tagCount < 2) return false; // require 2+ tags for a reliable seed
+
+        double x = botpose[0];
+        double y = botpose[1];
+        double yawDeg = botpose[5];
+
+        if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return false;
+
+        swerve.setPose(new Pose2d(x, y, Rotation2d.fromDegrees(yawDeg)));
+        return true;
+    }
+
+    /** Call this to force a re-seed (e.g. bound to a button if the robot is repositioned). */
+    public void resetPoseSeed() {
+        positionSeeded = false;
     }
 
     /**
@@ -57,7 +89,7 @@ public class Vision extends SubsystemBase {
     private boolean processMegaTag2(NetworkTable limelight) {
         // botpose_orb_wpiblue: [x, y, z, roll, pitch, yaw, latency_ms, tagCount, tagSpan, avgDist, avgArea]
         double[] botpose = limelight.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
-        if (botpose.length < 11) return false; // need indices 0-10 (x/y/z/rpy/latency/tagCount/tagSpan/avgDist/avgArea)
+        if (botpose.length < 11) return false; // need indices 0-10
 
         int tagCount = (int) botpose[7];
         if (tagCount < 1) return false;
@@ -72,7 +104,6 @@ public class Vision extends SubsystemBase {
         if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return false;
 
         // Standard deviations: trust x/y position, ignore vision yaw (gyro is more accurate).
-        // With multiple tags we trust the estimate more; single tag at distance is less reliable.
         Matrix<N3, N1> stdDevs;
         if (tagCount >= 2) {
             stdDevs = VecBuilder.fill(0.3, 0.3, 999);
@@ -116,12 +147,23 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Step 1: seed the pose from MegaTag1 once before relying on MegaTag2.
+        // MegaTag1 uses pure visual detection (no gyro), so it works regardless of boot orientation.
+        if (!positionSeeded) {
+            if (trySeedPose(limelightLeft) || trySeedPose(limelightRight)) {
+                positionSeeded = true;
+            }
+        }
+
+        // Step 2: push gyro yaw so MegaTag2 can use it.
         sendRobotOrientation();
 
+        // Step 3: feed MegaTag2 corrections into the pose estimator every loop.
         hasPoseLeft = processMegaTag2(limelightLeft);
         hasPoseRight = processMegaTag2(limelightRight);
 
         Pose2d pose = swerve.getPose();
+        SmartDashboard.putBoolean("Vision/PoseSeeded", positionSeeded);
         SmartDashboard.putBoolean("Vision/HasPoseLeft", hasPoseLeft);
         SmartDashboard.putBoolean("Vision/HasPoseRight", hasPoseRight);
         SmartDashboard.putNumber("Vision/RobotX", pose.getX());

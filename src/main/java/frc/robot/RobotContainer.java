@@ -136,7 +136,13 @@ public class RobotContainer {
                                 () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
                                                                                 // only while holding down the button
 
-                driverController.y().onTrue(Commands.runOnce(() -> swerve.resetGyro()));
+                // Reset gyro AND re-seed pose from MegaTag1 so MegaTag2 stays accurate after the reset
+                driverController.y().onTrue(Commands.runOnce(() -> {
+                        swerve.resetGyro();
+                        vision.resetPoseSeed();
+                }));
+                // Re-seed robot pose from MegaTag1 without touching gyro (use if robot is repositioned)
+                driverController.start().onTrue(Commands.runOnce(() -> vision.resetPoseSeed()));
 
                 // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
