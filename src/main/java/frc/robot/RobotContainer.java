@@ -181,8 +181,7 @@ public class RobotContainer {
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-
-                driverController.leftBumper().onTrue(
+                operatorController.leftBumper().onTrue(
                         Commands.parallel(shooter.runFeederBack(), hopper.runHopperBack())
                 ).onFalse(
                         Commands.either(
