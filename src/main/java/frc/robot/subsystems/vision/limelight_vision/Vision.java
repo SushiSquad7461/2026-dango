@@ -25,6 +25,9 @@ public class Vision extends SubsystemBase {
     // Whether we've seeded the pose estimator from MegaTag1 yet.
     // MegaTag2 requires the gyro to already match the field heading — seeding fixes that.
     private boolean positionSeeded = false;
+    // Track last heartbeat per camera to avoid re-submitting stale NT data every loop.
+    private double lastHbLeft = -1;
+    private double lastHbRight = -1;
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
@@ -84,15 +87,21 @@ public class Vision extends SubsystemBase {
 
     /**
      * Read MegaTag2 pose from one limelight and feed it into the swerve pose estimator.
-     * Returns true if a valid pose was received.
+     * Only processes genuinely new frames by checking the limelight heartbeat.
+     * Returns the current heartbeat value (caller should store this for next loop).
+     * Returns lastHb unchanged if no new valid frame was processed.
      */
-    private boolean processMegaTag2(NetworkTable limelight) {
+    private double processMegaTag2(NetworkTable limelight, double lastHb) {
+        // Only process if the limelight has published a new frame since last loop.
+        double hb = limelight.getEntry("hb").getDouble(-1);
+        if (hb == lastHb) return lastHb;
+
         // botpose_orb_wpiblue: [x, y, z, roll, pitch, yaw, latency_ms, tagCount, tagSpan, avgDist, avgArea]
         double[] botpose = limelight.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
-        if (botpose.length < 11) return false; // need indices 0-10
+        if (botpose.length < 11) return hb; // consume the heartbeat even if no valid pose
 
         int tagCount = (int) botpose[7];
-        if (tagCount < 1) return false;
+        if (tagCount < 1) return hb;
 
         double x = botpose[0];
         double y = botpose[1];
@@ -101,23 +110,23 @@ public class Vision extends SubsystemBase {
         double timestamp = Timer.getFPGATimestamp() - (latencyMs / 1000.0);
 
         // Reject poses outside field bounds
-        if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return false;
+        if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return hb;
 
         // Standard deviations: trust x/y position, ignore vision yaw (gyro is more accurate).
         Matrix<N3, N1> stdDevs;
         if (tagCount >= 2) {
-            stdDevs = VecBuilder.fill(0.3, 0.3, 999);
+            stdDevs = VecBuilder.fill(0.9, 0.9, 999);
         } else {
             double avgDist = botpose[9];
-            if (avgDist > 4.0) return false; // single far tag is too noisy
-            stdDevs = VecBuilder.fill(1.0, 1.0, 999);
+            if (avgDist > 3.0) return hb; // single far tag is too noisy
+            stdDevs = VecBuilder.fill(2.0, 2.0, 999);
         }
 
         swerve.addVisionMeasurement(new Pose2d(x, y, Rotation2d.fromDegrees(yawDeg)), timestamp, stdDevs);
-        return true;
+        return hb;
     }
 
-    /** Returns true if at least one limelight has a valid MegaTag2 pose this loop. */
+    /** Returns true if at least one limelight saw a new valid frame this loop. */
     public boolean hasPoseEstimate() {
         return hasPoseLeft || hasPoseRight;
     }
@@ -159,8 +168,13 @@ public class Vision extends SubsystemBase {
         sendRobotOrientation();
 
         // Step 3: feed MegaTag2 corrections into the pose estimator every loop.
-        hasPoseLeft = processMegaTag2(limelightLeft);
-        hasPoseRight = processMegaTag2(limelightRight);
+        double newHbLeft = processMegaTag2(limelightLeft, lastHbLeft);
+        hasPoseLeft = (newHbLeft != lastHbLeft);
+        lastHbLeft = newHbLeft;
+
+        double newHbRight = processMegaTag2(limelightRight, lastHbRight);
+        hasPoseRight = (newHbRight != lastHbRight);
+        lastHbRight = newHbRight;
 
         Pose2d pose = swerve.getPose();
         SmartDashboard.putBoolean("Vision/PoseSeeded", positionSeeded);
