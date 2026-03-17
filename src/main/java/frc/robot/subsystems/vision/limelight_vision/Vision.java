@@ -24,6 +24,10 @@ public class Vision extends SubsystemBase {
     private boolean hasPoseLeft = false;
     private boolean hasPoseRight = false;
 
+    // Whether we've done the initial full pose seed (x, y, AND yaw) from MegaTag1.
+    // This is required so AutoAlign's heading math works in the field coordinate frame.
+    private boolean poseSeeded = false;
+
     public Vision(Swerve swerve) {
         this.swerve = swerve;
         limelightLeft = NetworkTableInstance.getDefault().getTable(Constants.Vision.primaryLimelightName);
@@ -38,16 +42,37 @@ public class Vision extends SubsystemBase {
     }
 
     /**
-     * Reads a MegaTag1 (botpose_wpiblue) frame from one limelight and feeds it into
-     * the swerve pose estimator. MegaTag1 does NOT require gyro input — it computes
-     * the robot's field-relative position purely from visible AprilTags. This means
-     * the robot knows where it is from the moment it boots, regardless of orientation.
-     *
-     * Returns the new heartbeat value (store it for next loop to avoid re-submitting stale frames).
+     * Seeds the full pose (x, y, AND yaw) from MegaTag1 once.
+     * This is what makes getHeadingToHub() work — after seeding, getPose().getRotation()
+     * is in the field coordinate frame, not just the gyro-relative frame.
+     * Requires 2+ tags for a reliable yaw estimate.
+     */
+    private boolean trySeedPose(NetworkTable limelight) {
+        double[] botpose = limelight.getEntry("botpose_wpiblue").getDoubleArray(new double[0]);
+        if (botpose.length < 11) return false;
+        if ((int) botpose[7] < 2) return false;
+
+        double x = botpose[0], y = botpose[1], yawDeg = botpose[5];
+        if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return false;
+
+        swerve.setPose(new Pose2d(x, y, Rotation2d.fromDegrees(yawDeg)));
+        return true;
+    }
+
+    /**
+     * Call this to force a re-seed — e.g. when the robot is repositioned or gyro is reset.
+     */
+    public void resetPoseSeed() {
+        poseSeeded = false;
+    }
+
+    /**
+     * Reads a MegaTag1 (botpose_wpiblue) frame and feeds x,y into the pose estimator.
+     * Yaw stddev is kept very high so the gyro stays in control of heading after initial seeding.
      */
     private double processMegaTag1(NetworkTable limelight, double lastHb) {
         double hb = limelight.getEntry("hb").getDouble(-1);
-        if (hb == lastHb) return lastHb; // no new frame from limelight
+        if (hb == lastHb) return lastHb; // no new frame
 
         // botpose_wpiblue: [x, y, z, roll, pitch, yaw, latency_ms, tagCount, tagSpan, avgDist, avgArea]
         double[] botpose = limelight.getEntry("botpose_wpiblue").getDoubleArray(new double[0]);
@@ -62,16 +87,12 @@ public class Vision extends SubsystemBase {
         double latencyMs = botpose[6];
         double avgDist = botpose[9];
 
-        // Reject impossible poses
         if (x < 0 || x > 17.6 || y < 0 || y > 8.2) return hb;
-
-        // Single-tag estimates get noisy fast with distance — reject far single-tag readings
         if (tagCount == 1 && avgDist > 3.0) return hb;
 
         double timestamp = Timer.getFPGATimestamp() - (latencyMs / 1000.0);
-
-        // Trust position more with multiple nearby tags; yaw from gyro is always more accurate than vision
         double xyStdDev = (tagCount >= 2) ? 0.7 : 1.5;
+
         swerve.addVisionMeasurement(
             new Pose2d(x, y, Rotation2d.fromDegrees(yawDeg)),
             timestamp,
@@ -87,7 +108,7 @@ public class Vision extends SubsystemBase {
 
     /**
      * Returns the field-relative heading the robot must face so its launcher (back of robot)
-     * points at the hub. Computed from swerve pose — tags don't need to be visible.
+     * points at the hub. Requires poseSeeded = true to be accurate.
      */
     public Rotation2d getHeadingToHub(boolean isRed) {
         Pose2d robotPose = swerve.getPose();
@@ -98,10 +119,7 @@ public class Vision extends SubsystemBase {
         return new Rotation2d(Math.atan2(dy, dx) + Math.PI);
     }
 
-    /**
-     * Returns the straight-line distance (meters) from the robot to the hub.
-     * Computed from swerve pose — tags don't need to be visible.
-     */
+    /** Returns straight-line distance (meters) from the robot to the hub. */
     public double getDistanceToHub(boolean isRed) {
         Pose2d robotPose = swerve.getPose();
         Translation2d hub = isRed ? Constants.Vision.RED_HUB_POSITION : Constants.Vision.BLUE_HUB_POSITION;
@@ -110,6 +128,14 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Seed full pose (x, y, yaw) once from MegaTag1 before using it for heading math.
+        if (!poseSeeded) {
+            if (trySeedPose(limelightLeft) || trySeedPose(limelightRight)) {
+                poseSeeded = true;
+            }
+        }
+
+        // Continuously feed x,y corrections from MegaTag1 (yaw ignored after seeding).
         double newHbLeft = processMegaTag1(limelightLeft, lastHbLeft);
         hasPoseLeft = (newHbLeft != lastHbLeft);
         lastHbLeft = newHbLeft;
@@ -119,6 +145,7 @@ public class Vision extends SubsystemBase {
         lastHbRight = newHbRight;
 
         Pose2d pose = swerve.getPose();
+        SmartDashboard.putBoolean("Vision/PoseSeeded", poseSeeded);
         SmartDashboard.putBoolean("Vision/HasPoseLeft", hasPoseLeft);
         SmartDashboard.putBoolean("Vision/HasPoseRight", hasPoseRight);
         SmartDashboard.putNumber("Vision/RobotX", pose.getX());

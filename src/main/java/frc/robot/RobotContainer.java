@@ -136,7 +136,13 @@ public class RobotContainer {
                                 () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
                                                                                 // only while holding down the button
 
-                driverController.y().onTrue(Commands.runOnce(swerve::resetGyro));
+                // Y: reset gyro + re-seed full pose so heading math stays in the field frame
+                driverController.y().onTrue(Commands.runOnce(() -> {
+                        swerve.resetGyro();
+                        vision.resetPoseSeed();
+                }));
+                // Start: re-seed pose without touching gyro (use when robot is repositioned on field)
+                driverController.start().onTrue(Commands.runOnce(vision::resetPoseSeed));
 
                 // Intake & Shooter
                 // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(

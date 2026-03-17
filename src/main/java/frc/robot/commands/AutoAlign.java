@@ -50,7 +50,7 @@ public class AutoAlign extends Command {
         hoodedShooter.moveHoodToSetpoint(hoodedShooter.calculateDesiredAngle(distance, shooter.getTargetSpeedMS()));
 
         double rotation = rotationPID.calculate(
-            swerve.getHeading().getDegrees(),
+            swerve.getPose().getRotation().getDegrees(),
             targetHeading.getDegrees()
         );
         rotation = MathUtil.clamp(rotation, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
@@ -59,7 +59,7 @@ public class AutoAlign extends Command {
 
         SmartDashboard.putNumber("Vision/Distance", distance);
         SmartDashboard.putNumber("Vision/TargetHeading", targetHeading.getDegrees());
-        SmartDashboard.putNumber("Vision/CurrentHeading", swerve.getHeading().getDegrees());
+        SmartDashboard.putNumber("Vision/CurrentHeading", swerve.getPose().getRotation().getDegrees());
         SmartDashboard.putBoolean("Vision/HasPoseEstimate", vision.hasPoseEstimate());
     }
 
