@@ -161,6 +161,9 @@ public class ShotCalculator {
     // Suppress firing when pitch or roll exceeds this threshold.
     // Bumps and ramps tilt the robot, which throws off aim. Set to 90 to disable.
     public double maxTiltDeg = 5.0;
+    // Angle offset between robot front and shooter exit direction.
+    // 0 = forward-facing, PI = rear-facing.
+    public double shooterAngleOffsetRad = 0.0;
   }
 
   private final Config config;
@@ -429,7 +432,7 @@ public class ShotCalculator {
     Rotation2d driveAngle = new Rotation2d(aimX, aimY);
 
     // Heading error for confidence calculation
-    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
+    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading - config.shooterAngleOffsetRad);
 
     // Angular velocity feedforward: rate of change of aim angle
     double driveAngularVelocity = 0;

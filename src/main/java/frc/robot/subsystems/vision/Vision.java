@@ -4,6 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -74,7 +75,7 @@ public class Vision extends SubsystemBase {
 
         GeneratedLUT lut = projectileSimulator.generateLUT();
         ShotCalculator.Config config = new ShotCalculator.Config();
-        config.launcherOffsetX = 0.23;   // meters forward from robot center
+        config.launcherOffsetX = -0.23;  // negative: launcher is behind robot center
         config.launcherOffsetY = 0.0;    // 0 if centered
         // phaseDelayMs: set to actual pipeline latency from Limelight's "tl" field.
         // Log limelight.getTl() during testing and replace this placeholder.
@@ -85,6 +86,7 @@ public class Vision extends SubsystemBase {
         config.maxTiltDeg = 5.0;
         config.headingSpeedScalar = 1.0;
         config.headingReferenceDistance = 2.5;
+        config.shooterAngleOffsetRad = Math.PI;  // 0.0 means the shooter faces the same direction as the robot front; π means it faces backward.
 
         shotCalc = new ShotCalculator(config);
 
@@ -191,8 +193,10 @@ public class Vision extends SubsystemBase {
                 shooter.setTargetRPM(currentShot.rpm());
 
                 // PID on heading error + SOTM angular feedforward.
+                // driveAngle() points the front of the robot at the hub, so rotate by π
+                // to aim the rear-facing shooter instead.
                 double currentHeading = swerve.getPose().getRotation().getDegrees();
-                double targetHeading  = currentShot.driveAngle().getDegrees();
+                double targetHeading  = currentShot.driveAngle().rotateBy(Rotation2d.kPi).getDegrees();
                 double pidOutput      = rotationPID.calculate(currentHeading, targetHeading);
                 double rotationSpeed  = pidOutput + currentShot.driveAngularVelocityRadPerSec();
 
