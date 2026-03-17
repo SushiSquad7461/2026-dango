@@ -35,7 +35,9 @@ public class AutoCommands {
              NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
-            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN_AND_SHOOT)));
+        NamedCommands.registerCommand("Down",
+            new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN)));
         NamedCommands.registerCommand("Idle",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
     
@@ -44,10 +46,13 @@ public class AutoCommands {
             autoChooser.addOption("B1_Hub_HP", new PathPlannerAuto("B1_Hub_HP"));
             autoChooser.addOption("B2_Hub_HP", new PathPlannerAuto("B2_Hub_HP"));
             autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
+            autoChooser.addOption("Shoot_Still", new PathPlannerAuto("Shoot_Still"));
             autoChooser.addOption("B1_Hub_HP_Shoot", new PathPlannerAuto("B1_Hub_HP_Shoot"));
             autoChooser.addOption("B2_Hub_HP_Shoot", new PathPlannerAuto("B2_Hub_HP_Shoot"));
             autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
             autoChooser.addOption("B3_Hub_HP_Shoot", new PathPlannerAuto("B3_Hub_HP_Shoot"));
+            autoChooser.addOption("Shoot_N_Shoot", new PathPlannerAuto("Shoot_N_Shoot"));
+            autoChooser.addOption("Shoot_Neutral_Trench", new PathPlannerAuto("Shoot_Neutral_Trench"));
             SmartDashboard.putData("Auto Chooser", autoChooser);
 
     }

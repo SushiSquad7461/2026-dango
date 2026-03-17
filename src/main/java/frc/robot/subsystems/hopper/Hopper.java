@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Hopper extends SubsystemBase{
     public enum HopperState{
         IDLE(0.0),
-        RUNNING(-0.5);
+        RUNNING(-0.75);
 
         public double speed; 
 
@@ -26,10 +26,10 @@ public class Hopper extends SubsystemBase{
         return runOnce(()->{io.changeState(newState);});
     }
     public Command runHopper(){
-        return runOnce(()->{io.setSpeed(-0.5);});
+        return runOnce(()->{io.setSpeed(-0.75);});
     }
     public Command runHopperBack(){
-        return runOnce(()->{io.setSpeed(0.5);});
+        return runOnce(()->{io.setSpeed(0.75);});
     }
     public Command stopHopper(){
         return runOnce(()->{io.setSpeed(0);});
