@@ -7,12 +7,12 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -27,7 +27,6 @@ import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.vision.ShotCalculator;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
@@ -80,7 +79,7 @@ public class RobotContainer {
                         hopper = new Hopper(new HopperIOSim());
                 }
                 hoodedShooter = new HoodedShooter();
-                vision = new Vision(swerve, shooter);
+                vision = new Vision(swerve);
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
@@ -200,13 +199,12 @@ public class RobotContainer {
                 }));
                 ;
 
-                driverController.leftTrigger().whileTrue(
-                        vision.shootOnTheMove(
-                                () -> -driverController.getLeftY(), // X translation 
-                                () -> -driverController.getLeftX(), // Y translation 
-                                () -> -driverController.getRightX() // Driver Rotation!
-                        )
-                );
+                driverController.leftTrigger().whileTrue(new AutoAlign(
+                        swerve, vision, shooter,
+                        () -> -driverController.getLeftY(),
+                        () -> -driverController.getLeftX(),
+                        () -> -driverController.getRightX()
+                ));
                 
                 // bind to copilot D-pad
                 operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25.0)));

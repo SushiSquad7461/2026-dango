@@ -1,19 +1,14 @@
 package frc.robot.subsystems.vision;
 
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.ProjectileSimulator.GeneratedLUT;
 import frc.robot.subsystems.vision.ProjectileSimulator.LUTEntry;
 
@@ -51,27 +46,19 @@ public class Vision extends SubsystemBase {
     private static final Translation2d RED_HUB_CENTER   = new Translation2d(HUB_CENTER_X_RED, FIELD_MID_Y);
     private static final Translation2d RED_HUB_FORWARD  = new Translation2d(-1, 0);  // hub faces -X (toward field center)
 
-    // ShotCalculator.LaunchParameters.confidence() returns a 0–100 score
-    // (per frc-fire-control README and quick-start example).
-    // visionConfidence passed into ShotInputs is 0.0–1.0 — these are different scales.
-    private static final double CONFIDENCE_THRESHOLD = 50.0;
-
     // -------------------------------------------------------------------------
 
     private final ProjectileSimulator projectileSimulator = new ProjectileSimulator(Constants.Vision.SOTM_PARAMETERS);
     private final ShotCalculator shotCalc;
     private final Swerve swerve;
-    private final ShooterSubsystem shooter;
     private final PIDController rotationPID = Constants.Vision.rotationPID;
 
-    // Written in periodic(), read in shootOnTheMove() — both run on the main
-    // robot thread, so no synchronization is needed. If periodic() is ever
-    // moved off the main thread this will need a lock.
+    // Written in periodic(), read by AutoAlign via getCurrentShot() — both run on
+    // the main robot thread, so no synchronization is needed.
     private ShotCalculator.LaunchParameters currentShot = ShotCalculator.LaunchParameters.INVALID;
 
-    public Vision(Swerve swerve, ShooterSubsystem shooter) {
+    public Vision(Swerve swerve) {
         this.swerve = swerve;
-        this.shooter = shooter;
 
         GeneratedLUT lut = projectileSimulator.generateLUT();
         ShotCalculator.Config config = new ShotCalculator.Config();
@@ -169,6 +156,18 @@ public class Vision extends SubsystemBase {
         );
 
         currentShot = shotCalc.calculate(inputs);
+
+        SmartDashboard.putNumber("Vision/Confidence", currentShot.confidence());
+        SmartDashboard.putNumber("Vision/TargetRPM", currentShot.rpm());
+        SmartDashboard.putNumber("Vision/SolvedDistanceM", currentShot.solvedDistanceM());
+        SmartDashboard.putNumber("Vision/DriveAngleDeg", currentShot.driveAngle().getDegrees());
+        SmartDashboard.putBoolean("Vision/ShotValid", currentShot.isValid());
+        SmartDashboard.putBoolean("Vision/SpinningTooFast", spinningTooFast);
+        SmartDashboard.putData("Vision/RotationPID", rotationPID);
+    }
+
+    public ShotCalculator.LaunchParameters getCurrentShot() {
+        return currentShot;
     }
 
     public void resetOffset() {
@@ -181,33 +180,5 @@ public class Vision extends SubsystemBase {
 
     public void adjustOffset(double offset) {
         shotCalc.adjustOffset(offset);
-    }
-
-    public Command shootOnTheMove(DoubleSupplier xTranslation, DoubleSupplier yTranslation, DoubleSupplier driverRotation) {
-        return Commands.run(() -> {
-            Translation2d driverInput = new Translation2d(xTranslation.getAsDouble(), yTranslation.getAsDouble());
-
-            // confidence() returns 0–100 (frc-fire-control README: "0-100 confidence score")
-            if (currentShot.isValid() && currentShot.confidence() > CONFIDENCE_THRESHOLD) {
-                // Spin up to the calculated RPM.
-                shooter.setTargetRPM(currentShot.rpm());
-
-                // PID on heading error + SOTM angular feedforward.
-                // driveAngle() points the front of the robot at the hub, so rotate by π
-                // to aim the rear-facing shooter instead.
-                double currentHeading = swerve.getPose().getRotation().getDegrees();
-                double targetHeading  = currentShot.driveAngle().rotateBy(Rotation2d.kPi).getDegrees();
-                double pidOutput      = rotationPID.calculate(currentHeading, targetHeading);
-                double rotationSpeed  = pidOutput + currentShot.driveAngularVelocityRadPerSec();
-
-                swerve.drive(driverInput, rotationSpeed, true, true);
-            } else {
-                // Target lost or out of range — hand full control back to the driver.
-                // Default RPM keeps the shooter warm for when a target reappears.
-                // If you want to save battery when far from the hub, gate this on distance.
-                shooter.setTargetRPM(4500);
-                swerve.drive(driverInput, driverRotation.getAsDouble(), true, true);
-            }
-        }, this, swerve, shooter);
     }
 }

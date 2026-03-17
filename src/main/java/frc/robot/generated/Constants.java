@@ -45,8 +45,12 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static final double ERROR_DEGREES = 5.0;
+    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
+    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
+    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
+    public static PIDController distancePID = new PIDController(1.3, 0, 0);
+    public static final double targetDistanceMeters = Units.feetToMeters(9);
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
@@ -315,6 +319,8 @@ public class Constants {
         public static final double pivotD = 0.0;
 
         public static final double rollerSpeed = -0.35;//0.60;
+        public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
+        public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;
