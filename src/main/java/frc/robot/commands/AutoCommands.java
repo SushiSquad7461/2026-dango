@@ -6,7 +6,6 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,9 +27,8 @@ public class AutoCommands {
             selectedAuto.set("Nothing");
 
             NamedCommands.registerCommand("AutoAlign",
-                new AutoAlign(swerve, vision,
-                    () -> DriverStation.getAlliance().isPresent() &&
-                          DriverStation.getAlliance().get() == DriverStation.Alliance.Red));
+                new AutoAlign(swerve, vision, shooter,
+                    () -> 0.0, () -> 0.0, () -> 0.0));
 
              NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
@@ -43,14 +41,8 @@ public class AutoCommands {
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
-            autoChooser.addOption("B1_Hub_HP", new PathPlannerAuto("B1_Hub_HP"));
-            autoChooser.addOption("B2_Hub_HP", new PathPlannerAuto("B2_Hub_HP"));
-            autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
             autoChooser.addOption("Shoot_Still", new PathPlannerAuto("Shoot_Still"));
-            autoChooser.addOption("B1_Hub_HP_Shoot", new PathPlannerAuto("B1_Hub_HP_Shoot"));
-            autoChooser.addOption("B2_Hub_HP_Shoot", new PathPlannerAuto("B2_Hub_HP_Shoot"));
             autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
-            autoChooser.addOption("B3_Hub_HP_Shoot", new PathPlannerAuto("B3_Hub_HP_Shoot"));
             autoChooser.addOption("Shoot_N_Shoot", new PathPlannerAuto("Shoot_N_Shoot"));
             autoChooser.addOption("Shoot_Neutral_Trench", new PathPlannerAuto("Shoot_Neutral_Trench"));
             SmartDashboard.putData("Auto Chooser", autoChooser);

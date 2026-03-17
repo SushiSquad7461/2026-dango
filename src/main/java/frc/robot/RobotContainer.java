@@ -150,8 +150,8 @@ public class RobotContainer {
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));//.onFalse(stateMachine.changeState(RobotState.INTAKE_DOWN));
                 driverController.rightBumper().onTrue(
                         Commands.either(
-                                intake.changeState(IntakeState.IDLE),
-                                intake.changeState(IntakeState.DEPLOYED),
+                                Commands.runOnce(()->intake.setWantedState(IntakeState.IDLE)),
+                                Commands.runOnce(()->intake.setWantedState(IntakeState.DEPLOYED)),
                                 () -> intake.getState() == IntakeState.DEPLOYED));
 
                  // Intake & Shooter
@@ -178,10 +178,11 @@ public class RobotContainer {
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-
                 driverController.leftBumper().onTrue(
-                        Commands.parallel(shooter.runFeederBack(), hopper.runHopperBack())
-                ).onFalse(
+                        Commands.parallel(//shooter.runFeederBack(), hopper.runHopperBack(),
+                        Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
+                ).onFalse
+                (
                         Commands.either(
                                 Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
                                 Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),

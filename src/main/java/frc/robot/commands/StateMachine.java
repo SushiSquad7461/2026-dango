@@ -28,7 +28,7 @@ public class StateMachine extends SubsystemBase {
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
-    
+
         public final ShooterState shooterState;
         public final HopperState hopperState;
         public final IntakeState intakeState;
@@ -56,7 +56,7 @@ public class StateMachine extends SubsystemBase {
         this.intake = intake;
         this.state = RobotState.IDLE;
 
-       
+
         this.stateTable = NetworkTableInstance.getDefault().getTable("StateMachine");
          this.currentStatePub = stateTable.getStringTopic("CurrentState").publish();
     }
@@ -79,9 +79,9 @@ public class StateMachine extends SubsystemBase {
 
     //TODO: Combine
     public Command changeState(RobotState newState) {
-        
+
         return Commands.sequence(
-            Commands.runOnce(() -> 
+            Commands.runOnce(() ->
             state = newState
             ),
             Commands.parallel(
