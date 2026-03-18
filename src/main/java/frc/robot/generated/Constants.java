@@ -72,8 +72,8 @@ public class Constants {
         0.1016,  // wheel diameter, measure with calipers
         1.83,    // target height, from game manual
         0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
-        12.0,    // min hood angle degrees (mechanical limit)
-        40.0,    // max hood angle degrees (mechanical limit)
+        0.0,     // min hood angle degrees (mechanical limit, confirm experimentally)
+        30.0,    // max hood angle degrees (mechanical limit, confirm experimentally)
         3.0,     // max TOF ceiling seconds
         1.0,     // angle sweep step degrees
         0.001,   // sim timestep
@@ -351,8 +351,8 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
-        public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
+        public static final double hoodMinDegrees  = 0.0;    // confirm experimentally
+        public static final double hoodMaxDegrees  = 30.0;   // confirm experimentally
 
         public static final double motorRotationsPerHoodRotation = 24.0 / 18.0; // 18T motor : 24T hood
     }
