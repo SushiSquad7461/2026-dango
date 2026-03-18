@@ -62,16 +62,9 @@ public class AutoAlign extends Command {
         ShotCalculator.LaunchParameters shot = vision.getCurrentShot();
 
         if (shot.isValid() && shot.confidence() > CONFIDENCE_THRESHOLD) {
-            // RPM from the physics-sim LUT inside ShotCalculator.
-            double rpm = shot.rpm();
-            // Derive hood angle: RPM -> exit velocity -> kinematic launch angle.
-            double exitVelocity = vision.getExitVelocity(rpm);
-            double hoodAngle = hoodedShooter.calculateDesiredAngle(
-                    shot.solvedDistanceM(), exitVelocity);
-
-            // Command flywheel and hood every cycle so they track the changing solution.
-            shooter.commandRPM(rpm);
-            hoodedShooter.moveHoodToAngleWithOffset(hoodAngle);
+            // RPM and hood angle from the unified ShotLUT inside ShotCalculator.
+            shooter.commandRPM(shot.rpm());
+            hoodedShooter.moveHoodToAngleWithOffset(shot.hoodAngleDeg());
 
             // Use gyro heading (same frame as swerve.drive's field-relative conversion)
             // so the PID error and the drive reference frame are consistent.
@@ -84,9 +77,8 @@ public class AutoAlign extends Command {
 
             swerve.drive(driverInput, rotationSpeed, true, true);
 
-            SmartDashboard.putNumber("SOTM/RPM", rpm);
-            SmartDashboard.putNumber("SOTM/ExitVelocityMps", exitVelocity);
-            SmartDashboard.putNumber("SOTM/HoodAngleDeg", hoodAngle);
+            SmartDashboard.putNumber("SOTM/RPM", shot.rpm());
+            SmartDashboard.putNumber("SOTM/HoodAngleDeg", shot.hoodAngleDeg());
             SmartDashboard.putNumber("SOTM/DistanceM", shot.solvedDistanceM());
             SmartDashboard.putNumber("SOTM/Confidence", shot.confidence());
             SmartDashboard.putNumber("SOTM/HeadingErrorDeg", currentHeading - targetHeading);
