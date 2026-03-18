@@ -169,6 +169,8 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putBoolean("Vision/ShotValid", currentShot.isValid());
         SmartDashboard.putBoolean("Vision/SpinningTooFast", spinningTooFast);
         SmartDashboard.putData("Vision/RotationPID", rotationPID);
+        SmartDashboard.putNumber("Vision/LimelightTLLeft",  LimelightHelpers.getLatency_Pipeline(Constants.Vision.primaryLimelightName));
+        SmartDashboard.putNumber("Vision/LimelightTLRight", LimelightHelpers.getLatency_Pipeline(Constants.Vision.secondaryLimelightName));
     }
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
@@ -185,5 +187,25 @@ public class Vision extends SubsystemBase {
 
     public void adjustOffset(double offset) {
         shotCalc.adjustOffset(offset);
+    }
+
+    /**
+     * Hard-seeds both Limelight IMUs with the current robot heading.
+     *
+     * In mode 4 (enabled), the Limelight uses its internal 1kHz IMU with only gentle
+     * external correction. After a gyro reset the internal IMU won't snap to the new
+     * heading for several seconds. Calling this immediately after resetGyro() forces a
+     * one-shot mode-1 seed so MegaTag2 estimates are correct right away.
+     * The next periodic() call will restore the correct mode (1 or 4).
+     *
+     * Call order matters: invoke this AFTER swerve.resetGyro() so getPose() already
+     * returns the new heading (0°).
+     */
+    public void seedIMU() {
+        double headingDeg = swerve.getPose().getRotation().getDegrees();
+        LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
+        LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 1);
     }
 }
