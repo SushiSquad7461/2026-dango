@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.Vision;
 
@@ -21,13 +22,13 @@ public class AutoCommands {
     private final StringPublisher selectedAuto;
     private final NetworkTable autoNetworkTable;
 
-    public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter, Swerve swerve, Vision vision){
+    public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter, HoodedShooter hoodedShooter, Swerve swerve, Vision vision){
             autoNetworkTable = NetworkTableInstance.getDefault().getTable("Auto");
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
             NamedCommands.registerCommand("AutoAlign",
-                new AutoAlign(swerve, vision, shooter,
+                new AutoAlign(swerve, vision, shooter, hoodedShooter,
                     () -> 0.0, () -> 0.0, () -> 0.0));
 
              NamedCommands.registerCommand("Shoot",

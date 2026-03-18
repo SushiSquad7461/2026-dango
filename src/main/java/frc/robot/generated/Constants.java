@@ -72,7 +72,10 @@ public class Constants {
         0.1016,  // wheel diameter, measure with calipers
         1.83,    // target height, from game manual
         0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
-        45.0,    // launch angle degrees from horizontal
+        12.0,    // min hood angle degrees (mechanical limit)
+        40.0,    // max hood angle degrees (mechanical limit)
+        3.0,     // max TOF ceiling seconds
+        1.0,     // angle sweep step degrees
         0.001,   // sim timestep
         1500, 6000, 25, 5.0  // RPM range, search iters, max sim time
     );
@@ -337,23 +340,22 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
-        public static final double cruiseVelocityRps = 1.0;   // tune on robot
-        public static final double accelRps2 = 4.0;           // tune on robot
+        public static final double cruiseVelocityRps = 1.0;
+        public static final double accelRps2 = 4.0;
 
         public static final double hoodP = 0.8;
         public static final double hoodI = 0.0;
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 0.0;
-        public static final double hoodMaxDegrees  = 30.0;    // verify against physical stop
+        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
+        public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
 
         // Motor rotations per full hood rotation (360°). Measure your actual gear ratio.
-        // Example: if the hood turns 1° for every 10 motor rotations, set this to 3600.
         public static final double motorRotationsPerHoodRotation = 1.0; // TODO: measure gear ratio
 
         // Height delta from shooter exit to hub scoring zone (meters).
-        // = SOTM_PARAMETERS.targetHeightM (1.83) - SOTM_PARAMETERS.exitHeightM (0.43)
+        // TODO: remove when calculateDesiredAngle() is deleted
         public static final double hubHeightDeltaM = 1.40;
     }
 

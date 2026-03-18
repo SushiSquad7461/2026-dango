@@ -70,7 +70,10 @@ public class ProjectileSimulator {
       double wheelDiameterM,
       double targetHeightM,
       double slipFactor,
-      double fixedLaunchAngleDeg,
+      double minHoodAngleDeg,
+      double maxHoodAngleDeg,
+      double maxTofCeilingS,
+      double angleStepDeg,
       double dt,
       double rpmMin,
       double rpmMax,
@@ -114,7 +117,7 @@ public class ProjectileSimulator {
   /** Simulate a ball launched at the given RPM and see where it is when it reaches the target distance. */
   public TrajectoryResult simulate(double rpm, double targetDistanceM) {
     double v0 = exitVelocity(rpm);
-    double launchRad = Math.toRadians(params.fixedLaunchAngleDeg());
+    double launchRad = Math.toRadians(params.minHoodAngleDeg()); // placeholder, rewritten in Task 3
     double vx = v0 * Math.cos(launchRad);
     double vz = v0 * Math.sin(launchRad);
 
