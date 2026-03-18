@@ -31,28 +31,9 @@ package frc.robot.subsystems.vision;
  *
  * <p>Usage:
  * <pre>
- *   SimParameters params = new SimParameters(
- *       0.215,   // ball mass kg
- *       0.1501,  // ball diameter m
- *       0.47,    // drag coeff (smooth sphere)
- *       0.2,     // Magnus coeff
- *       1.225,   // air density kg/m^3
- *       0.43,    // exit height from floor, measure from CAD
- *       0.1016,  // wheel diameter, measure with calipers
- *       1.83,    // target height, from game manual
- *       0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
- *       45.0,    // launch angle degrees from horizontal
- *       0.001,   // sim timestep
- *       1500, 6000, 25, 5.0  // RPM range, search iters, max sim time
- *   );
- *   ProjectileSimulator sim = new ProjectileSimulator(params);
- *   GeneratedLUT lut = sim.generateLUT();
- *   for (LUTEntry entry : lut.entries()) {
- *       if (entry.reachable()) {
- *           System.out.printf("%.2fm -> %.0f RPM, %.3fs TOF%n",
- *               entry.distanceM(), entry.rpm(), entry.tof());
- *       }
- *   }
+ *   ProjectileSimulator sim = new ProjectileSimulator(Constants.Vision.SOTM_PARAMETERS);
+ *   ShotLUT lut = sim.generateLUT();
+ *   // lut.get(distance) returns ShotParameters(rpm, angle, tof)
  * </pre>
  */
 public class ProjectileSimulator {

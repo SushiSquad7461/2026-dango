@@ -57,33 +57,7 @@ public class HoodedShooter extends SubsystemBase{
         hoodMotor.setPosition(0);
     }
 
-    //Use this method to set HoodedShooter angle based on these
-    public double calculateDesiredAngle(double distanceToHub, double speed){
-        return Math.toDegrees(getLowAngle(distanceToHub, Constants.HoodedShooterConstants.hubHeightDeltaM, speed));
-    }
 
-    /*
-     * Calculates the angle (helper method, dont use anywhere else)
-     * 
-     * distance to hub & height (x&y): meters
-     * speed (v): meters/second
-     * g (gravity constant): metrs per second squared
-     * 
-     * returns in radian
-     */
-    private static double getLowAngle(double x, double y, double v) {
-        double inside = Math.pow(v,4) - 9.81*(9.81*Math.pow(x,2) + 2*y*Math.pow(v,2));
-        if (inside < 0) return 0;
-        double sqrt = Math.sqrt(inside);
-        return Math.atan((Math.pow(v,2) - sqrt) / (9.81*x));
-    }
-
-    // public static double getHighAngle(double x, double y, double v) {
-    //     double inside = Math.pow(v,4) - 9.81*(9.81*Math.pow(x,2) + 2*y*Math.pow(v,2));
-    //     if (inside < 0) return 0;
-    //     double sqrt = Math.sqrt(inside);
-    //     return Math.atan((Math.pow(v,2) + sqrt) / (9.81*x));
-    // }
 
     public void moveHood(double speed){
             hoodMotor.setControl(hoodControlV.withVelocity((speed)));

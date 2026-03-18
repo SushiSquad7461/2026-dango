@@ -353,10 +353,6 @@ public class Constants {
 
         // Motor rotations per full hood rotation (360°). Measure your actual gear ratio.
         public static final double motorRotationsPerHoodRotation = 1.0; // TODO: measure gear ratio
-
-        // Height delta from shooter exit to hub scoring zone (meters).
-        // TODO: remove when calculateDesiredAngle() is deleted
-        public static final double hubHeightDeltaM = 1.40;
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!
