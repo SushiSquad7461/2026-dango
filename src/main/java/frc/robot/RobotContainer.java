@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.generated.Constants;
 import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
@@ -131,8 +132,8 @@ public class RobotContainer {
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
                 // D-pad: step hood ±5° using MotionMagic position hold
-                driverController.povDown().onTrue(Commands.runOnce(() -> hoodedShooter.stepHood(-5.0), hoodedShooter));
-                driverController.povUp().onTrue(  Commands.runOnce(() -> hoodedShooter.stepHood( 5.0), hoodedShooter));
+                driverController.povDown().onTrue(Commands.runOnce(() -> hoodedShooter.stepHood(-Constants.HoodedShooterConstants.hoodStepDegrees), hoodedShooter));
+                driverController.povUp().onTrue(  Commands.runOnce(() -> hoodedShooter.stepHood( Constants.HoodedShooterConstants.hoodStepDegrees), hoodedShooter));
 
                 driverController.leftTrigger().whileTrue(new AutoAlign(
                         swerve, vision, shooter, hoodedShooter,
