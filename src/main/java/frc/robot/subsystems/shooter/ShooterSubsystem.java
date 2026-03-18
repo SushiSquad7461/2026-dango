@@ -11,7 +11,6 @@ import frc.robot.generated.Constants;
 
 public class ShooterSubsystem extends SubsystemBase {
   // private double shootStartTime = 0; // could come in useful later, especially for logging
-  private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
   private double targetRPM = Constants.Shooter.TARGET_RPM_DEFAULT;
 
   public enum ShooterState {
@@ -25,64 +24,66 @@ public class ShooterSubsystem extends SubsystemBase {
   //ShooterDataAutoLogged data = new ShooterDataAutoLogged();
 
   public LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 5);
-
-
-  public ShooterSubsystem(ShooterIO io) {
-    this.io = io;
-  }
-
-  public void startShoot() {
-    state = ShooterState.PRESHOOT;
-  }
-
-  public void stop() {
-    state = ShooterState.IDLE;
-  }
-
-  public Command changeState(ShooterState newState){
-    this.state = newState;
-    switch (newState) {
-      case IDLE:
-        return Commands.parallel(
-            Commands.runOnce(()->{
-                io.stopShooter();    
-            }),
-            Commands.runOnce(()->{
-                io.stopFeeder();
-            }));
-
-      case PRESHOOT:
-        return Commands.parallel(
-          Commands.runOnce(()->io.runShooter(targetRPM)),
-           Commands.waitUntil(() -> isShooterReady()).andThen(Commands.runOnce(() -> {
-               this.state = ShooterState.SHOOT;
-               io.runShooter(targetRPM);
-               io.runFeeder();
-           })));
-      case SHOOT:
-        return Commands.parallel(
-            Commands.runOnce(()->{
-                io.runShooter(targetRPM);
-            }),
-            Commands.runOnce(()->{
-                io.runFeeder();
-            }));
-      default:
-        return Commands.none();
+    private double distance;
+  
+  
+    public ShooterSubsystem(ShooterIO io) {
+      this.io = io;
     }
-
-  }
-
-  public Command runFeeder() {
-   return Commands.runOnce(()->io.runFeeder());
-  }
-  public Command runFeederBack(){
-   return Commands.runOnce(()->io.runFeederBack());
-  }
-  public Command stopFeeder() {
-   return Commands.runOnce(()->io.stopFeeder());
-  }
-  public void setTargetRPM(double distance) {
+  
+    public void startShoot() {
+      state = ShooterState.PRESHOOT;
+    }
+  
+    public void stop() {
+      state = ShooterState.IDLE;
+    }
+  
+    public Command changeState(ShooterState newState){
+      this.state = newState;
+      switch (newState) {
+        case IDLE:
+          return Commands.parallel(
+              Commands.runOnce(()->{
+                  io.stopShooter();    
+              }),
+              Commands.runOnce(()->{
+                  io.stopFeeder();
+              }));
+  
+        case PRESHOOT:
+          return Commands.parallel(
+            Commands.runOnce(()->io.runShooter(targetRPM)),
+             Commands.waitUntil(() -> isShooterReady()).andThen(Commands.runOnce(() -> {
+                 this.state = ShooterState.SHOOT;
+                 io.runShooter(targetRPM);
+                 io.runFeeder();
+             })));
+        case SHOOT:
+          return Commands.parallel(
+              Commands.runOnce(()->{
+                  io.runShooter(targetRPM);
+              }),
+              Commands.runOnce(()->{
+                  io.runFeeder();
+              }));
+        default:
+          return Commands.none();
+      }
+  
+    }
+  
+    public Command runFeeder() {
+     return Commands.runOnce(()->io.runFeeder());
+    }
+    public Command runFeederBack(){
+     return Commands.runOnce(()->io.runFeederBack());
+    }
+    public Command stopFeeder() {
+     return Commands.runOnce(()->io.stopFeeder());
+    }
+    public void setTargetRPM(double distance) {
+      this.distance = distance;
     this.targetRPM = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
   }
 
@@ -120,7 +121,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
       SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
       SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
-      
+      SmartDashboard.putNumber("ShooterSubsystem/TargetRPM", targetRPM);
       //System.out.println(io.getFlywheelRPM());
 
        /*  Logger.processInputs("HoodedShooter/data", data);
@@ -132,7 +133,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         Logger.recordOutput("autoStowEnabled", autoStowEnabled);
         Logger.recordOutput("stateBeforeAutoStow", stateBeforeAutoStow);*/
-      SmartDashboard.putData("Shooter/Shooter_PID_Controller", shooterPidController);
+      SmartDashboard.putNumber("ShooterSubsystem/Distance", distance);
 
   }
 }
