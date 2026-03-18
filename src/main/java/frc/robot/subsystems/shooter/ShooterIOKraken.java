@@ -20,9 +20,9 @@ public class ShooterIOKraken implements ShooterIO {
   CANBus rioCanBus = new CANBus("rio");
 
   // initialize shooter, shooter intake, and hood motors
-  private final TalonFX krakenShooterLeft = new TalonFX(5, rioCanBus);
+  private final TalonFX krakenShooterLeft = new TalonFX(14, rioCanBus);
   private final TalonFX krakenShooterRight = new TalonFX(2, rioCanBus);
-  private final TalonFX krakenShooterKicker = new TalonFX(14, rioCanBus);
+  private final TalonFX krakenShooterKicker = new TalonFX(5, rioCanBus);
   private final VelocityVoltage shooterRequest = new VelocityVoltage(0).withSlot(0); // create a velocity closed-loop request, voltage output, slot 0 configs
   private final VelocityVoltage feederRequest = new VelocityVoltage(0).withSlot(0);
 
