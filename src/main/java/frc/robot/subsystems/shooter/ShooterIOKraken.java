@@ -73,14 +73,15 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public void runShooter(double rpm) {
-    double rps = rpm / 60;
+    // rpm is flywheel RPM; scale to motor RPS via gear ratio
+    double rps = rpm * Constants.Shooter.FLYWHEEL_GEAR_RATIO / 60.0;
     krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps));
   }
 
   @Override
   public void stopShooter(double rpm) {
-    double rps = rpm / 60;
-    krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps/2));
+    double rps = rpm * Constants.Shooter.FLYWHEEL_GEAR_RATIO / 60.0;
+    krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps / 2.0));
   }
 
   @Override
@@ -101,12 +102,13 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public double getFlywheelRPM() {
-    return krakenShooterLeft.getVelocity().getValueAsDouble() * 60;
+    // Motor velocity → flywheel RPM (divide out gear ratio)
+    return krakenShooterLeft.getVelocity().getValueAsDouble() * 60.0 / Constants.Shooter.FLYWHEEL_GEAR_RATIO;
   }
 
   @Override
   public double getFlywheelTargetRPM() {
-    return shooterRequest.Velocity * 60;
+    return shooterRequest.Velocity * 60.0 / Constants.Shooter.FLYWHEEL_GEAR_RATIO;
   }
 
   @Override
