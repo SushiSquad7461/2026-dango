@@ -79,7 +79,7 @@ public class ShooterIOKraken implements ShooterIO {
 
   @Override
   public void stopShooter() {
-    krakenShooterLeft.setControl(shooterRequest.withVelocity(0));
+    krakenShooterLeft.set(0);
   }
 
   @Override
