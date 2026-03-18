@@ -60,12 +60,14 @@ public class AutoAlign extends Command {
             // StateMachine enters SHOOT state (right trigger held).
             shooter.setTargetRPM(shot.rpm());
 
-            // driveAngle() points the robot front at the hub.
-            // Rotate by π so the rear-facing shooter faces the hub instead.
-            double currentHeading = swerve.getPose().getRotation().getDegrees();
+            // Use gyro heading (same frame as swerve.drive's field-relative conversion)
+            // so the PID error and the drive reference frame are consistent.
+            double currentHeading = swerve.getHeading().getDegrees();
             double targetHeading  = shot.driveAngle().rotateBy(Rotation2d.kPi).getDegrees();
             double pidOutput      = Constants.Vision.rotationPID.calculate(currentHeading, targetHeading);
             double rotationSpeed  = pidOutput + shot.driveAngularVelocityRadPerSec();
+            // Clamp so large heading errors don't steal translation bandwidth via desaturation.
+            rotationSpeed = MathUtil.clamp(rotationSpeed, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
 
             swerve.drive(driverInput, rotationSpeed, true, true);
         } else {
@@ -83,5 +85,7 @@ public class AutoAlign extends Command {
     }
 
     @Override
-    public void end(boolean interrupted) {}
+    public void end(boolean interrupted) {
+        swerve.drive(new Translation2d(), 0, true, true);
+    }
 }
