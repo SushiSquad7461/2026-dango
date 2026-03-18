@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -45,7 +46,13 @@ public class AutoAlign extends Command {
 
     @Override
     public void execute() {
-        Translation2d driverInput = new Translation2d(xTranslation.getAsDouble(), yTranslation.getAsDouble());
+        // Apply the same deadband + cubic + maxSpeed scaling as TeleopSwerve.
+        double x = MathUtil.applyDeadband(xTranslation.getAsDouble(), Constants.stickDeadband);
+        double y = MathUtil.applyDeadband(yTranslation.getAsDouble(), Constants.stickDeadband);
+        Translation2d raw = new Translation2d(x, y);
+        double magnitude = raw.getNorm();
+        Translation2d driverInput = raw.times(Math.pow(magnitude, 2)).times(Constants.Swerve.maxSpeed);
+
         ShotCalculator.LaunchParameters shot = vision.getCurrentShot();
 
         if (shot.isValid() && shot.confidence() > CONFIDENCE_THRESHOLD) {
@@ -64,7 +71,9 @@ public class AutoAlign extends Command {
         } else {
             // No valid solution — keep shooter warm and give driver full rotation control.
             shooter.setTargetRPM(4500);
-            swerve.drive(driverInput, driverRotation.getAsDouble(), true, true);
+            double rotation = MathUtil.applyDeadband(driverRotation.getAsDouble(), Constants.stickDeadband);
+            rotation = Math.pow(rotation, 3) * Constants.Swerve.maxAngularVelocity;
+            swerve.drive(driverInput, rotation, true, true);
         }
     }
 
