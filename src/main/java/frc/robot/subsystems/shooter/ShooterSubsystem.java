@@ -9,15 +9,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
-import frc.robot.subsystems.vision.ProjectileSimulator;
-import frc.robot.subsystems.vision.ProjectileSimulator.GeneratedLUT;
-import frc.robot.subsystems.vision.ShotCalculator;
-
 public class ShooterSubsystem extends SubsystemBase {
   // private double shootStartTime = 0; // could come in useful later, especially for logging
   private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
   private double targetRPM = Constants.Shooter.TARGET_RPM_DEFAULT;
-  private ProjectileSimulator projectileSimulator;
 
   public enum ShooterState {
     IDLE, // shooter inactive

@@ -27,9 +27,9 @@ class ProjectileSimulatorTest {
     }
 
     @Test
-    void generateShotLUT_returnsPopulatedLUT() {
+    void generateLUT_returnsPopulatedLUT() {
         ProjectileSimulator sim = new ProjectileSimulator(PARAMS);
-        ShotLUT lut = sim.generateShotLUT();
+        ShotLUT lut = sim.generateLUT();
         assertNotNull(lut);
 
         ShotLUT.ShotParameters shot = lut.get(2.0);
@@ -43,15 +43,15 @@ class ProjectileSimulatorTest {
     }
 
     @Test
-    void generateShotLUT_tightTofCeiling_requiresHigherRPM() {
+    void generateLUT_tightTofCeiling_requiresHigherRPM() {
         ProjectileSimulator.SimParameters tightParams = new ProjectileSimulator.SimParameters(
             0.215, 0.1501, 0.47, 0.2, 1.225,
             0.43, 0.1016, 1.83, 0.6,
             12.0, 40.0, 0.5, 1.0,
             0.001, 1500, 6000, 25, 5.0);
 
-        ShotLUT lutTight = new ProjectileSimulator(tightParams).generateShotLUT();
-        ShotLUT lutLoose = new ProjectileSimulator(PARAMS).generateShotLUT();
+        ShotLUT lutTight = new ProjectileSimulator(tightParams).generateLUT();
+        ShotLUT lutLoose = new ProjectileSimulator(PARAMS).generateLUT();
 
         ShotLUT.ShotParameters tight = lutTight.get(2.0);
         ShotLUT.ShotParameters loose = lutLoose.get(2.0);

@@ -169,9 +169,7 @@ public class ShotCalculator {
 
   private final Config config;
 
-  private final ShotLUT shotLUT;  // null when using legacy loadLUTEntry path
-  private final InterpolatingDoubleTreeMap rpmMap = new InterpolatingDoubleTreeMap();
-  private final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
+  private final ShotLUT shotLUT;
   private final InterpolatingDoubleTreeMap correctionRpmMap = new InterpolatingDoubleTreeMap();
   private final InterpolatingDoubleTreeMap correctionTofMap = new InterpolatingDoubleTreeMap();
 
@@ -192,51 +190,21 @@ public class ShotCalculator {
     this.shotLUT = shotLUT;
   }
 
-  /** @deprecated Use ShotCalculator(Config, ShotLUT) instead. */
-  public ShotCalculator(Config config) {
-    this.config = config;
-    this.shotLUT = null;
-  }
-
-  /** @deprecated Use ShotCalculator(Config, ShotLUT) instead. */
-  public ShotCalculator() {
-    this(new Config());
-  }
-
-  /** Add a distance/RPM/TOF point to the lookup table. Use ProjectileSimulator to generate these, or hand-tune. */
-  public void loadLUTEntry(double distanceM, double rpm, double tof) {
-    rpmMap.put(distanceM, rpm);
-    tofMap.put(distanceM, tof);
-  }
-
   // LUT lookup: base value + any corrections + copilot RPM offset
   double effectiveRPM(double distance) {
-    double base;
-    if (shotLUT != null) {
-      base = shotLUT.get(distance).rpm();
-    } else {
-      base = rpmMap.get(distance);
-    }
+    double base = shotLUT.get(distance).rpm();
     Double correction = correctionRpmMap.get(distance);
     return base + (correction != null ? correction : 0.0) + rpmOffset;
   }
 
   double effectiveTOF(double distance) {
-    double base;
-    if (shotLUT != null) {
-      base = shotLUT.get(distance).tof();
-    } else {
-      base = tofMap.get(distance);
-    }
+    double base = shotLUT.get(distance).tof();
     Double correction = correctionTofMap.get(distance);
     return base + (correction != null ? correction : 0.0);
   }
 
   double effectiveAngle(double distance) {
-    if (shotLUT != null) {
-      return shotLUT.get(distance).angle();
-    }
-    return 0; // legacy path has no angle data
+    return shotLUT.get(distance).angle();
   }
 
   // Drag-adjusted effective TOF: actual displacement < v*tof because drag.
@@ -600,10 +568,7 @@ public class ShotCalculator {
 
   /** Base RPM at this distance, before any corrections or offset. */
   public double getBaseRPM(double distance) {
-    if (shotLUT != null) {
-      return shotLUT.get(distance).rpm();
-    }
-    return rpmMap.get(distance);
+    return shotLUT.get(distance).rpm();
   }
 
   /** Reset the warm start state. Call this after a pose reset so the solver doesn't use stale data. */
@@ -615,11 +580,4 @@ public class ShotCalculator {
     prevRobotOmega = 0;
   }
 
-  InterpolatingDoubleTreeMap getRpmMap() {
-    return rpmMap;
-  }
-
-  InterpolatingDoubleTreeMap getTofMap() {
-    return tofMap;
-  }
 }

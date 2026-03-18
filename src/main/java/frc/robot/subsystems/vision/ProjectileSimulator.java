@@ -20,8 +20,6 @@
 
 package frc.robot.subsystems.vision;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Simulates a ball flying through the air with drag and Magnus lift. Uses RK4 integration
@@ -84,16 +82,7 @@ public class ProjectileSimulator {
       double zAtTarget, double tof, boolean reachedTarget, double maxHeight, double apexX) {}
 
   // One row: distance -> RPM that lands it, TOF, reachable flag
-  public record LUTEntry(double distanceM, double rpm, double tof, boolean reachable) {}
-
-  /** Full LUT with generation stats. */
-  public record GeneratedLUT(
-      List<LUTEntry> entries,
-      SimParameters params,
-      int reachableCount,
-      int unreachableCount,
-      double maxRangeM,
-      long generationTimeMs) {}
+  private record LUTEntry(double distanceM, double rpm, double tof, boolean reachable) {}
 
   private final SimParameters params;
 
@@ -112,65 +101,6 @@ public class ProjectileSimulator {
   /** RPM to ball exit speed (m/s). Accounts for slip between the wheel surface and ball. */
   public double exitVelocity(double rpm) {
     return params.slipFactor() * rpm * Math.PI * params.wheelDiameterM() / 60.0;
-  }
-
-  /** Simulate a ball launched at the given RPM and see where it is when it reaches the target distance. */
-  public TrajectoryResult simulate(double rpm, double targetDistanceM) {
-    double v0 = exitVelocity(rpm);
-    double launchRad = Math.toRadians(params.minHoodAngleDeg()); // placeholder, rewritten in Task 3
-    double vx = v0 * Math.cos(launchRad);
-    double vz = v0 * Math.sin(launchRad);
-
-    double x = 0;
-    double z = params.exitHeightM();
-    double dt = params.dt();
-    double maxHeight = z;
-    double apexX = 0;
-
-    double t = 0;
-    double maxTime = params.maxSimTime();
-
-    while (t < maxTime) {
-      // RK4 step
-      double[] state = {x, z, vx, vz};
-      double[] k1 = derivatives(state);
-      double[] s2 = addScaled(state, k1, dt / 2.0);
-      double[] k2 = derivatives(s2);
-      double[] s3 = addScaled(state, k2, dt / 2.0);
-      double[] k3 = derivatives(s3);
-      double[] s4 = addScaled(state, k3, dt);
-      double[] k4 = derivatives(s4);
-
-      x += dt / 6.0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
-      z += dt / 6.0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
-      vx += dt / 6.0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]);
-      vz += dt / 6.0 * (k1[3] + 2 * k2[3] + 2 * k3[3] + k4[3]);
-      t += dt;
-
-      if (z > maxHeight) {
-        maxHeight = z;
-        apexX = x;
-      }
-
-      // Check if we've passed or reached the target distance
-      if (x >= targetDistanceM) {
-        // Linear interpolation to find z at exact target x
-        double prevX = x - vx * dt; // approximate previous x
-        double prevZ = z - vz * dt; // approximate previous z
-        double frac = (targetDistanceM - prevX) / (x - prevX);
-        double zAtTarget = prevZ + frac * (z - prevZ);
-        double tofAtTarget = t - dt + frac * dt;
-        return new TrajectoryResult(zAtTarget, tofAtTarget, true, maxHeight, apexX);
-      }
-
-      // Ball hit the ground
-      if (z < 0) {
-        return new TrajectoryResult(0, t, false, maxHeight, apexX);
-      }
-    }
-
-    // Timed out without reaching target
-    return new TrajectoryResult(0, maxTime, false, maxHeight, apexX);
   }
 
   // state = [x, z, vx, vz]
@@ -194,87 +124,6 @@ public class ProjectileSimulator {
       base[2] + delta[2] * scale,
       base[3] + delta[3] * scale
     };
-  }
-
-  /** Binary search for the RPM that puts the ball at the target height. Returns reachable=false if max RPM can't reach. */
-  public LUTEntry findRPMForDistance(double distanceM) {
-    double heightTolerance = 0.02; // 2cm
-    double lo = params.rpmMin();
-    double hi = params.rpmMax();
-
-    // Quick feasibility check: can max RPM even reach this distance?
-    TrajectoryResult maxCheck = simulate(hi, distanceM);
-    if (!maxCheck.reachedTarget()) {
-      return new LUTEntry(distanceM, 0, 0, false);
-    }
-
-    double bestRpm = hi;
-    double bestTof = maxCheck.tof();
-    double bestError = Math.abs(maxCheck.zAtTarget() - params.targetHeightM());
-
-    for (int i = 0; i < params.binarySearchIters(); i++) {
-      double mid = (lo + hi) / 2.0;
-      TrajectoryResult result = simulate(mid, distanceM);
-
-      if (!result.reachedTarget()) {
-        // Too slow, need more RPM
-        lo = mid;
-        continue;
-      }
-
-      double error = result.zAtTarget() - params.targetHeightM();
-      double absError = Math.abs(error);
-
-      if (absError < bestError) {
-        bestRpm = mid;
-        bestTof = result.tof();
-        bestError = absError;
-      }
-
-      if (absError < heightTolerance) {
-        return new LUTEntry(distanceM, mid, result.tof(), true);
-      }
-
-      if (error > 0) {
-        // Ball too high, reduce RPM
-        hi = mid;
-      } else {
-        // Ball too low, increase RPM
-        lo = mid;
-      }
-    }
-
-    // Return best found even if not perfectly converged (0.004 RPM precision after 25 iters)
-    return new LUTEntry(distanceM, bestRpm, bestTof, bestError < 0.10);
-  }
-
-  /** Generate the full lookup table: 0.50m to 5.00m in 5cm steps (91 entries). Takes ~200ms. */
-  public GeneratedLUT generateLUT() {
-    long startMs = System.currentTimeMillis();
-    List<LUTEntry> entries = new ArrayList<>();
-    int reachable = 0;
-    int unreachable = 0;
-    double maxRange = 0;
-
-    // 0.50 to 5.00 at 0.05m steps = 91 entries
-    for (int i = 0; i <= 90; i++) {
-      double distance = 0.50 + i * 0.05;
-      // Round to avoid floating-point drift
-      distance = Math.round(distance * 100.0) / 100.0;
-
-      LUTEntry entry = findRPMForDistance(distance);
-      entries.add(entry);
-
-      if (entry.reachable()) {
-        reachable++;
-        maxRange = distance;
-      } else {
-        unreachable++;
-      }
-    }
-
-    long elapsed = System.currentTimeMillis() - startMs;
-    return new GeneratedLUT(entries, params, reachable, unreachable, maxRange, elapsed);
   }
 
   /** Simulate a ball launched at the given RPM and explicit angle. */
@@ -362,7 +211,7 @@ public class ProjectileSimulator {
    * Generate unified shot LUT: sweep hood angles per distance, find lowest RPM
    * within TOF ceiling. Takes ~5-6 seconds at startup.
    */
-  public ShotLUT generateShotLUT() {
+  public ShotLUT generateLUT() {
     ShotLUT lut = new ShotLUT();
 
     double minAngle = params.minHoodAngleDeg();

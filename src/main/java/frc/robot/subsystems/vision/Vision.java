@@ -9,8 +9,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.LimelightHelpers;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.vision.ProjectileSimulator.GeneratedLUT;
-import frc.robot.subsystems.vision.ProjectileSimulator.LUTEntry;
 
 public class Vision extends SubsystemBase {
     // -------------------------------------------------------------------------
@@ -60,7 +58,7 @@ public class Vision extends SubsystemBase {
     public Vision(Swerve swerve) {
         this.swerve = swerve;
 
-        GeneratedLUT lut = projectileSimulator.generateLUT();
+        ShotLUT lut = projectileSimulator.generateLUT();
         ShotCalculator.Config config = new ShotCalculator.Config();
         config.launcherOffsetX = -0.1905;  // negative: launcher is behind robot center
         config.launcherOffsetY = 0.0;    // 0 if centered
@@ -75,13 +73,7 @@ public class Vision extends SubsystemBase {
         config.headingReferenceDistance = 2.5;
         config.shooterAngleOffsetRad = Math.PI;  // 0.0 means the shooter faces the same direction as the robot front; π means it faces backward.
 
-        shotCalc = new ShotCalculator(config);
-
-        for (LUTEntry entry : lut.entries()) {
-            if (entry.reachable()) {
-                shotCalc.loadLUTEntry(entry.distanceM(), entry.rpm(), entry.tof());
-            }
-        }
+        shotCalc = new ShotCalculator(config, lut);
 
         rotationPID.enableContinuousInput(-180, 180);
         // 2° tolerance at a typical 5m shot distance = ~17cm miss at the hub.
@@ -165,6 +157,7 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putNumber("Vision/Confidence", currentShot.confidence());
         SmartDashboard.putNumber("Vision/TargetRPM", currentShot.rpm());
         SmartDashboard.putNumber("Vision/SolvedDistanceM", currentShot.solvedDistanceM());
+        SmartDashboard.putNumber("Vision/HoodAngleDeg", currentShot.hoodAngleDeg());
         SmartDashboard.putNumber("Vision/DriveAngleDeg", currentShot.driveAngle().getDegrees());
         SmartDashboard.putBoolean("Vision/ShotValid", currentShot.isValid());
         SmartDashboard.putBoolean("Vision/SpinningTooFast", spinningTooFast);
@@ -176,11 +169,6 @@ public class Vision extends SubsystemBase {
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
         return currentShot;
-    }
-
-    /** Convert RPM to ball exit velocity (m/s) using the ProjectileSimulator's wheel/slip model. */
-    public double getExitVelocity(double rpm) {
-        return projectileSimulator.exitVelocity(rpm);
     }
 
     public void resetOffset() {
