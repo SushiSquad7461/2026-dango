@@ -76,11 +76,12 @@ public class ShotCalculator {
       boolean isValid,
       double confidence,
       double solvedDistanceM,
+      double hoodAngleDeg,
       int iterationsUsed,
       boolean warmStartUsed) {
 
     public static final LaunchParameters INVALID =
-        new LaunchParameters(0, 0, new Rotation2d(), 0, false, 0, 0, 0, false);
+        new LaunchParameters(0, 0, new Rotation2d(), 0, false, 0, 0, 0, 0, false);
   }
 
   /**
@@ -168,6 +169,7 @@ public class ShotCalculator {
 
   private final Config config;
 
+  private final ShotLUT shotLUT;  // null when using legacy loadLUTEntry path
   private final InterpolatingDoubleTreeMap rpmMap = new InterpolatingDoubleTreeMap();
   private final InterpolatingDoubleTreeMap tofMap = new InterpolatingDoubleTreeMap();
   private final InterpolatingDoubleTreeMap correctionRpmMap = new InterpolatingDoubleTreeMap();
@@ -185,11 +187,18 @@ public class ShotCalculator {
   private double prevRobotVy = 0;
   private double prevRobotOmega = 0;
 
-  public ShotCalculator(Config config) {
+  public ShotCalculator(Config config, ShotLUT shotLUT) {
     this.config = config;
+    this.shotLUT = shotLUT;
   }
 
-  /** Default config. You still need to call loadLUTEntry() to fill the lookup tables. */
+  /** @deprecated Use ShotCalculator(Config, ShotLUT) instead. */
+  public ShotCalculator(Config config) {
+    this.config = config;
+    this.shotLUT = null;
+  }
+
+  /** @deprecated Use ShotCalculator(Config, ShotLUT) instead. */
   public ShotCalculator() {
     this(new Config());
   }
@@ -202,15 +211,32 @@ public class ShotCalculator {
 
   // LUT lookup: base value + any corrections + copilot RPM offset
   double effectiveRPM(double distance) {
-    double base = rpmMap.get(distance);
+    double base;
+    if (shotLUT != null) {
+      base = shotLUT.get(distance).rpm();
+    } else {
+      base = rpmMap.get(distance);
+    }
     Double correction = correctionRpmMap.get(distance);
     return base + (correction != null ? correction : 0.0) + rpmOffset;
   }
 
   double effectiveTOF(double distance) {
-    double base = tofMap.get(distance);
+    double base;
+    if (shotLUT != null) {
+      base = shotLUT.get(distance).tof();
+    } else {
+      base = tofMap.get(distance);
+    }
     Double correction = correctionTofMap.get(distance);
     return base + (correction != null ? correction : 0.0);
+  }
+
+  double effectiveAngle(double distance) {
+    if (shotLUT != null) {
+      return shotLUT.get(distance).angle();
+    }
+    return 0; // legacy path has no angle data
   }
 
   // Drag-adjusted effective TOF: actual displacement < v*tof because drag.
@@ -463,6 +489,8 @@ public class ShotCalculator {
 
     previousSpeed = robotSpeed;
 
+    double effectiveAngleValue = effectiveAngle(projDist);
+
     return new LaunchParameters(
         effectiveRPMValue,
         effectiveTOF,
@@ -470,7 +498,8 @@ public class ShotCalculator {
         driveAngularVelocity,
         true,
         confidence,
-        distance,
+        projDist,
+        effectiveAngleValue,
         iterationsUsed,
         warmStartUsed);
   }
@@ -571,6 +600,9 @@ public class ShotCalculator {
 
   /** Base RPM at this distance, before any corrections or offset. */
   public double getBaseRPM(double distance) {
+    if (shotLUT != null) {
+      return shotLUT.get(distance).rpm();
+    }
     return rpmMap.get(distance);
   }
 
