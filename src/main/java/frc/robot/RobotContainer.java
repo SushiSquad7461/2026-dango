@@ -179,16 +179,18 @@ public class RobotContainer {
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-                driverController.leftBumper().onTrue(
-                        Commands.parallel(//shooter.runFeederBack(), hopper.runHopperBack(),
-                        Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
-                ).onFalse
-                (
-                        Commands.either(
-                                Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
-                                Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
-                                () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
-                                      stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
+                // driverController.leftBumper().onTrue(
+                //         Commands.parallel(//shooter.runFeederBack(), hopper.runHopperBack(),
+                //         stateMachine.changeState(RobotState.WIGGLING))
+                //         //Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
+                // ).onFalse
+                // (
+                //         Commands.either(
+                //                 Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
+                //                 Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
+                //                 () -> 
+                //                 stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
+                //                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         hoodedShooter.moveHood(-0.05);

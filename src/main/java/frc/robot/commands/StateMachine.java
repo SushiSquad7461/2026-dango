@@ -18,9 +18,9 @@ public class StateMachine extends SubsystemBase {
 
 
         IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.IDLE),
-        SHOOT_ONLY(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.WIGGLING),//IntakeState.DEPLOYED
+        SHOOT_ONLY(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
         INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
-        //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
+        WIGGLING(ShooterState.SHOOT,HopperState.IDLE,IntakeState.WIGGLING),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
         INTAKE_DOWN_AND_SHOOT(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.WIGGLING);

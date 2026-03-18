@@ -43,25 +43,6 @@
           }
         },
         {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoAlign"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Down"
-                }
-              }
-            ]
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "Intake"
