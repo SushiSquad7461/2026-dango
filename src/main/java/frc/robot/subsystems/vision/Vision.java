@@ -29,19 +29,10 @@ public class Vision extends SubsystemBase {
     //   The AprilTag layout file is the most reliable source once available on
     //   your robot's WPILib installation.
     // -------------------------------------------------------------------------
-    private static final double FIELD_LENGTH_M      = 16.54;  // 651.2in, per 2026 game manual
-    private static final double FIELD_WIDTH_M       = 8.07;   // 317.7in, per 2026 game manual
-    private static final double FIELD_MID_Y         = FIELD_WIDTH_M / 2.0;  // 4.035m
-
-    // Blue Hub: ~120in from blue alliance wall, centered in Y
-    // TODO: confirm against official CAD / AprilTag JSON
-    private static final double HUB_CENTER_X_BLUE   = 3.048;  // ~120in from blue wall
-    private static final Translation2d BLUE_HUB_CENTER  = new Translation2d(HUB_CENTER_X_BLUE, FIELD_MID_Y);
+    private static final Translation2d BLUE_HUB_CENTER  = new Translation2d(4.029, 4.034);
     private static final Translation2d BLUE_HUB_FORWARD = new Translation2d(1, 0);  // hub faces +X (toward field center)
 
-    // Red Hub: mirrored across field centerline
-    private static final double HUB_CENTER_X_RED    = FIELD_LENGTH_M - HUB_CENTER_X_BLUE;
-    private static final Translation2d RED_HUB_CENTER   = new Translation2d(HUB_CENTER_X_RED, FIELD_MID_Y);
+    private static final Translation2d RED_HUB_CENTER   = new Translation2d(12.513, 4.034);
     private static final Translation2d RED_HUB_FORWARD  = new Translation2d(-1, 0);  // hub faces -X (toward field center)
 
     // -------------------------------------------------------------------------
@@ -69,6 +60,7 @@ public class Vision extends SubsystemBase {
         // maxTiltDeg: 5.0 suppresses firing over bumps/ramps where the launcher
         // is knocked off-axis. 90.0 (the previous value) effectively disabled this gate.
         config.maxTiltDeg = 5.0;
+        config.maxScoringDistance = 15.0; // TODO: tighten once hub coordinates are verified
         config.headingSpeedScalar = 1.0;
         config.headingReferenceDistance = 2.5;
         config.shooterAngleOffsetRad = Math.PI;  // 0.0 means the shooter faces the same direction as the robot front; π means it faces backward.
