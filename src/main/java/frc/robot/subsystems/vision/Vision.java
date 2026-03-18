@@ -165,6 +165,19 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putData("Vision/RotationPID", rotationPID);
         SmartDashboard.putNumber("Vision/LimelightTLLeft",  LimelightHelpers.getLatency_Pipeline(Constants.Vision.primaryLimelightName));
         SmartDashboard.putNumber("Vision/LimelightTLRight", LimelightHelpers.getLatency_Pipeline(Constants.Vision.secondaryLimelightName));
+        // Debug: raw pose and vision tag counts to distinguish pose vs. solver failures
+        SmartDashboard.putNumber("Vision/RobotX", swerve.getPose().getX());
+        SmartDashboard.putNumber("Vision/RobotY", swerve.getPose().getY());
+        SmartDashboard.putNumber("Vision/RobotHeadingDeg", swerve.getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("Vision/VisionConfidence", visionConfidence);
+        SmartDashboard.putNumber("Vision/HubX", hubCenter.getX());
+        SmartDashboard.putNumber("Vision/HubY", hubCenter.getY());
+        double distToHub = swerve.getPose().getTranslation().getDistance(hubCenter);
+        SmartDashboard.putNumber("Vision/DistToHubRaw", distToHub);
+        int leftTags  = (leftPose  != null) ? leftPose.tagCount  : 0;
+        int rightTags = (rightPose != null) ? rightPose.tagCount : 0;
+        SmartDashboard.putNumber("Vision/TagCountLeft",  leftTags);
+        SmartDashboard.putNumber("Vision/TagCountRight", rightTags);
     }
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
