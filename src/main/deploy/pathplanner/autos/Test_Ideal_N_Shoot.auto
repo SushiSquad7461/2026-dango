@@ -30,13 +30,32 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "bEST_NT_AutoAlign"
+                  "pathName": "NT_Turn_Back"
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "Down"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Test_Shoot_on_the_Move"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot"
                 }
               }
             ]
