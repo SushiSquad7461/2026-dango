@@ -61,19 +61,24 @@ public class AutoAlign extends Command {
 
         ShotCalculator.LaunchParameters shot = vision.getCurrentShot();
 
-        if (shot.isValid() && shot.confidence() > CONFIDENCE_THRESHOLD) {
-            // RPM and hood angle from the unified ShotLUT inside ShotCalculator.
-            shooter.commandRPM(shot.rpm());
-            hoodedShooter.moveHoodToAngleWithOffset(shot.hoodAngleDeg());
-
-            // Use gyro heading (same frame as swerve.drive's field-relative conversion)
-            // so the PID error and the drive reference frame are consistent.
+        if (shot.isValid()) {
+            // Always rotate toward the hub whenever we have a valid solution.
+            // Confidence gates shooter/hood only — don't gate rotation on confidence
+            // or we get a deadlock where the robot never turns because it isn't aimed yet.
             double currentHeading = swerve.getHeading().getDegrees();
             double targetHeading  = shot.driveAngle().rotateBy(Rotation2d.kPi).getDegrees();
             double pidOutput      = Constants.Vision.rotationPID.calculate(currentHeading, targetHeading);
             double rotationSpeed  = pidOutput + shot.driveAngularVelocityRadPerSec();
-            // Clamp so large heading errors don't steal translation bandwidth via desaturation.
             rotationSpeed = MathUtil.clamp(rotationSpeed, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
+
+            if (shot.confidence() > CONFIDENCE_THRESHOLD) {
+                // Heading is close enough — spin up shooter and set hood.
+                shooter.commandRPM(shot.rpm());
+                hoodedShooter.moveHoodToAngleWithOffset(shot.hoodAngleDeg());
+            } else {
+                // Still rotating toward hub — keep shooter warm at default RPM.
+                shooter.setTargetRPM(4500);
+            }
 
             swerve.drive(driverInput, rotationSpeed, true, true);
 
@@ -84,7 +89,7 @@ public class AutoAlign extends Command {
             SmartDashboard.putNumber("SOTM/HeadingErrorDeg", currentHeading - targetHeading);
             SmartDashboard.putNumber("SOTM/RotationPID", pidOutput);
         } else {
-            // No valid solution — keep shooter warm and give driver full rotation control.
+            // No valid solution at all — give driver full rotation control.
             shooter.setTargetRPM(4500);
             double rotation = MathUtil.applyDeadband(driverRotation.getAsDouble(), Constants.stickDeadband);
             rotation = Math.pow(rotation, 3) * Constants.Swerve.maxAngularVelocity;
