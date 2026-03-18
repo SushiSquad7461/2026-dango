@@ -96,6 +96,12 @@ public class ShooterSubsystem extends SubsystemBase {
   public void setTargetRPM(double rpm) {
     this.targetRPM = rpm;
   }
+
+  /** Set target RPM and immediately command the motor. Use in continuous commands like SOTM. */
+  public void commandRPM(double rpm) {
+    this.targetRPM = rpm;
+    io.runShooter(rpm);
+  }
   public void setTargetRPM(String location) {
     switch (location) {
       case "hub":

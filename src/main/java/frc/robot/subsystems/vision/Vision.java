@@ -62,7 +62,7 @@ public class Vision extends SubsystemBase {
 
         GeneratedLUT lut = projectileSimulator.generateLUT();
         ShotCalculator.Config config = new ShotCalculator.Config();
-        config.launcherOffsetX = -0.23;  // negative: launcher is behind robot center
+        config.launcherOffsetX = -0.1905;  // negative: launcher is behind robot center
         config.launcherOffsetY = 0.0;    // 0 if centered
         // phaseDelayMs: set to actual pipeline latency from Limelight's "tl" field.
         // Log limelight.getTl() during testing and replace this placeholder.
@@ -168,6 +168,7 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putNumber("Vision/DriveAngleDeg", currentShot.driveAngle().getDegrees());
         SmartDashboard.putBoolean("Vision/ShotValid", currentShot.isValid());
         SmartDashboard.putBoolean("Vision/SpinningTooFast", spinningTooFast);
+        SmartDashboard.putNumber("Vision/SolverIterations", currentShot.iterationsUsed());
         SmartDashboard.putData("Vision/RotationPID", rotationPID);
         SmartDashboard.putNumber("Vision/LimelightTLLeft",  LimelightHelpers.getLatency_Pipeline(Constants.Vision.primaryLimelightName));
         SmartDashboard.putNumber("Vision/LimelightTLRight", LimelightHelpers.getLatency_Pipeline(Constants.Vision.secondaryLimelightName));
@@ -175,6 +176,11 @@ public class Vision extends SubsystemBase {
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
         return currentShot;
+    }
+
+    /** Convert RPM to ball exit velocity (m/s) using the ProjectileSimulator's wheel/slip model. */
+    public double getExitVelocity(double rpm) {
+        return projectileSimulator.exitVelocity(rpm);
     }
 
     public void resetOffset() {

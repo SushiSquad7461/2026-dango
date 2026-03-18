@@ -337,12 +337,24 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
-        public static final double cruiseVelocityRps = .25;
-        public static final double accelRps2 =.125;
+        public static final double cruiseVelocityRps = 1.0;   // tune on robot
+        public static final double accelRps2 = 4.0;           // tune on robot
 
         public static final double hoodP = 0.8;
         public static final double hoodI = 0.0;
         public static final double hoodD = 0.0;
+
+        public static final double hoodStepDegrees = 5.0;
+        public static final double hoodMinDegrees  = 0.0;
+        public static final double hoodMaxDegrees  = 30.0;    // verify against physical stop
+
+        // Motor rotations per full hood rotation (360°). Measure your actual gear ratio.
+        // Example: if the hood turns 1° for every 10 motor rotations, set this to 3600.
+        public static final double motorRotationsPerHoodRotation = 1.0; // TODO: measure gear ratio
+
+        // Height delta from shooter exit to hub scoring zone (meters).
+        // = SOTM_PARAMETERS.targetHeightM (1.83) - SOTM_PARAMETERS.exitHeightM (0.43)
+        public static final double hubHeightDeltaM = 1.40;
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!

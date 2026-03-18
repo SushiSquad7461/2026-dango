@@ -97,36 +97,6 @@ public class RobotContainer {
          * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
          */
         private void configureButtonBindings() {
-                // // Default command, normal field-relative drive
-                // swerve.setDefaultCommand(
-                // DriveCommands.joystickDrive(
-                // swerve,
-                // () -> -driverController.getLeftY(),
-                // () -> -driverController.getLeftX(),
-                // () -> -driverController.getRightX()
-                // )
-                // );
-
-                // // Lock to 0° when A button is held
-                // driverController
-                // .a()
-                // .whileTrue(
-                // DriveCommands.joystickDriveAtAngle(
-                // swerve,
-                // () -> -driverController.getLeftY(),
-                // () -> -driverController.getLeftX(),
-                // () -> Rotation2d.kZero
-                // )
-                // );
-
-                // // Switch to X pattern when X button is pressed
-                // driverController.x().onTrue(Commands.runOnce(swerve::stopWithX, swerve));
-
-                // // Reset gyro to 0° when Y button is pressed
-                // driverController.y().onTrue(Commands.runOnce(() ->swerve.setPose(
-                // new Pose2d(swerve.getPose().getTranslation(),
-                // Rotation2d.kZero)),swerve).ignoringDisable(true));
-
                 swerve.setDefaultCommand(new TeleopSwerve(
                                 swerve,
                                 () -> -driverController.getLeftY(),
@@ -143,86 +113,37 @@ public class RobotContainer {
                                 Commands.runOnce(() -> vision.resetOffset()),
                                 Commands.runOnce(() -> vision.resetWarmStart()))));
 
-                // Intake & Shooter
-                // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
-                //                 stateMachine.changeState(RobotState.SHOOT_ONLY));
-                // driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
-                //                 stateMachine.changeState(RobotState.IDLE));
-                // driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
-                //                 stateMachine.changeState(RobotState.SHOOT_ONLY));
-                // driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
-                //                 stateMachine.changeState(RobotState.IDLE));
-
-                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));//.onFalse(stateMachine.changeState(RobotState.INTAKE_DOWN));
+                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
                 driverController.rightBumper().onTrue(
                         Commands.either(
                                 Commands.runOnce(()->intake.setWantedState(IntakeState.IDLE)),
                                 Commands.runOnce(()->intake.setWantedState(IntakeState.DEPLOYED)),
                                 () -> intake.getState() == IntakeState.DEPLOYED));
 
-                 // Intake & Shooter
-                // driverController.rightTrigger().and(driverController.rightBumper()).onTrue(
-                //                 intakeDown?stateMachine.changeState(RobotState.SHOOT_ONLY)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
-                //                 stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-
-                // driverController.rightTrigger().negate().and(driverController.rightBumper()).onTrue(
-                //                  intakeDown?stateMachine.changeState(RobotState.IDLE)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
-                //                 stateMachine.changeState(RobotState.INTAKE_DOWN)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-
-                // driverController.rightBumper().negate().and(driverController.rightTrigger()).onTrue(
-                //                  intakeDown?stateMachine.changeState(RobotState.INTAKE_DOWN_AND_SHOOT)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
-                //                 stateMachine.changeState(RobotState.SHOOT_ONLY)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-
-                // driverController.rightBumper().negate().and(driverController.rightTrigger().negate()).onTrue(
-                //                  intakeDown?stateMachine.changeState(RobotState.INTAKE_DOWN)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
-                //                 stateMachine.changeState(RobotState.IDLE)
-                //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
                 driverController.leftBumper().onTrue(
-                        Commands.parallel(//shooter.runFeederBack(), hopper.runHopperBack(),
+                        Commands.parallel(
                         Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
-                ).onFalse
-                (
+                ).onFalse(
                         Commands.either(
                                 Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
                                 Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
                                 () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
-                
-                driverController.povDown().onTrue(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(-0.05);
-                })).onFalse(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0);}));
-                driverController.povUp().onTrue(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0.05);
-                })).onFalse(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0);
-                }));
-                ;
+
+                // D-pad: step hood ±5° using MotionMagic position hold
+                driverController.povDown().onTrue(Commands.runOnce(() -> hoodedShooter.stepHood(-5.0), hoodedShooter));
+                driverController.povUp().onTrue(  Commands.runOnce(() -> hoodedShooter.stepHood( 5.0), hoodedShooter));
 
                 driverController.leftTrigger().whileTrue(new AutoAlign(
-                        swerve, vision, shooter,
+                        swerve, vision, shooter, hoodedShooter,
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX(),
                         () -> -driverController.getRightX()
                 ));
-                
+
                 // bind to copilot D-pad
                 operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25.0)));
                 operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-25.0)));
-                // operatorController.a().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("hub"), shooter));
-                // operatorController.b().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
-                // operatorController.x().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("outpost"), shooter));
-                // operatorController.y().onTrue(Commands.runOnce(() -> shooter.setTargetRPM("trench"), shooter));
-
-                // operatorController.a().or(operatorController.b()).or(operatorController.x()).or(operatorController.y())
-                //         .onFalse(Commands.runOnce(() -> shooter.setTargetRPM("default"), shooter));
         }
 
         public Command getAutonomousCommand() {
