@@ -277,6 +277,132 @@ public class ProjectileSimulator {
     return new GeneratedLUT(entries, params, reachable, unreachable, maxRange, elapsed);
   }
 
+  /** Simulate a ball launched at the given RPM and explicit angle. */
+  public TrajectoryResult simulate(double rpm, double targetDistanceM, double launchAngleDeg) {
+    double v0 = exitVelocity(rpm);
+    double launchRad = Math.toRadians(launchAngleDeg);
+    double vx = v0 * Math.cos(launchRad);
+    double vz = v0 * Math.sin(launchRad);
+
+    double x = 0;
+    double z = params.exitHeightM();
+    double dt = params.dt();
+    double maxHeight = z;
+    double apexX = 0;
+    double t = 0;
+    double maxTime = params.maxSimTime();
+
+    while (t < maxTime) {
+      double[] state = {x, z, vx, vz};
+      double[] k1 = derivatives(state);
+      double[] s2 = addScaled(state, k1, dt / 2.0);
+      double[] k2 = derivatives(s2);
+      double[] s3 = addScaled(state, k2, dt / 2.0);
+      double[] k3 = derivatives(s3);
+      double[] s4 = addScaled(state, k3, dt);
+      double[] k4 = derivatives(s4);
+
+      x += dt / 6.0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
+      z += dt / 6.0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
+      vx += dt / 6.0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]);
+      vz += dt / 6.0 * (k1[3] + 2 * k2[3] + 2 * k3[3] + k4[3]);
+      t += dt;
+
+      if (z > maxHeight) { maxHeight = z; apexX = x; }
+
+      if (x >= targetDistanceM) {
+        double prevX = x - vx * dt;
+        double prevZ = z - vz * dt;
+        double frac = (targetDistanceM - prevX) / (x - prevX);
+        double zAtTarget = prevZ + frac * (z - prevZ);
+        double tofAtTarget = t - dt + frac * dt;
+        return new TrajectoryResult(zAtTarget, tofAtTarget, true, maxHeight, apexX);
+      }
+
+      if (z < 0) { return new TrajectoryResult(0, t, false, maxHeight, apexX); }
+    }
+
+    return new TrajectoryResult(0, maxTime, false, maxHeight, apexX);
+  }
+
+  /** Binary search for RPM at a specific launch angle that lands at target height. */
+  private LUTEntry findRPMForAngle(double distanceM, double launchAngleDeg) {
+    double heightTolerance = 0.02;
+    double lo = params.rpmMin();
+    double hi = params.rpmMax();
+
+    TrajectoryResult maxCheck = simulate(hi, distanceM, launchAngleDeg);
+    if (!maxCheck.reachedTarget()) {
+      return new LUTEntry(distanceM, 0, 0, false);
+    }
+
+    double bestRpm = hi;
+    double bestTof = maxCheck.tof();
+    double bestError = Math.abs(maxCheck.zAtTarget() - params.targetHeightM());
+
+    for (int i = 0; i < params.binarySearchIters(); i++) {
+      double mid = (lo + hi) / 2.0;
+      TrajectoryResult result = simulate(mid, distanceM, launchAngleDeg);
+
+      if (!result.reachedTarget()) { lo = mid; continue; }
+
+      double error = result.zAtTarget() - params.targetHeightM();
+      double absError = Math.abs(error);
+
+      if (absError < bestError) { bestRpm = mid; bestTof = result.tof(); bestError = absError; }
+      if (absError < heightTolerance) { return new LUTEntry(distanceM, mid, result.tof(), true); }
+
+      if (error > 0) { hi = mid; } else { lo = mid; }
+    }
+
+    return new LUTEntry(distanceM, bestRpm, bestTof, bestError < 0.10);
+  }
+
+  /**
+   * Generate unified shot LUT: sweep hood angles per distance, find lowest RPM
+   * within TOF ceiling. Takes ~5-6 seconds at startup.
+   */
+  public ShotLUT generateShotLUT() {
+    ShotLUT lut = new ShotLUT();
+
+    double minAngle = params.minHoodAngleDeg();
+    double maxAngle = params.maxHoodAngleDeg();
+    double angleStep = params.angleStepDeg();
+    double tofCeiling = params.maxTofCeilingS();
+    double rpmTiebreaker = 10.0;
+
+    for (int i = 0; i <= 90; i++) {
+      double distance = 0.50 + i * 0.05;
+      distance = Math.round(distance * 100.0) / 100.0;
+
+      double bestRpm = Double.MAX_VALUE;
+      double bestAngle = minAngle;
+      double bestTof = tofCeiling;
+
+      for (double angle = minAngle; angle <= maxAngle; angle += angleStep) {
+        LUTEntry entry = findRPMForAngle(distance, angle);
+        if (!entry.reachable()) continue;
+        if (entry.tof() > tofCeiling) continue;
+
+        boolean betterRpm = entry.rpm() < bestRpm - rpmTiebreaker;
+        boolean tiedRpm = Math.abs(entry.rpm() - bestRpm) <= rpmTiebreaker;
+        boolean betterTof = entry.tof() < bestTof;
+
+        if (betterRpm || (tiedRpm && betterTof)) {
+          bestRpm = entry.rpm();
+          bestAngle = angle;
+          bestTof = entry.tof();
+        }
+      }
+
+      if (bestRpm < Double.MAX_VALUE) {
+        lut.put(distance, new ShotLUT.ShotParameters(bestRpm, bestAngle, bestTof));
+      }
+    }
+
+    return lut;
+  }
+
   // Package-private for testing
   double getKDrag() {
     return kDrag;
