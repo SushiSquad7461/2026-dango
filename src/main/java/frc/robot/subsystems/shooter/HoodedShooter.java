@@ -1,6 +1,5 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -22,6 +21,7 @@ public class HoodedShooter extends SubsystemBase{
     private final MotionMagicVelocityVoltage hoodControlV = new MotionMagicVelocityVoltage(0);
     private final MotionMagicVoltage hoodControl = new MotionMagicVoltage(0);
     private double hoodSetpointDegrees = 0.0;
+    private double lastCommandedDegrees = 0.0;
 
     public HoodedShooter(){
         hoodMotor = new TalonFX(15);
@@ -50,6 +50,7 @@ public class HoodedShooter extends SubsystemBase{
     public void moveHoodToSetpoint(double angleInDegrees){
         // Convert hood degrees → motor rotations via gear ratio
         double rotations = (angleInDegrees / 360.0) * Constants.HoodedShooterConstants.motorRotationsPerHoodRotation;
+        lastCommandedDegrees = angleInDegrees;
         hoodMotor.setControl(hoodControl.withPosition(rotations));
     }
 
@@ -90,7 +91,7 @@ public class HoodedShooter extends SubsystemBase{
                 / Constants.HoodedShooterConstants.motorRotationsPerHoodRotation * 360.0;
         SmartDashboard.putNumber("HoodedShooter/HoodAngle", actualHoodDegrees);
         SmartDashboard.putNumber("HoodedShooter/HoodSetpoint", hoodSetpointDegrees);
-        SmartDashboard.putNumber("HoodedShooter/HoodTarget", (hoodControl.getPositionMeasure().in(Degrees)));
+        SmartDashboard.putNumber("HoodedShooter/HoodTarget", lastCommandedDegrees);
         SmartDashboard.putNumber("HoodedShooter/StatorCurrent", hoodMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("HoodedShooter/MotorRotations", hoodMotor.getPosition().getValueAsDouble());
     }
