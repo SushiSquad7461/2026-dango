@@ -343,7 +343,7 @@ public class Constants {
         public static final double cruiseVelocityRps = 1.0;
         public static final double accelRps2 = 4.0;
 
-        public static final double hoodP = 0.8;
+        public static final double hoodP = 50.0;  // TODO: retune after measuring motorRotationsPerHoodRotation
         public static final double hoodI = 0.0;
         public static final double hoodD = 0.0;
 
@@ -351,8 +351,7 @@ public class Constants {
         public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
         public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
 
-        // Motor rotations per full hood rotation (360°). Measure your actual gear ratio.
-        public static final double motorRotationsPerHoodRotation = 1.0; // TODO: measure gear ratio
+        public static final double motorRotationsPerHoodRotation = 24.0 / 18.0; // 18T motor : 24T hood
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!
