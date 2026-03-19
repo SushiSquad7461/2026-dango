@@ -144,7 +144,7 @@ public class RobotContainer {
                 ));
 
                 driverController.x().whileTrue(new AutoPass(
-                        swerve, vision, shooter, hoodedShooter,
+                        swerve, vision, shooter, hoodedShooter, hopper,
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX(),
                         () -> -driverController.getRightX()

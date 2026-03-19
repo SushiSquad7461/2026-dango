@@ -21,11 +21,15 @@ package frc.robot.subsystems.vision;
 public class PassTable {
     private static final double[][] DATA = {
         // { distM,  rpm,   angleDeg, tof  }
+        {    2.5,  2400,     33.0,  0.60 },
+        {    3.0,  2600,     32.0,  0.65 },
         {    4.0,  3000,     30.0,  0.80 },
         {    5.0,  3200,     27.0,  0.90 },
         {    6.0,  3400,     24.0,  1.00 },
         {    7.0,  3600,     22.0,  1.10 },
         {    8.0,  3800,     20.0,  1.20 },
+        {    9.0,  4000,     18.0,  1.30 },
+        {   10.0,  4200,     16.0,  1.40 },
     };
 
     /** Build a ShotLUT from the pass data points above. Called once at startup. */

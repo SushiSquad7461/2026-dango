@@ -74,7 +74,9 @@ public class PassCalculator {
             target.getX() - rx
         );
 
-        ShotLUT.ShotParameters shotParams = passLUT.get(distance);
+        // Clamp distance to PassTable range to prevent extrapolation
+        double clampedDistance = MathUtil.clamp(distance, 2.5, 10.0);
+        ShotLUT.ShotParameters shotParams = passLUT.get(clampedDistance);
 
         return new PassParameters(
             target,

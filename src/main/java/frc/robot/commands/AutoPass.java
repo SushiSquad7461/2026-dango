@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.vision.PassCalculator;
@@ -24,16 +25,20 @@ public class AutoPass extends Command {
     private final Vision vision;
     private final ShooterSubsystem shooter;
     private final HoodedShooter hoodedShooter;
+    private final Hopper hopper;
     private final DoubleSupplier xTranslation;
     private final DoubleSupplier yTranslation;
     private final DoubleSupplier driverRotation;
+    private boolean hasFed = false;
 
     public AutoPass(Swerve swerve, Vision vision, ShooterSubsystem shooter, HoodedShooter hoodedShooter,
+            Hopper hopper,
             DoubleSupplier xTranslation, DoubleSupplier yTranslation, DoubleSupplier driverRotation) {
         this.swerve = swerve;
         this.vision = vision;
         this.shooter = shooter;
         this.hoodedShooter = hoodedShooter;
+        this.hopper = hopper;
         this.xTranslation = xTranslation;
         this.yTranslation = yTranslation;
         this.driverRotation = driverRotation;
@@ -45,6 +50,7 @@ public class AutoPass extends Command {
     @Override
     public void initialize() {
         Constants.Vision.rotationPID.reset();
+        hasFed = false;
     }
 
     @Override
@@ -67,15 +73,20 @@ public class AutoPass extends Command {
             double rotationSpeed  = MathUtil.clamp(pidOutput,
                 -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
 
-            // Command shooter and hood once heading is close enough
-            double headingError = Math.abs(currentHeading - targetHeading);
-            // Normalize heading error to [-180, 180]
-            headingError = Math.abs(((headingError + 180) % 360) - 180);
+            // Normalize heading error to [-180, 180] using WPILib utility
+            double headingError = Math.abs(MathUtil.inputModulus(currentHeading - targetHeading, -180, 180));
 
+            // Always spin up shooter and set hood when heading is close
             if (headingError < 15.0) {
-                // Close enough — spin up and set hood for the pass
                 shooter.commandRPM(pass.rpm());
                 hoodedShooter.moveHoodToAngleWithOffset(pass.hoodAngleDeg());
+
+                // Feed ball once shooter is at speed (one-shot: don't re-feed)
+                if (!hasFed && shooter.isShooterReady()) {
+                    hopper.runHopper().schedule();
+                    shooter.runFeeder().schedule();
+                    hasFed = true;
+                }
             } else {
                 // Still turning — keep shooter warm
                 shooter.setTargetRPM(pass.rpm());
@@ -105,5 +116,7 @@ public class AutoPass extends Command {
     @Override
     public void end(boolean interrupted) {
         swerve.drive(new Translation2d(), 0, true, true);
+        hopper.stopHopper().schedule();
+        shooter.stopFeeder().schedule();
     }
 }
