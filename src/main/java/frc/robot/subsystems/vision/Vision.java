@@ -37,7 +37,6 @@ public class Vision extends SubsystemBase {
 
     // -------------------------------------------------------------------------
 
-    private final ProjectileSimulator projectileSimulator = new ProjectileSimulator(Constants.Vision.SOTM_PARAMETERS);
     private final ShotCalculator shotCalc;
     private final Swerve swerve;
     private final PIDController rotationPID = Constants.Vision.rotationPID;
@@ -49,7 +48,7 @@ public class Vision extends SubsystemBase {
     public Vision(Swerve swerve) {
         this.swerve = swerve;
 
-        ShotLUT lut = projectileSimulator.generateLUT();
+        ShotLUT lut = ShotTable.buildLUT();
         ShotCalculator.Config config = new ShotCalculator.Config();
         config.launcherOffsetX = -0.1905;  // negative: launcher is behind robot center
         config.launcherOffsetY = 0.0;    // 0 if centered
