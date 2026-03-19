@@ -38,12 +38,14 @@ public class Vision extends SubsystemBase {
     // -------------------------------------------------------------------------
 
     private final ShotCalculator shotCalc;
+    private final PassCalculator passCalc;
     private final Swerve swerve;
     private final PIDController rotationPID = Constants.Vision.rotationPID;
 
     // Written in periodic(), read by AutoAlign via getCurrentShot() — both run on
     // the main robot thread, so no synchronization is needed.
     private ShotCalculator.LaunchParameters currentShot = ShotCalculator.LaunchParameters.INVALID;
+    private PassCalculator.PassParameters currentPass = PassCalculator.PassParameters.INVALID;
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
@@ -65,6 +67,9 @@ public class Vision extends SubsystemBase {
         config.shooterAngleOffsetRad = Math.PI;  // 0.0 means the shooter faces the same direction as the robot front; π means it faces backward.
 
         shotCalc = new ShotCalculator(config, lut);
+
+        ShotLUT passLUT = PassTable.buildLUT();
+        passCalc = new PassCalculator(passLUT);
 
         rotationPID.enableContinuousInput(-180, 180);
         // 2° tolerance at a typical 5m shot distance = ~17cm miss at the hub.
@@ -169,10 +174,36 @@ public class Vision extends SubsystemBase {
         int rightTags = (rightPose != null) ? rightPose.tagCount : 0;
         SmartDashboard.putNumber("Vision/TagCountLeft",  leftTags);
         SmartDashboard.putNumber("Vision/TagCountRight", rightTags);
+
+        // Pass computation — runs alongside shot computation
+        var passAlliance = alliance.orElse(null);
+        if (passAlliance != null) {
+            currentPass = passCalc.calculate(swerve.getPose(), passAlliance);
+        } else {
+            currentPass = PassCalculator.PassParameters.INVALID;
+        }
+
+        SmartDashboard.putBoolean("Vision/PassValid", currentPass.isValid());
+        SmartDashboard.putBoolean("Vision/InCentralZone",
+            PassCalculator.isInCentralZone(swerve.getPose().getX()));
+        if (currentPass.isValid()) {
+            SmartDashboard.putNumber("Vision/PassRPM", currentPass.rpm());
+            SmartDashboard.putNumber("Vision/PassAngleDeg", currentPass.hoodAngleDeg());
+            SmartDashboard.putNumber("Vision/PassDistance", currentPass.distance());
+            SmartDashboard.putBoolean("Vision/PassBlocked", currentPass.isBlocked());
+        }
     }
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
         return currentShot;
+    }
+
+    public PassCalculator.PassParameters getCurrentPass() {
+        return currentPass;
+    }
+
+    public boolean isInCentralZone() {
+        return PassCalculator.isInCentralZone(swerve.getPose().getX());
     }
 
     public void resetOffset() {
