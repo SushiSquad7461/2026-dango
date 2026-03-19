@@ -77,10 +77,13 @@ public class Constants {
         3.0,     // max TOF ceiling seconds
         1.0,     // angle sweep step degrees
         0.001,   // sim timestep
-        1500, 6000, 25, 5.0  // RPM range, search iters, max sim time
+        1500, 6000, 25, 5.0  // RPM range (flywheel RPM), search iters, max sim time
     );
   }
   public static final class Shooter{
+    // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
+    // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
+    public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
     public static final double TARGET_RPM_DEFAULT = 4500;
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
@@ -348,7 +351,7 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 5.0;    // match SOTM_PARAMETERS.minHoodAngleDeg
+        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
         public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
 
         // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
