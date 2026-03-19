@@ -363,7 +363,7 @@ public class Swerve extends SubsystemBase {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
         return Commands.sequence(
                 runOnce(() -> {
-                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0))
+                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(Math.PI))
                             : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
                     resetGyro();
                 }));
