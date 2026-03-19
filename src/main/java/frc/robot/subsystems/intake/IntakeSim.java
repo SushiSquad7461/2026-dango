@@ -12,6 +12,9 @@ public class IntakeSim implements IntakeIO{
         public double currentAmps = 0.0;
     }
 
+    // Matches IntakeReal roller supply current limit.
+    private static final double ROLLER_SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
+
     public final IntakeData data = new IntakeData();
 
     // Pivot simulation
@@ -75,17 +78,22 @@ public class IntakeSim implements IntakeIO{
     @Override
     public void runRollers() {
         rollerOutput = IntakeConstants.rollerSpeed;
+        data.appliedVolts = rollerOutput * 12.0;
+        data.currentAmps = Math.abs(rollerOutput) * ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
     }
 
     @Override
     public void stopRollers() {
         rollerOutput = 0.0;
+        data.appliedVolts = 0.0;
+        data.currentAmps = 0.0;
     }
 
     @Override
     public void setStateRollers(double rollerSpeed) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setStateRollers'");
+        rollerOutput = rollerSpeed;
+        data.appliedVolts = rollerSpeed * 12.0;
+        data.currentAmps = Math.abs(rollerSpeed) * ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
     }
 }
 

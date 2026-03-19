@@ -12,6 +12,9 @@ public class ShooterIOSim implements ShooterIO {
 
     public final ShooterData data = new ShooterData();
 
+    // Matches ShooterIOKraken kicker supply current limit.
+    private static final double FEEDER_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+
     private double simulatedRPM = 0; 
     private double targetRPM = 0;  
     private boolean feederRunning = false;
@@ -28,7 +31,7 @@ public class ShooterIOSim implements ShooterIO {
     @Override
     public void runFeeder() {
         feederRunning = true;
-        data.currentAmps = 5.0; 
+        data.currentAmps = FEEDER_SUPPLY_CURRENT_LIMIT_AMPS; 
     }
 
     @Override
@@ -61,20 +64,19 @@ public class ShooterIOSim implements ShooterIO {
 
     @Override
     public double getFlywheelTargetRPM() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
+        return targetRPM;
     }
 
     @Override
     public void runFeederBack() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runFeederBack'");
+        feederRunning = true;
+        data.currentAmps = FEEDER_SUPPLY_CURRENT_LIMIT_AMPS;
     }
 
     @Override
     public void stopShooter(double rpm) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stopShooter'");
+        targetRPM = rpm / 2.0;
+        data.appliedVolts = targetRPM / 5000.0 * 12.0;
     }
 
 }
