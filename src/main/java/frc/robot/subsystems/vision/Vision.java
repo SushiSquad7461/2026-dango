@@ -75,6 +75,7 @@ public class Vision extends SubsystemBase {
     }
 
     @Override
+    
     public void periodic() {
         // 1. IMU mode: seed internal IMU from external gyro while disabled (mode 1),
         //    switch to fused internal+external mode while enabled (mode 4).

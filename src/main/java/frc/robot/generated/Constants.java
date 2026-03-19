@@ -71,7 +71,7 @@ public class Constants {
         0.43,    // exit height from floor, measure from CAD
         0.1016,  // wheel diameter, measure with calipers
         1.83,    // target height, from game manual
-        0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
+        0.5,     // slip factor (0=no grip, 1=perfect), tune on robot
         5.0,     // min hood angle degrees (mechanical limit)
         40.0,    // max hood angle degrees (mechanical limit)
         3.0,     // max TOF ceiling seconds
@@ -351,7 +351,7 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
+        public static final double hoodMinDegrees  = 5.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
         public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
 
         // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
