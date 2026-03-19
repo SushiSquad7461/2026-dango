@@ -334,11 +334,24 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 12.0;   // mechanical limit (degrees)
-        public static final double hoodMaxDegrees  = 40.0;   // mechanical limit (degrees)
+        public static final double hoodMinDegrees  = 2.0;    // mechanical limit (degrees)
+        public static final double hoodMaxDegrees  = 35.0;   // mechanical limit (degrees)
 
         // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
         public static final double motorRotationsPerHoodRotation = (24.0 / 18.0) * (167.0 / 12.0);
+    }
+
+    public static final class Passing {
+        public static final double CENTRAL_ZONE_MIN_X = 4.65;
+        public static final double CENTRAL_ZONE_MAX_X = 11.30;
+        public static final double PASS_TARGET_X_BLUE = 2.5;
+        public static final double PASS_TARGET_X_RED  = 14.0;
+        public static final double HUB_CENTER_Y        = 4.03;
+        public static final double HUB_HALF_WIDTH      = 0.597;
+        public static final double HUB_AVOIDANCE_MARGIN = 0.3;
+        public static final double PASS_TARGET_Y_MIN = 0.5;
+        public static final double PASS_TARGET_Y_MAX = 7.57;
+        public static final double PASS_CONFIDENCE_THRESHOLD = 30.0;
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!
