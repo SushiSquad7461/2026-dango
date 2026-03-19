@@ -72,7 +72,7 @@ public class Constants {
         0.1016,  // wheel diameter, measure with calipers
         1.83,    // target height, from game manual
         0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
-        12.0,    // min hood angle degrees (mechanical limit)
+        5.0,     // min hood angle degrees (mechanical limit)
         40.0,    // max hood angle degrees (mechanical limit)
         3.0,     // max TOF ceiling seconds
         1.0,     // angle sweep step degrees
@@ -340,18 +340,19 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
-        public static final double cruiseVelocityRps = 1.0;
-        public static final double accelRps2 = 4.0;
+        public static final double cruiseVelocityRps = 5.0;  // motor rps → ~97°/s hood
+        public static final double accelRps2 = 20.0;
 
-        public static final double hoodP = 50.0;  // TODO: retune after measuring motorRotationsPerHoodRotation
+        public static final double hoodP = 5.0;
         public static final double hoodI = 0.0;
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
+        public static final double hoodMinDegrees  = 5.0;    // match SOTM_PARAMETERS.minHoodAngleDeg
         public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
 
-        public static final double motorRotationsPerHoodRotation = 24.0 / 18.0; // 18T motor : 24T hood
+        // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
+        public static final double motorRotationsPerHoodRotation = (24.0 / 18.0) * (167.0 / 12.0);
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!
