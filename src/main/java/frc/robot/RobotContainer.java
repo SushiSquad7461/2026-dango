@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.Constants;
 import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
+import frc.robot.commands.AutoPass;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.hopper.Hopper;
@@ -136,6 +137,13 @@ public class RobotContainer {
                 driverController.povUp().onTrue(  Commands.runOnce(() -> hoodedShooter.stepHood( Constants.HoodedShooterConstants.hoodStepDegrees), hoodedShooter));
 
                 driverController.leftTrigger().whileTrue(new AutoAlign(
+                        swerve, vision, shooter, hoodedShooter,
+                        () -> -driverController.getLeftY(),
+                        () -> -driverController.getLeftX(),
+                        () -> -driverController.getRightX()
+                ));
+
+                driverController.x().whileTrue(new AutoPass(
                         swerve, vision, shooter, hoodedShooter,
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX(),
