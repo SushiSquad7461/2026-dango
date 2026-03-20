@@ -428,12 +428,18 @@ public class ShotCalculator {
     // Heading error for confidence calculation
     double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading - config.shooterAngleOffsetRad);
 
-    // Angular velocity feedforward: rate of change of aim angle
+    // Angular velocity feedforward: rate of change of aim angle.
+    // Use the velocity-compensated aim vector (not raw hub displacement) so
+    // the feedforward matches the actual target the robot is tracking.
     double driveAngularVelocity = 0;
-    if (!velocityFiltered && distance > 0.1) {
-      // tangential velocity / distance gives angular rate
-      double tangentialVel = (ry * vx - rx * vy) / distance;
-      driveAngularVelocity = tangentialVel / distance;
+    if (!velocityFiltered && projDist > 0.1) {
+      double compRx = compTargetX - robotX;
+      double compRy = compTargetY - robotY;
+      double compDist = Math.hypot(compRx, compRy);
+      if (compDist > 0.1) {
+        double tangentialVel = (compRy * vx - compRx * vy) / compDist;
+        driveAngularVelocity = tangentialVel / compDist;
+      }
     }
 
     // Solver convergence quality

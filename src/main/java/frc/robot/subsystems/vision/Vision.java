@@ -1,7 +1,8 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,11 +40,37 @@ public class Vision extends SubsystemBase {
     private static final double FIELD_LENGTH = 16.54;
     private static final double FIELD_WIDTH  = 8.07;
 
+    // Jump-distance thresholds for pose rejection.
+    // Multi-tag poses are far more reliable, so we allow much larger jumps
+    // (including initial localization from any starting position on the field).
+    private static final double JUMP_THRESHOLD_SINGLE_TAG = 1.0;   // meters
+    private static final double JUMP_THRESHOLD_MULTI_TAG  = 20.0;  // meters (> field diagonal, allows init from anywhere)
+
+    // Maximum single-tag ambiguity to accept (MT2 resolves most ambiguity via
+    // gyro heading, but very high values indicate poor corner detection).
+    private static final double MAX_SINGLE_TAG_AMBIGUITY = 0.7;
+
+    // Minimum tag count required for the MT1 bootstrap to accept a heading.
+    // 2+ tags give MT1 a reliable heading; single-tag MT1 has severe ambiguity.
+    private static final int MT1_BOOTSTRAP_MIN_TAGS = 2;
+
     // -------------------------------------------------------------------------
 
     private final ShotCalculator shotCalc;
     private final Swerve swerve;
-    private final PIDController rotationPID = Constants.Vision.rotationPID;
+
+    // True until the first multi-tag MT1 observation seeds the gyro offset.
+    // While bootstrapping, we use MT1 (which solves for heading from geometry)
+    // instead of MT2 (which requires a correct heading input).
+    private boolean headingBootstrapped = false;
+
+    // Rejection counters for field debugging (reset each cycle).
+    private int rejectSpin = 0;
+    private int rejectNull = 0;
+    private int rejectBounds = 0;
+    private int rejectJump = 0;
+    private int rejectAmbiguity = 0;
+    private int acceptCount = 0;
 
     // Written in periodic(), read by AutoAlign via getCurrentShot() — both run on
     // the main robot thread, so no synchronization is needed.
@@ -64,18 +91,12 @@ public class Vision extends SubsystemBase {
         // maxTiltDeg: 5.0 suppresses firing over bumps/ramps where the launcher
         // is knocked off-axis. 90.0 (the previous value) effectively disabled this gate.
         config.maxTiltDeg = 5.0;
-        config.maxScoringDistance = 15.0; // TODO: tighten once hub coordinates are verified
+        config.maxScoringDistance = 5.5; // slightly beyond LUT max (5.0m) for interpolation margin
         config.headingSpeedScalar = 1.0;
         config.headingReferenceDistance = 2.5;
         config.shooterAngleOffsetRad = Math.PI;  // 0.0 means the shooter faces the same direction as the robot front; π means it faces backward.
 
         shotCalc = new ShotCalculator(config, lut);
-
-        rotationPID.enableContinuousInput(-180, 180);
-        // 2° tolerance at a typical 5m shot distance = ~17cm miss at the hub.
-        // Consider tightening this or making it distance-dependent during tuning.
-        rotationPID.setTolerance(2.0);
-
     }
 
     @Override
@@ -99,16 +120,26 @@ public class Vision extends SubsystemBase {
             hubForward = RED_HUB_FORWARD;
         }
 
-        // 3. Feed heading and yaw rate to both Limelights for MegaTag2.
-        //    MUST use raw gyro heading, NOT the pose estimator heading. The estimator
-        //    heading includes vision corrections, which creates a feedback loop:
-        //    wrong vision → wrong heading → worse MegaTag2 → pose drifts.
-        double headingDeg    = swerve.getGyroYaw().getDegrees();
+        // 3. Heading bootstrap: on first boot, the gyro offset is 0° which may be
+        //    wrong if the robot starts at an arbitrary orientation. Use MegaTag1
+        //    (which solves for heading from tag geometry alone) to get a reliable
+        //    multi-tag heading, seed the gyro offset, then switch to MT2 for all
+        //    subsequent cycles.
         double yawRateDegPerSec = Math.toDegrees(swerve.getRobotRelativeSpeeds().omegaRadiansPerSecond);
+
+        if (!headingBootstrapped) {
+            tryBootstrapHeading(yawRateDegPerSec);
+        }
+
+        // 4. Feed heading and yaw rate to both Limelights for MegaTag2.
+        //    Uses the gyro-derived field heading (rawGyro + offset from last reset),
+        //    NOT the pose estimator heading. The estimator heading could include
+        //    tiny vision corrections, creating a feedback loop.
+        double headingDeg    = swerve.getFieldHeadingFromGyro().getDegrees();
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
 
-        // 4. Fetch MegaTag2 pose estimates.
+        // 5. Fetch MegaTag2 pose estimates.
         LimelightHelpers.PoseEstimate leftPose  = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.primaryLimelightName);
         LimelightHelpers.PoseEstimate rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.secondaryLimelightName);
 
@@ -120,12 +151,16 @@ public class Vision extends SubsystemBase {
         // Fast rotation makes pose estimates unreliable; 360°/s is the recommended threshold.
         boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 360.0;
 
-        // 5. Process each Limelight independently (let the Kalman filter fuse them).
+        // Reset per-cycle rejection counters.
+        rejectSpin = 0; rejectNull = 0; rejectBounds = 0; rejectJump = 0; rejectAmbiguity = 0; acceptCount = 0;
+
+        // 6. Process each Limelight independently (let the Kalman filter fuse them).
         //    Sanity checks per MT2 best practices:
         //      - Reject when spinning too fast (above)
         //      - Reject null / zero-tag results
         //      - Reject poses outside the field boundary
-        //      - Reject poses that jump >1m from current estimate
+        //      - Reject poses that jump too far from current estimate (dynamic threshold)
+        //      - Reject single-tag poses with high ambiguity
         //    Std dev formula (Gray Matter / community consensus):
         //      xyStdDev = 0.5 * avgTagDist² / tagCount
         //    Heading std = 9999999 — always trust gyro, never vision heading.
@@ -151,7 +186,6 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putBoolean("Vision/ShotValid", currentShot.isValid());
         SmartDashboard.putBoolean("Vision/SpinningTooFast", spinningTooFast);
         SmartDashboard.putNumber("Vision/SolverIterations", currentShot.iterationsUsed());
-        SmartDashboard.putData("Vision/RotationPID", rotationPID);
         SmartDashboard.putNumber("Vision/LimelightTLLeft",  LimelightHelpers.getLatency_Pipeline(Constants.Vision.primaryLimelightName));
         SmartDashboard.putNumber("Vision/LimelightTLRight", LimelightHelpers.getLatency_Pipeline(Constants.Vision.secondaryLimelightName));
         // Debug: raw pose and vision tag counts to distinguish pose vs. solver failures
@@ -167,6 +201,16 @@ public class Vision extends SubsystemBase {
         int rightTags = (rightPose != null) ? rightPose.tagCount : 0;
         SmartDashboard.putNumber("Vision/TagCountLeft",  leftTags);
         SmartDashboard.putNumber("Vision/TagCountRight", rightTags);
+
+        // Rejection breakdown for field debugging.
+        SmartDashboard.putNumber("Vision/RejectSpin", rejectSpin);
+        SmartDashboard.putNumber("Vision/RejectNull", rejectNull);
+        SmartDashboard.putNumber("Vision/RejectBounds", rejectBounds);
+        SmartDashboard.putNumber("Vision/RejectJump", rejectJump);
+        SmartDashboard.putNumber("Vision/RejectAmbiguity", rejectAmbiguity);
+        SmartDashboard.putNumber("Vision/AcceptCount", acceptCount);
+        SmartDashboard.putBoolean("Vision/HeadingBootstrapped", headingBootstrapped);
+        SmartDashboard.putNumber("Vision/GyroFieldHeadingDeg", headingDeg);
     }
 
     public ShotCalculator.LaunchParameters getCurrentShot() {
@@ -186,11 +230,70 @@ public class Vision extends SubsystemBase {
     }
 
     /**
+     * Attempts to bootstrap heading from MegaTag1 multi-tag observations.
+     * MT1 solves for both position AND heading from tag geometry, so it doesn't
+     * need a correct heading input. Once a reliable multi-tag MT1 pose is found,
+     * we use its heading to seed the gyro offset, then switch to MT2 permanently.
+     */
+    private void tryBootstrapHeading(double yawRateDegPerSec) {
+        // Don't bootstrap while spinning — MT1 heading is unreliable during fast rotation.
+        if (Math.abs(yawRateDegPerSec) > 120.0) {
+            return;
+        }
+
+        // Try both cameras for a multi-tag MT1 result.
+        LimelightHelpers.PoseEstimate mt1 = pickBestMT1(
+                LimelightHelpers.getBotPoseEstimate_wpiBlue(Constants.Vision.primaryLimelightName),
+                LimelightHelpers.getBotPoseEstimate_wpiBlue(Constants.Vision.secondaryLimelightName));
+
+        if (mt1 == null) {
+            return;
+        }
+
+        // Validate the MT1 pose is on the field.
+        double x = mt1.pose.getX();
+        double y = mt1.pose.getY();
+        if (x < 0 || x > FIELD_LENGTH || y < 0 || y > FIELD_WIDTH) {
+            return;
+        }
+
+        // MT1 heading is reliable with 2+ tags. Use it to seed the full pose
+        // (position + heading) and compute the gyro offset.
+        Rotation2d mt1Heading = mt1.pose.getRotation();
+        swerve.setPose(mt1.pose);
+        headingBootstrapped = true;
+
+        // Also re-seed the Limelight IMUs with the corrected heading.
+        seedIMU(mt1Heading.getDegrees());
+    }
+
+    /**
+     * Returns the best multi-tag MT1 pose from two cameras, or null if neither qualifies.
+     * Prefers the camera with more tags; breaks ties by closer average tag distance.
+     */
+    private LimelightHelpers.PoseEstimate pickBestMT1(
+            LimelightHelpers.PoseEstimate a, LimelightHelpers.PoseEstimate b) {
+        boolean aValid = a != null && a.tagCount >= MT1_BOOTSTRAP_MIN_TAGS;
+        boolean bValid = b != null && b.tagCount >= MT1_BOOTSTRAP_MIN_TAGS;
+        if (!aValid && !bValid) return null;
+        if (!bValid) return a;
+        if (!aValid) return b;
+        // Both valid: prefer more tags, then closer distance.
+        if (a.tagCount != b.tagCount) return a.tagCount > b.tagCount ? a : b;
+        return a.avgTagDist <= b.avgTagDist ? a : b;
+    }
+
+    /**
      * Validates and processes a single camera's MT2 pose estimate.
      * Returns 0.5 if the measurement was accepted, 0.0 if rejected.
      */
     private double processCamera(LimelightHelpers.PoseEstimate pose, boolean spinningTooFast) {
-        if (spinningTooFast || pose == null || pose.tagCount == 0) {
+        if (spinningTooFast) {
+            rejectSpin++;
+            return 0.0;
+        }
+        if (pose == null || pose.tagCount == 0) {
+            rejectNull++;
             return 0.0;
         }
 
@@ -198,12 +301,28 @@ public class Vision extends SubsystemBase {
         double x = pose.pose.getX();
         double y = pose.pose.getY();
         if (x < 0 || x > FIELD_LENGTH || y < 0 || y > FIELD_WIDTH) {
+            rejectBounds++;
             return 0.0;
         }
 
-        // Reject poses that jump more than 1m from current estimate.
+        // Reject single-tag poses with high ambiguity. MT2 uses the gyro to
+        // resolve most ambiguity, but very high values indicate the tag corners
+        // were poorly detected (glare, motion blur, extreme viewing angle).
+        if (pose.tagCount == 1
+                && pose.rawFiducials != null
+                && pose.rawFiducials.length > 0
+                && pose.rawFiducials[0].ambiguity > MAX_SINGLE_TAG_AMBIGUITY) {
+            rejectAmbiguity++;
+            return 0.0;
+        }
+
+        // Dynamic jump threshold: multi-tag poses are far more reliable, so
+        // allow larger jumps. This also solves the startup problem where the
+        // estimator begins at (0,0) and rejects the first valid vision pose.
+        double jumpThreshold = (pose.tagCount >= 2) ? JUMP_THRESHOLD_MULTI_TAG : JUMP_THRESHOLD_SINGLE_TAG;
         double jumpM = swerve.getPose().getTranslation().getDistance(pose.pose.getTranslation());
-        if (jumpM > 1.0) {
+        if (jumpM > jumpThreshold) {
+            rejectJump++;
             return 0.0;
         }
 
@@ -212,6 +331,7 @@ public class Vision extends SubsystemBase {
         double xyStdDev = 0.5 * Math.pow(pose.avgTagDist, 2.0) / pose.tagCount;
         swerve.addVisionMeasurement(pose.pose, pose.timestampSeconds,
                 VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+        acceptCount++;
         return 0.5;
     }
 
@@ -229,5 +349,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 1);
+        // Manual seed means heading is known — skip MT1 bootstrap.
+        headingBootstrapped = true;
     }
 }

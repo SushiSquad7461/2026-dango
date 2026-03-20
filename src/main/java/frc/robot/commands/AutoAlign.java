@@ -3,6 +3,7 @@ package frc.robot.commands;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,6 +27,7 @@ public class AutoAlign extends Command {
     private final DoubleSupplier xTranslation;
     private final DoubleSupplier yTranslation;
     private final DoubleSupplier driverRotation;
+    private final PIDController rotationPID;
 
     public AutoAlign(Swerve swerve, Vision vision, ShooterSubsystem shooter, HoodedShooter hoodedShooter,
             DoubleSupplier xTranslation, DoubleSupplier yTranslation, DoubleSupplier driverRotation) {
@@ -42,12 +44,20 @@ public class AutoAlign extends Command {
         // Not requiring hoodedShooter allows d-pad trim (stepHood) to update
         // hoodSetpointDegrees while AutoAlign is running.
         addRequirements(swerve);
+
+        // Own the rotation PID — gains from Constants, configuration here.
+        rotationPID = new PIDController(
+                Constants.Vision.rotationPID.getP(),
+                Constants.Vision.rotationPID.getI(),
+                Constants.Vision.rotationPID.getD());
+        rotationPID.enableContinuousInput(-180, 180);
+        rotationPID.setTolerance(2.0);
     }
 
     @Override
     public void initialize() {
         // Clear integral windup from any previous run.
-        Constants.Vision.rotationPID.reset();
+        rotationPID.reset();
     }
 
     @Override
@@ -67,7 +77,7 @@ public class AutoAlign extends Command {
             // or we get a deadlock where the robot never turns because it isn't aimed yet.
             double currentHeading = swerve.getHeading().getDegrees();
             double targetHeading  = shot.driveAngle().rotateBy(Rotation2d.kPi).getDegrees();
-            double pidOutput      = Constants.Vision.rotationPID.calculate(currentHeading, targetHeading);
+            double pidOutput      = rotationPID.calculate(currentHeading, targetHeading);
             double rotationSpeed  = pidOutput + shot.driveAngularVelocityRadPerSec();
             rotationSpeed = MathUtil.clamp(rotationSpeed, -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity);
 
@@ -86,7 +96,7 @@ public class AutoAlign extends Command {
             SmartDashboard.putNumber("SOTM/HoodAngleDeg", shot.hoodAngleDeg());
             SmartDashboard.putNumber("SOTM/DistanceM", shot.solvedDistanceM());
             SmartDashboard.putNumber("SOTM/Confidence", shot.confidence());
-            SmartDashboard.putNumber("SOTM/HeadingErrorDeg", currentHeading - targetHeading);
+            SmartDashboard.putNumber("SOTM/HeadingErrorDeg", MathUtil.inputModulus(currentHeading - targetHeading, -180, 180));
             SmartDashboard.putNumber("SOTM/RotationPID", pidOutput);
         } else {
             // No valid solution at all — give driver full rotation control.
