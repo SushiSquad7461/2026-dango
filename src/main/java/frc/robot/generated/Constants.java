@@ -525,6 +525,59 @@ public class Constants {
   private static final Distance kBackRightXPos = Inches.of(-10);
   private static final Distance kBackRightYPos = Inches.of(-10);
 
+  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      AKFrontLeft =
+          ConstantCreator.createModuleConstants(
+              kFrontLeftSteerMotorId,
+              kFrontLeftDriveMotorId,
+              kFrontLeftEncoderId,
+              kFrontLeftEncoderOffset,
+              kFrontLeftXPos,
+              kFrontLeftYPos,
+              kInvertLeftSide,
+              kFrontLeftSteerMotorInverted,
+              kFrontLeftEncoderInverted);
+  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      AKFrontRight =
+          ConstantCreator.createModuleConstants(
+              kFrontRightSteerMotorId,
+              kFrontRightDriveMotorId,
+              kFrontRightEncoderId,
+              kFrontRightEncoderOffset,
+              kFrontRightXPos,
+              kFrontRightYPos,
+              kInvertRightSide,
+              kFrontRightSteerMotorInverted,
+              kFrontRightEncoderInverted);
+  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      AKBackLeft =
+          ConstantCreator.createModuleConstants(
+              kBackLeftSteerMotorId,
+              kBackLeftDriveMotorId,
+              kBackLeftEncoderId,
+              kBackLeftEncoderOffset,
+              kBackLeftXPos,
+              kBackLeftYPos,
+              kInvertLeftSide,
+              kBackLeftSteerMotorInverted,
+              kBackLeftEncoderInverted);
+  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      AKBackRight =
+          ConstantCreator.createModuleConstants(
+              kBackRightSteerMotorId,
+              kBackRightDriveMotorId,
+              kBackRightEncoderId,
+              kBackRightEncoderOffset,
+              kBackRightXPos,
+              kBackRightYPos,
+              kInvertRightSide,
+              kBackRightSteerMotorInverted,
+              kBackRightEncoderInverted);
+
 //   public static final SwerveModuleConstants<
 //           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
 //       FrontLeft =

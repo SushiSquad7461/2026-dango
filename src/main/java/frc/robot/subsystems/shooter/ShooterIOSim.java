@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.generated.Constants;
 
@@ -19,6 +20,8 @@ public class ShooterIOSim implements ShooterIO {
         public double sotmTofSec = 0.0;
         public double sotmDragCompensatedTofSec = 0.0;
         public boolean shotSourceIsSotm = true;
+        public Pose3d sotmNotePose = new Pose3d();
+        public Pose3d[] sotmTrajectory = new Pose3d[] {};
     }
 
     public final ShooterData data = new ShooterData();
@@ -26,12 +29,18 @@ public class ShooterIOSim implements ShooterIO {
     private static final double NOMINAL_VOLTAGE = 12.0;
     private static final double SHOOTER_SUPPLY_CURRENT_LIMIT_AMPS = 70.0;
     private static final double FEEDER_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+    private static final double HOOD_SUPPLY_CURRENT_LIMIT_AMPS = 10.0;
+    private static final double HOOD_MAX_VELOCITY_DEG_PER_SEC =
+        (Constants.HoodedShooterConstants.cruiseVelocityRps / Constants.IntakeConstants.motorRotationsPerArmRotation) * 360.0;
 
     private double legacySimulatedRPM = 0; 
     private double targetRPM = 0;  
     private int feederDirection = 0;
     private double flywheelAppliedVolts = 0.0;
     private double hoodPos = 0;    
+    private double hoodVelocityCmd = 0.0;
+    private double robotVxMetersPerSecond = 0.0;
+    private double robotVyMetersPerSecond = 0.0;
     private double lastModelUpdateSec = Timer.getFPGATimestamp();
     private final SOTMShotPhysicsSim sotmShotSim = new SOTMShotPhysicsSim();
 
@@ -77,6 +86,26 @@ public class ShooterIOSim implements ShooterIO {
     }
 
     @Override
+    public void runHood(double speed) {
+        hoodVelocityCmd = speed;
+        updateShotModels();
+        updateCurrentDraw();
+    }
+
+    @Override
+    public void stopHood() {
+        hoodVelocityCmd = 0.0;
+        updateShotModels();
+        updateCurrentDraw();
+    }
+
+    @Override
+    public void setRobotVelocity(double vxMetersPerSecond, double vyMetersPerSecond) {
+        robotVxMetersPerSecond = vxMetersPerSecond;
+        robotVyMetersPerSecond = vyMetersPerSecond;
+    }
+
+    @Override
     public boolean isShooterReady() {
         updateShotModels();
         return data.sotmReady;
@@ -115,6 +144,10 @@ public class ShooterIOSim implements ShooterIO {
         if (dtSec > 0.1) dtSec = 0.1;
         lastModelUpdateSec = nowSec;
 
+        hoodPos += hoodVelocityCmd * HOOD_MAX_VELOCITY_DEG_PER_SEC * dtSec;
+        if (hoodPos < 0.0) hoodPos = 0.0;
+        if (hoodPos > 90.0) hoodPos = 90.0;
+
         double legacyGain = 0.1 * (dtSec / 0.02);
         if (legacyGain < 0.0) legacyGain = 0.0;
         if (legacyGain > 1.0) legacyGain = 1.0;
@@ -125,13 +158,22 @@ public class ShooterIOSim implements ShooterIO {
 
         var sotmOutput =
             sotmShotSim.update(
-                targetRPM, feederDirection, Constants.Shooter.SHOOTER_RPM_TOLERANCE, dtSec);
+                targetRPM,
+                feederDirection,
+                Constants.Shooter.SHOOTER_RPM_TOLERANCE,
+                dtSec,
+                hoodPos,
+                Constants.Vision.targetDistanceMeters,
+                robotVxMetersPerSecond,
+                robotVyMetersPerSecond);
         data.sotmFlywheelRPM = sotmOutput.flywheelRPM;
         data.sotmReady = sotmOutput.shooterReady;
         data.sotmShotActive = sotmOutput.shotActive;
         data.sotmConfidence = sotmOutput.confidence;
         data.sotmTofSec = sotmOutput.tofSec;
         data.sotmDragCompensatedTofSec = sotmOutput.dragCompensatedTofSec;
+        data.sotmNotePose = sotmOutput.notePose;
+        data.sotmTrajectory = sotmOutput.trajectory;
         data.shotSourceIsSotm = true;
     }
 
@@ -157,11 +199,14 @@ public class ShooterIOSim implements ShooterIO {
 
     private void updateCurrentDraw() {
         double feederAppliedVolts = calculateFeederAppliedVolts();
+        double hoodAppliedVolts = clamp(hoodVelocityCmd * NOMINAL_VOLTAGE, -NOMINAL_VOLTAGE, NOMINAL_VOLTAGE);
         double shooterCurrentAmps =
             (Math.abs(flywheelAppliedVolts) / NOMINAL_VOLTAGE) * SHOOTER_SUPPLY_CURRENT_LIMIT_AMPS;
         double feederCurrentAmps =
             (Math.abs(feederAppliedVolts) / NOMINAL_VOLTAGE) * FEEDER_SUPPLY_CURRENT_LIMIT_AMPS;
-        data.currentAmps = shooterCurrentAmps + feederCurrentAmps;
+        double hoodCurrentAmps =
+            (Math.abs(hoodAppliedVolts) / NOMINAL_VOLTAGE) * HOOD_SUPPLY_CURRENT_LIMIT_AMPS;
+        data.currentAmps = shooterCurrentAmps + feederCurrentAmps + hoodCurrentAmps;
     }
 
     private static double clamp(double value, double min, double max) {

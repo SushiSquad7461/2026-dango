@@ -53,6 +53,13 @@ public class Intake extends SubsystemBase{
                 .andThen(Commands.runOnce(()->io.setStateRollers(newState.rollerSpeed)));
     }
 
+    public double getSimulatedCurrentDrawAmps() {
+        if (io instanceof IntakeSim simIo) {
+            return simIo.data.currentAmps;
+        }
+        return 0.0;
+    }
+
     @Override
     public void periodic(){
         // io.getMotorPos();

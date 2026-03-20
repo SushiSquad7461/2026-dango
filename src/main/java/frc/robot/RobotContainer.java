@@ -78,20 +78,23 @@ public class RobotContainer {
                                 shooter = new ShooterSubsystem(new ShooterIOKraken());
                                 intake = new Intake(new IntakeReal());
                                 hopper = new Hopper(new HopperIOReal());
+                                hoodedShooter = new HoodedShooter();
                                 break;
                         case REPLAY:
                                 shooter = new ShooterSubsystem(new ShooterIOReplay());
                                 intake = new Intake(new IntakeReplay());
                                 hopper = new Hopper(new HopperIOReplay());
+                                hoodedShooter = null;
                                 break;
                         case SIM:
                         default:
                                 shooter = new ShooterSubsystem(new ShooterIOSim());
                                 intake = new Intake(new IntakeSim());
                                 hopper = new Hopper(new HopperIOSim());
+                                hoodedShooter = null;
                                 break;
                 }
-                hoodedShooter = new HoodedShooter();
+                shooter.setRobotSpeedsSupplier(swerve::getRobotRelativeSpeeds);
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, swerve, vision);
@@ -201,13 +204,13 @@ public class RobotContainer {
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(-0.05);
+                        setHoodSpeed(-0.05);
                 })).onFalse(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0);}));
+                        setHoodSpeed(0);}));
                 driverController.povUp().onTrue(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0.05);
+                        setHoodSpeed(0.05);
                 })).onFalse(Commands.runOnce(() -> {
-                        hoodedShooter.moveHood(0);
+                        setHoodSpeed(0);
                 }));
                 ;
 
@@ -233,5 +236,29 @@ public class RobotContainer {
 
         public void resetModulesToAbsolute() {
                 swerve.resetModulesToAbsolute();
+        }
+
+        public double[] getSimulatedCurrentDrawsAmps() {
+                if (Constants.currentMode != Constants.Mode.SIM) {
+                        return new double[] {0.0};
+                }
+                return new double[] {
+                        swerve.getSimulatedCurrentDrawAmps(),
+                        shooter.getSimulatedCurrentDrawAmps(),
+                        intake.getSimulatedCurrentDrawAmps(),
+                        hopper.getSimulatedCurrentDrawAmps()
+                };
+        }
+
+        private void setHoodSpeed(double speed) {
+                if (Constants.currentMode != Constants.Mode.REAL) {
+                        shooter.runHood(speed);
+                        return;
+                }
+                if (hoodedShooter != null) {
+                        hoodedShooter.moveHood(speed);
+                } else {
+                        shooter.stopHood();
+                }
         }
 }

@@ -3,12 +3,14 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
 import org.littletonrobotics.junction.Logger;
+import java.util.function.Supplier;
 
 public class ShooterSubsystem extends SubsystemBase {
   // private double shootStartTime = 0; // could come in useful later, especially for logging
@@ -23,6 +25,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private ShooterState state = ShooterState.IDLE;
   private final ShooterIO io;
+  private Supplier<ChassisSpeeds> robotSpeedsSupplier = ChassisSpeeds::new;
   //ShooterDataAutoLogged data = new ShooterDataAutoLogged();
 
   public LoggedMechanism2d mech2d = new LoggedMechanism2d(3, 5);
@@ -107,8 +110,31 @@ public class ShooterSubsystem extends SubsystemBase {
     return io.isShooterReady();
   }
 
+  public void setRobotSpeedsSupplier(Supplier<ChassisSpeeds> supplier) {
+    robotSpeedsSupplier = supplier != null ? supplier : ChassisSpeeds::new;
+  }
+
+  public void runHood(double speed) {
+    io.runHood(speed);
+  }
+
+  public void stopHood() {
+    io.stopHood();
+  }
+
+  public double getSimulatedCurrentDrawAmps() {
+    if (io instanceof ShooterIOSim simIo) {
+      return simIo.data.currentAmps;
+    }
+    return 0.0;
+  }
+
   @Override
   public void periodic() {
+      ChassisSpeeds robotSpeeds = robotSpeedsSupplier.get();
+      if (robotSpeeds != null) {
+        io.setRobotVelocity(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond);
+      }
       double flywheelRPM = io.getFlywheelRPM();
       double flywheelTargetRPM = io.getFlywheelTargetRPM();
       boolean shooterReady = io.isShooterReady();
@@ -133,6 +159,8 @@ public class ShooterSubsystem extends SubsystemBase {
           Logger.recordOutput(
               "Shooter/SOTMDragCompensatedTofSec", simIo.data.sotmDragCompensatedTofSec);
           Logger.recordOutput("Shooter/ShotSourceIsSotm", simIo.data.shotSourceIsSotm);
+          Logger.recordOutput("Shooter/SOTMNotePose", simIo.data.sotmNotePose);
+          Logger.recordOutput("Shooter/SOTMTrajectory", simIo.data.sotmTrajectory);
         }
       }
       

@@ -49,6 +49,13 @@ public class Hopper extends SubsystemBase{
             io.setSpeed(0);
         });
     }
+
+    public double getSimulatedCurrentDrawAmps() {
+        if (io instanceof HopperIOSim simIo) {
+            return simIo.data.currentAmps;
+        }
+        return 0.0;
+    }
     @Override
     public void periodic() {
         if (Constants.currentMode != Constants.Mode.REAL && io instanceof HopperIOSim simIo) {

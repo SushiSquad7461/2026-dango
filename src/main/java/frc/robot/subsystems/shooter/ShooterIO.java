@@ -11,4 +11,7 @@ public interface ShooterIO {
     double getFlywheelRPM();
     double getFlywheelTargetRPM();
     boolean isShooterReady();
+    default void setRobotVelocity(double vxMetersPerSecond, double vyMetersPerSecond) {}
+    default void runHood(double speed) {}
+    default void stopHood() {}
 }

@@ -2,6 +2,9 @@ package frc.robot.subsystems;
 
 import frc.robot.util.AllianceUtil;
 import frc.robot.generated.Constants;
+import frc.robot.subsystems.drive.Module;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.sim.ModuleIOSim;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -46,7 +49,9 @@ import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator;
+    private final boolean useAkModuleIo;
     private final SwerveModule[] mSwerveMods;
+    private final Module[] akModules;
     private final BaseStatusSignal[] modStatusSignals;
     private final Pigeon2 gyro;
     private final Pigeon2SimState gyroSimState;
@@ -76,6 +81,7 @@ public class Swerve extends SubsystemBase {
 
     public Swerve() {
         field = new Field2d();
+        useAkModuleIo = Constants.currentMode != Constants.Mode.REAL;
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
@@ -83,38 +89,60 @@ public class Swerve extends SubsystemBase {
         gyroYaw = gyro.getYaw();
         alignmentPID = new PIDController(0.15, 0, 0);
         alignmentPID.setTolerance(10, 10);
-        mSwerveMods = new SwerveModule[] {
-                new SwerveModule(0, Constants.Swerve.Mod0.constants), //Front Left Module
-                new SwerveModule(1, Constants.Swerve.Mod1.constants), //Front Right Module
-                new SwerveModule(2, Constants.Swerve.Mod2.constants), //Back Left Module
-                new SwerveModule(3, Constants.Swerve.Mod3.constants) //Back Right Module
-        };
+        if (useAkModuleIo) {
+            mSwerveMods = new SwerveModule[] {};
+            ModuleIO flIo = Constants.currentMode == Constants.Mode.REPLAY
+                    ? new ModuleIO() {}
+                    : new ModuleIOSim(Constants.AKFrontLeft);
+            ModuleIO frIo = Constants.currentMode == Constants.Mode.REPLAY
+                    ? new ModuleIO() {}
+                    : new ModuleIOSim(Constants.AKFrontRight);
+            ModuleIO blIo = Constants.currentMode == Constants.Mode.REPLAY
+                    ? new ModuleIO() {}
+                    : new ModuleIOSim(Constants.AKBackLeft);
+            ModuleIO brIo = Constants.currentMode == Constants.Mode.REPLAY
+                    ? new ModuleIO() {}
+                    : new ModuleIOSim(Constants.AKBackRight);
+            akModules = new Module[] {
+                    new Module(flIo, 0, Constants.AKFrontLeft),
+                    new Module(frIo, 1, Constants.AKFrontRight),
+                    new Module(blIo, 2, Constants.AKBackLeft),
+                    new Module(brIo, 3, Constants.AKBackRight)
+            };
+            modStatusSignals = new BaseStatusSignal[] {gyroYaw};
+        } else {
+            akModules = new Module[] {};
+            mSwerveMods = new SwerveModule[] {
+                    new SwerveModule(0, Constants.Swerve.Mod0.constants),
+                    new SwerveModule(1, Constants.Swerve.Mod1.constants),
+                    new SwerveModule(2, Constants.Swerve.Mod2.constants),
+                    new SwerveModule(3, Constants.Swerve.Mod3.constants)
+            };
+            modStatusSignals = new BaseStatusSignal[] {
+                    mSwerveMods[0].getDrivePosition(),
+                    mSwerveMods[0].getDriveVelocity(),
+                    mSwerveMods[0].getAnglePosition(),
+                    mSwerveMods[0].getEncoderPosition(),
+                    mSwerveMods[1].getDrivePosition(),
+                    mSwerveMods[1].getDriveVelocity(),
+                    mSwerveMods[1].getAnglePosition(),
+                    mSwerveMods[1].getEncoderPosition(),
+                    mSwerveMods[2].getDrivePosition(),
+                    mSwerveMods[2].getDriveVelocity(),
+                    mSwerveMods[2].getAnglePosition(),
+                    mSwerveMods[2].getEncoderPosition(),
+                    mSwerveMods[3].getDrivePosition(),
+                    mSwerveMods[3].getDriveVelocity(),
+                    mSwerveMods[3].getAnglePosition(),
+                    mSwerveMods[3].getEncoderPosition(),
+                    gyroYaw
+            };
+        }
         poseEstimator = new SwerveDrivePoseEstimator(
                 Constants.Swerve.swerveKinematics,
                 getGyroYaw(),
                 getModulePositions(),
                 new Pose2d());
-
-
-        modStatusSignals = new BaseStatusSignal[] {
-                mSwerveMods[0].getDrivePosition(),
-                mSwerveMods[0].getDriveVelocity(),
-                mSwerveMods[0].getAnglePosition(),
-                mSwerveMods[0].getEncoderPosition(),
-                mSwerveMods[1].getDrivePosition(),
-                mSwerveMods[1].getDriveVelocity(),
-                mSwerveMods[1].getAnglePosition(),
-                mSwerveMods[1].getEncoderPosition(),
-                mSwerveMods[2].getDrivePosition(),
-                mSwerveMods[2].getDriveVelocity(),
-                mSwerveMods[2].getAnglePosition(),
-                mSwerveMods[2].getEncoderPosition(),
-                mSwerveMods[3].getDrivePosition(),
-                mSwerveMods[3].getDriveVelocity(),
-                mSwerveMods[3].getAnglePosition(),
-                mSwerveMods[3].getEncoderPosition(),
-                gyroYaw
-        };
 
         table = NetworkTableInstance.getDefault().getTable("Swerve");
         gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
@@ -138,16 +166,6 @@ public class Swerve extends SubsystemBase {
             yPosEntry = null;
             rotEntry = null;
         }
-        // gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
-        // cancoderPubs = new DoublePublisher[4];
-        // anglePubs = new DoublePublisher[4];
-        // velocityPubs = new DoublePublisher[4];
-
-        for (int i = 0; i < 4; i++) {
-            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
-            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
-            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
-        }
         driveSysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         null, // Use default ramp rate (1 V/s)
@@ -157,9 +175,14 @@ public class Swerve extends SubsystemBase {
                         (state) -> SignalLogger.writeString("state", state.toString())),
                 new SysIdRoutine.Mechanism(
                         (volts) -> {
-                            // Apply the same voltage to all drive motors
-                            for (SwerveModule mod : mSwerveMods) {
-                                mod.setDriveVoltage(volts.in(Volts));
+                            if (useAkModuleIo) {
+                                for (Module mod : akModules) {
+                                    mod.runCharacterization(volts.in(Volts));
+                                }
+                            } else {
+                                for (SwerveModule mod : mSwerveMods) {
+                                    mod.setDriveVoltage(volts.in(Volts));
+                                }
                             }
                         },
                         null,
@@ -174,9 +197,14 @@ public class Swerve extends SubsystemBase {
                         (state) -> SignalLogger.writeString("state", state.toString())),
                 new SysIdRoutine.Mechanism(
                         (volts) -> {
-                            // Apply the same voltage to all steer motors
-                            for (SwerveModule mod : mSwerveMods) {
-                                mod.setSteerVoltage(volts.in(Volts));
+                            if (useAkModuleIo) {
+                                for (Module mod : akModules) {
+                                    mod.runTurnCharacterization(volts.in(Volts));
+                                }
+                            } else {
+                                for (SwerveModule mod : mSwerveMods) {
+                                    mod.setSteerVoltage(volts.in(Volts));
+                                }
                             }
                         },
                         null,
@@ -222,21 +250,21 @@ public class Swerve extends SubsystemBase {
             public void initSendable(SendableBuilder builder) {
                 builder.setSmartDashboardType("SwerveDrive");
 
-                builder.addDoubleProperty("Front Left Angle", () -> mSwerveMods[0].getState().angle.getDegrees(), null);
-                builder.addDoubleProperty("Front Left Velocity", () -> mSwerveMods[0].getState().speedMetersPerSecond,
+                builder.addDoubleProperty("Front Left Angle", () -> getModuleStates()[0].angle.getDegrees(), null);
+                builder.addDoubleProperty("Front Left Velocity", () -> getModuleStates()[0].speedMetersPerSecond,
                         null);
 
-                builder.addDoubleProperty("Front Right Angle", () -> mSwerveMods[1].getState().angle.getDegrees(),
+                builder.addDoubleProperty("Front Right Angle", () -> getModuleStates()[1].angle.getDegrees(),
                         null);
-                builder.addDoubleProperty("Front Right Velocity", () -> mSwerveMods[1].getState().speedMetersPerSecond,
-                        null);
-
-                builder.addDoubleProperty("Back Left Angle", () -> mSwerveMods[2].getState().angle.getDegrees(), null);
-                builder.addDoubleProperty("Back Left Velocity", () -> mSwerveMods[2].getState().speedMetersPerSecond,
+                builder.addDoubleProperty("Front Right Velocity", () -> getModuleStates()[1].speedMetersPerSecond,
                         null);
 
-                builder.addDoubleProperty("Back Right Angle", () -> mSwerveMods[3].getState().angle.getDegrees(), null);
-                builder.addDoubleProperty("Back Right Velocity", () -> mSwerveMods[3].getState().speedMetersPerSecond,
+                builder.addDoubleProperty("Back Left Angle", () -> getModuleStates()[2].angle.getDegrees(), null);
+                builder.addDoubleProperty("Back Left Velocity", () -> getModuleStates()[2].speedMetersPerSecond,
+                        null);
+
+                builder.addDoubleProperty("Back Right Angle", () -> getModuleStates()[3].angle.getDegrees(), null);
+                builder.addDoubleProperty("Back Right Velocity", () -> getModuleStates()[3].speedMetersPerSecond,
                         null);
 
                 builder.addDoubleProperty("Robot Angle", () -> getPose().getRotation().getDegrees(), null);
@@ -266,7 +294,7 @@ public class Swerve extends SubsystemBase {
         RIGHT
     }
 
-    private ChassisSpeeds getRobotRelativeSpeeds() {
+    public ChassisSpeeds getRobotRelativeSpeeds() {
         return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
     }
 
@@ -277,11 +305,16 @@ public class Swerve extends SubsystemBase {
     }
 
      private void stop() {
-         for (SwerveModule mod : mSwerveMods) {
-             mod.setDriveVoltage(0);
-             mod.setSteerVoltage(0);
-
-        }
+         if (useAkModuleIo) {
+             for (Module mod : akModules) {
+                 mod.stop();
+             }
+         } else {
+             for (SwerveModule mod : mSwerveMods) {
+                 mod.setDriveVoltage(0);
+                 mod.setSteerVoltage(0);
+             }
+         }
     }
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
@@ -296,8 +329,14 @@ public class Swerve extends SubsystemBase {
                                 rotation));
         SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
 
-        for (SwerveModule mod : mSwerveMods) {
-            mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
+        if (useAkModuleIo) {
+            for (int i = 0; i < akModules.length; i++) {
+                akModules[i].runSetpoint(swerveModuleStates[i]);
+            }
+        } else {
+            for (SwerveModule mod : mSwerveMods) {
+                mod.setDesiredState(swerveModuleStates[mod.moduleNumber], isOpenLoop);
+            }
         }
     }
 
@@ -305,15 +344,27 @@ public class Swerve extends SubsystemBase {
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
 
-        for (SwerveModule mod : mSwerveMods) {
-            mod.setDesiredState(desiredStates[mod.moduleNumber], false);
+        if (useAkModuleIo) {
+            for (int i = 0; i < akModules.length; i++) {
+                akModules[i].runSetpoint(desiredStates[i]);
+            }
+        } else {
+            for (SwerveModule mod : mSwerveMods) {
+                mod.setDesiredState(desiredStates[mod.moduleNumber], false);
+            }
         }
     }
 
     public SwerveModuleState[] getModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
-        for (SwerveModule mod : mSwerveMods) {
-            states[mod.moduleNumber] = mod.getState();
+        if (useAkModuleIo) {
+            for (int i = 0; i < akModules.length; i++) {
+                states[i] = akModules[i].getState();
+            }
+        } else {
+            for (SwerveModule mod : mSwerveMods) {
+                states[mod.moduleNumber] = mod.getState();
+            }
         }
         return states;
     }
@@ -330,8 +381,14 @@ public class Swerve extends SubsystemBase {
 
     public SwerveModulePosition[] getModulePositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
-        for (SwerveModule mod : mSwerveMods) {
-            positions[mod.moduleNumber] = mod.getPosition();
+        if (useAkModuleIo) {
+            for (int i = 0; i < akModules.length; i++) {
+                positions[i] = akModules[i].getPosition();
+            }
+        } else {
+            for (SwerveModule mod : mSwerveMods) {
+                positions[mod.moduleNumber] = mod.getPosition();
+            }
         }
         return positions;
     }
@@ -358,6 +415,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public void resetModulesToAbsolute() {
+        if (useAkModuleIo) {
+            return;
+        }
         for (SwerveModule mod : mSwerveMods) {
             if (Math.abs(mod.getCANcoderWithOffset().getDegrees() - mod.getState().angle.getDegrees()) > 10)
                 mod.resetToAbsolute();
@@ -400,12 +460,22 @@ public class Swerve extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("GyroYaw", getGyroYaw().getDegrees());
         SmartDashboard.putNumber("PoseYaw", getPose().getRotation().getDegrees());
-        BaseStatusSignal.refreshAll(modStatusSignals);
-        for (SwerveModule mod : mSwerveMods) {
-            cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
-            var modState = mod.getState();
-            anglePubs[mod.moduleNumber].set(modState.angle.getDegrees());
-            velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
+        if (useAkModuleIo) {
+            for (int i = 0; i < akModules.length; i++) {
+                akModules[i].periodic();
+                var modState = akModules[i].getState();
+                cancoderPubs[i].set(modState.angle.getDegrees());
+                anglePubs[i].set(modState.angle.getDegrees());
+                velocityPubs[i].set(modState.speedMetersPerSecond);
+            }
+        } else {
+            BaseStatusSignal.refreshAll(modStatusSignals);
+            for (SwerveModule mod : mSwerveMods) {
+                cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
+                var modState = mod.getState();
+                anglePubs[mod.moduleNumber].set(modState.angle.getDegrees());
+                velocityPubs[mod.moduleNumber].set(modState.speedMetersPerSecond);
+            }
         }
 
         updateOdom();
@@ -425,8 +495,14 @@ public class Swerve extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         simCurrentDrawAmps = 0;
-        for (var mod : mSwerveMods) {
-            simCurrentDrawAmps += mod.simulationPeriodic();
+        if (useAkModuleIo) {
+            for (var mod : akModules) {
+                simCurrentDrawAmps += mod.getCurrentDrawAmps();
+            }
+        } else {
+            for (var mod : mSwerveMods) {
+                simCurrentDrawAmps += mod.simulationPeriodic();
+            }
         }
         if (gyroSimState != null) {
             gyroSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
