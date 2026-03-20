@@ -143,8 +143,8 @@ public class RobotContainer {
                 ));
 
                 // bind to copilot D-pad
-                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(25.0)));
-                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-25.0)));
+                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(100.0)));
+                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-100.0)));
         }
 
         public Command getAutonomousCommand() {
