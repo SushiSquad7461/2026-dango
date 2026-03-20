@@ -51,6 +51,9 @@ public class Constants {
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
     public static PIDController distancePID = new PIDController(1.3, 0, 0);
     public static final double targetDistanceMeters = Units.feetToMeters(9);
+    // Max tag distance for the startup hard-reset. Beyond this, single-tag translation error
+    // is large enough that a hard reset could put the pose further off than leaving it alone.
+    public static final double POSE_INIT_MAX_TAG_DIST_M = 4.0;
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
