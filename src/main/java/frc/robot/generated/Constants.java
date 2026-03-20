@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 import frc.robot.subsystems.SwerveModule;
-import frc.robot.subsystems.vision.ProjectileSimulator.SimParameters;
+
 import frc.robot.Robot;
 
 
@@ -61,23 +61,6 @@ public class Constants {
     public static Pose3d cameraPoseSecondary = new Pose3d(
         new Translation3d(-0.263525, -0.263525, 0.2439162),
         new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
-    );
-    public static final SimParameters SOTM_PARAMETERS = new SimParameters(
-        0.215,   // ball mass kg
-        0.1501,  // ball diameter m
-        0.47,    // drag coeff (smooth sphere)
-        0.2,     // Magnus coeff
-        1.225,   // air density kg/m^3
-        0.43,    // exit height from floor, measure from CAD
-        0.1016,  // wheel diameter, measure with calipers
-        1.83,    // target height, from game manual
-        0.6,     // slip factor (0=no grip, 1=perfect), tune on robot
-        5.0,     // min hood angle degrees (mechanical limit)
-        40.0,    // max hood angle degrees (mechanical limit)
-        3.0,     // max TOF ceiling seconds
-        1.0,     // angle sweep step degrees
-        0.001,   // sim timestep
-        1500, 6000, 25, 5.0  // RPM range (flywheel RPM), search iters, max sim time
     );
   }
   public static final class Shooter{
@@ -351,8 +334,8 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 12.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
-        public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
+        public static final double hoodMinDegrees  = 12.0;   // mechanical limit (degrees)
+        public static final double hoodMaxDegrees  = 40.0;   // mechanical limit (degrees)
 
         // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
         public static final double motorRotationsPerHoodRotation = (24.0 / 18.0) * (167.0 / 12.0);
