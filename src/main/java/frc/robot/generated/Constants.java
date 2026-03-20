@@ -38,9 +38,23 @@ import frc.robot.Robot;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public class Constants {
   public static final double stickDeadband = 0.1;
-  public static final Mode simMode = Mode.SIM;
+  public static final Mode simMode = getSimModeFromConfig();
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
+
+  private static Mode getSimModeFromConfig() {
+    String configuredMode = System.getProperty("akit.mode");
+    if (configuredMode == null || configuredMode.isBlank()) {
+      configuredMode = System.getenv("AKIT_MODE");
+    }
+    if (configuredMode == null) {
+      return Mode.SIM;
+    }
+    return switch (configuredMode.trim().toUpperCase()) {
+      case "REPLAY" -> Mode.REPLAY;
+      default -> Mode.SIM;
+    };
+  }
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
