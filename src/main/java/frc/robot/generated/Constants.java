@@ -46,8 +46,8 @@ public class Constants {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
-    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    public static final int[] RED_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
+    public static final int[] BLUE_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
     public static PIDController distancePID = new PIDController(1.3, 0, 0);
     public static final double targetDistanceMeters = Units.feetToMeters(9);
@@ -294,7 +294,7 @@ public class Constants {
         public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
-        public static final double intakeAngleDeg = 135; 
+        public static final double intakeAngleDeg = 145; 
         public static final double angleToleranceDeg = 5.0;
         public static final double stowedAngleDeg = 0;
 
