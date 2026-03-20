@@ -108,13 +108,16 @@ public class RobotContainer {
 
                 driverController.y().onTrue(Commands.runOnce(() -> {
                         // Compute target heading once — both resetGyro and seedIMU must use
-                        // the same value. Reading the gyro after setYaw returns stale data
-                        // because setYaw is async (CAN bus).
+                        // the same value.
                         double yaw = frc.robot.util.AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
                         swerve.resetGyro();
                         vision.seedIMU(yaw);
                         vision.resetOffset();
                         vision.resetWarmStart();
+                        // Trigger MT1 re-bootstrap so the next cycle hard-sets the full
+                        // pose (X/Y + heading) from multi-tag geometry, instead of slowly
+                        // converging through the Kalman filter.
+                        vision.requestRebootstrap();
                 }));
 
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
