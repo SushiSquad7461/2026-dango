@@ -193,7 +193,7 @@ public class Vision extends SubsystemBase {
     }
 
     /**
-     * Hard-seeds both Limelight IMUs with the current robot heading.
+     * Hard-seeds both Limelight IMUs with the given heading.
      *
      * In mode 4 (enabled), the Limelight uses its internal 1kHz IMU with only gentle
      * external correction. After a gyro reset the internal IMU won't snap to the new
@@ -201,11 +201,11 @@ public class Vision extends SubsystemBase {
      * one-shot mode-1 seed so MegaTag2 estimates are correct right away.
      * The next periodic() call will restore the correct mode (1 or 4).
      *
-     * Call order matters: invoke this AFTER swerve.resetGyro() so getPose() already
-     * returns the new heading (0°).
+     * @param headingDeg the target heading in degrees (pass the same value used in
+     *                   resetGyro, NOT a live gyro read — gyro.setYaw is async CAN
+     *                   and the stale value would seed the Limelights with the wrong heading).
      */
-    public void seedIMU() {
-        double headingDeg = swerve.getGyroYaw().getDegrees();
+    public void seedIMU(double headingDeg) {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);

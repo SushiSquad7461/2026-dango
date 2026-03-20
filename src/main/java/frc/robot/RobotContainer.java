@@ -106,13 +106,16 @@ public class RobotContainer {
                                 () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
                                                                                 // only while holding down the button
 
-                driverController.y().onTrue(Commands.sequence(
-                        // resetGyro() must run first so seedIMU() reads the new heading (0°).
-                        Commands.runOnce(() -> swerve.resetGyro()),
-                        Commands.parallel(
-                                Commands.runOnce(() -> vision.seedIMU()),
-                                Commands.runOnce(() -> vision.resetOffset()),
-                                Commands.runOnce(() -> vision.resetWarmStart()))));
+                driverController.y().onTrue(Commands.runOnce(() -> {
+                        // Compute target heading once — both resetGyro and seedIMU must use
+                        // the same value. Reading the gyro after setYaw returns stale data
+                        // because setYaw is async (CAN bus).
+                        double yaw = frc.robot.util.AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
+                        swerve.resetGyro();
+                        vision.seedIMU(yaw);
+                        vision.resetOffset();
+                        vision.resetWarmStart();
+                }));
 
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
                 driverController.rightBumper().onTrue(

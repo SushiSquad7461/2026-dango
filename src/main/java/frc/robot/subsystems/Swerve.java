@@ -83,9 +83,12 @@ public class Swerve extends SubsystemBase {
                 new SwerveModule(2, Constants.Swerve.Mod2.constants), //Back Left Module
                 new SwerveModule(3, Constants.Swerve.Mod3.constants) //Back Right Module
         };
+        // Use the target yaw (0°) directly — gyro.setYaw(0) above is async (CAN bus),
+        // so getGyroYaw() still returns the stale pre-reset value. Using it would give
+        // the estimator a wrong internal offset, making the initial heading incorrect.
         poseEstimator = new SwerveDrivePoseEstimator(
                 Constants.Swerve.swerveKinematics,
-                getGyroYaw(),
+                Rotation2d.fromDegrees(0),
                 getModulePositions(),
                 new Pose2d());
 
@@ -331,6 +334,10 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
+        // Refresh the gyro signal so we read the latest CAN value, not a stale cache.
+        // A stale reading here produces a wrong internal offset in the estimator,
+        // causing odometry to drift until vision corrects it.
+        gyroYaw.refresh();
         poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
