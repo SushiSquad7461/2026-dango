@@ -17,7 +17,8 @@ public class ShooterSubsystem extends SubsystemBase {
   public enum ShooterState {
     IDLE, // shooter inactive
     PRESHOOT, // shooter spinning up, waiting for hood to come into position, or waiting for robot to turn to goal
-    SHOOT // shooting
+    SHOOT, // shooting
+    SHOOT_INIT
   }
 
   private ShooterState state = ShooterState.IDLE;
@@ -65,6 +66,14 @@ public class ShooterSubsystem extends SubsystemBase {
         return Commands.parallel(
             Commands.runOnce(()->{
                 io.runShooter(targetRPM);
+            }),
+            Commands.runOnce(()->{
+                io.runFeeder();
+            }));
+      case SHOOT_INIT:
+        return Commands.parallel(
+            Commands.runOnce(()->{
+                //io.runShooter(targetRPM);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
