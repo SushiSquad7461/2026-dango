@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 import frc.robot.subsystems.SwerveModule;
-import frc.robot.subsystems.vision.ProjectileSimulator.SimParameters;
+
 import frc.robot.Robot;
 
 
@@ -46,11 +46,14 @@ public class Constants {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
-    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
+    public static final int[] RED_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
+    public static final int[] BLUE_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
     public static PIDController distancePID = new PIDController(1.3, 0, 0);
     public static final double targetDistanceMeters = Units.feetToMeters(9);
+    // Max tag distance for the startup hard-reset. Beyond this, single-tag translation error
+    // is large enough that a hard reset could put the pose further off than leaving it alone.
+    public static final double POSE_INIT_MAX_TAG_DIST_M = 4.0;
     // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
     // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
     public static Pose3d cameraPosePrimary = new Pose3d(
@@ -61,23 +64,6 @@ public class Constants {
     public static Pose3d cameraPoseSecondary = new Pose3d(
         new Translation3d(-0.263525, -0.263525, 0.2439162),
         new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
-    );
-    public static final SimParameters SOTM_PARAMETERS = new SimParameters(
-        0.215,   // ball mass kg
-        0.1501,  // ball diameter m
-        0.47,    // drag coeff (smooth sphere)
-        0.2,     // Magnus coeff
-        1.225,   // air density kg/m^3
-        0.43,    // exit height from floor, measure from CAD
-        0.1016,  // wheel diameter, measure with calipers
-        1.83,    // target height, from game manual
-        0.5,     // slip factor (0=no grip, 1=perfect), tune on robot
-        5.0,     // min hood angle degrees (mechanical limit)
-        40.0,    // max hood angle degrees (mechanical limit)
-        3.0,     // max TOF ceiling seconds
-        1.0,     // angle sweep step degrees
-        0.001,   // sim timestep
-        1500, 6000, 25, 5.0  // RPM range (flywheel RPM), search iters, max sim time
     );
   }
   public static final class Shooter{
@@ -311,7 +297,7 @@ public class Constants {
         public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
-        public static final double intakeAngleDeg = 135; 
+        public static final double intakeAngleDeg = 145; 
         public static final double angleToleranceDeg = 5.0;
         public static final double stowedAngleDeg = 0;
 
@@ -351,8 +337,8 @@ public class Constants {
         public static final double hoodD = 0.0;
 
         public static final double hoodStepDegrees = 5.0;
-        public static final double hoodMinDegrees  = 5.0;   // match SOTM_PARAMETERS.minHoodAngleDeg
-        public static final double hoodMaxDegrees  = 40.0;   // match SOTM_PARAMETERS.maxHoodAngleDeg
+        public static final double hoodMinDegrees  = 5.0;   // mechanical limit (degrees)
+        public static final double hoodMaxDegrees  = 35.0;   // mechanical limit (degrees)
 
         // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
         public static final double motorRotationsPerHoodRotation = (24.0 / 18.0) * (167.0 / 12.0);

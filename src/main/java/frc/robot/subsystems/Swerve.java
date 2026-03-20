@@ -37,7 +37,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -356,20 +355,23 @@ public class Swerve extends SubsystemBase {
 
     public Command resetPositionToFrontReef() {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
-        return Commands.sequence(
-                runOnce(() -> {
-                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
-                            : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
-                    resetGyro();
-                }));
-
+        return runOnce(() -> {
+            Pose2d targetPose = AllianceUtil.isRedAlliance()
+                    ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
+                    : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0));
+            gyro.setYaw(targetPose.getRotation().getDegrees());
+            setPose(targetPose);
+        });
     }
 
     public void resetGyro() {
-        // if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
-        // else
-        gyro.setYaw(0);
-        setPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
+        if (AllianceUtil.isRedAlliance()) {
+            gyro.setYaw(180);
+            setPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));
+        } else {
+            gyro.setYaw(0);
+            setPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
+        }
     }
 
     /**
