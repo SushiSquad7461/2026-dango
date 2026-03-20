@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
+import org.littletonrobotics.junction.Logger;
 
 public class ShooterSubsystem extends SubsystemBase {
   // private double shootStartTime = 0; // could come in useful later, especially for logging
@@ -108,9 +109,22 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+      double flywheelRPM = io.getFlywheelRPM();
+      double flywheelTargetRPM = io.getFlywheelTargetRPM();
+      boolean shooterReady = io.isShooterReady();
 
-      SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
-      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+      SmartDashboard.putNumber("Shooter/FlywheelRPM",flywheelRPM);
+      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",flywheelTargetRPM);
+      if (Constants.currentMode != Constants.Mode.REAL) {
+        Logger.recordOutput("Shooter/State", state.name());
+        Logger.recordOutput("Shooter/FlywheelRPM", flywheelRPM);
+        Logger.recordOutput("Shooter/FlywheelTargetRPM", flywheelTargetRPM);
+        Logger.recordOutput("Shooter/Ready", shooterReady);
+        if (io instanceof ShooterIOSim simIo) {
+          Logger.recordOutput("Shooter/AppliedVolts", simIo.data.appliedVolts);
+          Logger.recordOutput("Shooter/CurrentAmps", simIo.data.currentAmps);
+        }
+      }
       
       //System.out.println(io.getFlywheelRPM());
 

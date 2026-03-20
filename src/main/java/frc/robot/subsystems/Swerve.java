@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -409,6 +410,12 @@ public class Swerve extends SubsystemBase {
         currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
+        if (Constants.currentMode != Constants.Mode.REAL) {
+            Logger.recordOutput("Swerve/Pose", currentPose);
+            Logger.recordOutput("Swerve/GyroYawDeg", getGyroYaw().getDegrees());
+            Logger.recordOutput("Swerve/ModuleStates", getModuleStates());
+            Logger.recordOutput("Swerve/ModulePositions", getModulePositions());
+        }
     }
 
     @Override
@@ -417,6 +424,7 @@ public class Swerve extends SubsystemBase {
         for (var mod : mSwerveMods) {
             simCurrentDrawAmps += mod.simulationPeriodic();
         }
+        Logger.recordOutput("Swerve/SimCurrentDrawAmps", simCurrentDrawAmps);
 
         boolean resetRequested = false;
         var curPose = getPose();

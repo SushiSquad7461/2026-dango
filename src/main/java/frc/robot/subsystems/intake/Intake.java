@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants.IntakeConstants;
+import frc.robot.generated.Constants;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase{
     private IntakeIO io;
@@ -59,10 +61,23 @@ public class Intake extends SubsystemBase{
         //  if (!manualRoll) {
         //      io.updateRollers();
         //  }
+        double pivotDeg = io.getPivotAngle();
+        double pivotTargetDeg = io.getPivotTargetAngle();
+        boolean pivotAtTarget = io.isPivotAtTarget();
         SmartDashboard.putNumber("Intake/kP", IntakeConstants.pivotP);
         SmartDashboard.putString("Intake/State", state.name());
-        SmartDashboard.putNumber("Intake/PivotDeg", io.getPivotAngle());
-        SmartDashboard.putNumber("Intake/PivotTargetDeg", io.getPivotTargetAngle());
-        SmartDashboard.putBoolean("Intake/PivotAtTarget", io.isPivotAtTarget());
+        SmartDashboard.putNumber("Intake/PivotDeg", pivotDeg);
+        SmartDashboard.putNumber("Intake/PivotTargetDeg", pivotTargetDeg);
+        SmartDashboard.putBoolean("Intake/PivotAtTarget", pivotAtTarget);
+        if (Constants.currentMode != Constants.Mode.REAL) {
+            Logger.recordOutput("Intake/State", state.name());
+            Logger.recordOutput("Intake/PivotDeg", pivotDeg);
+            Logger.recordOutput("Intake/PivotTargetDeg", pivotTargetDeg);
+            Logger.recordOutput("Intake/PivotAtTarget", pivotAtTarget);
+            if (io instanceof IntakeSim simIo) {
+                Logger.recordOutput("Intake/AppliedVolts", simIo.data.appliedVolts);
+                Logger.recordOutput("Intake/CurrentAmps", simIo.data.currentAmps);
+            }
+        }
     }
 }
