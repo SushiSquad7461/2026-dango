@@ -80,7 +80,7 @@ public class RobotContainer {
                         hopper = new Hopper(new HopperIOSim());
                 }
                 hoodedShooter = new HoodedShooter();
-                vision = new Vision(swerve);
+                vision = new Vision();
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, hoodedShooter, swerve, vision);
@@ -107,17 +107,8 @@ public class RobotContainer {
                                                                                 // only while holding down the button
 
                 driverController.y().onTrue(Commands.runOnce(() -> {
-                        // Compute target heading once — both resetGyro and seedIMU must use
-                        // the same value.
-                        double yaw = frc.robot.util.AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
                         swerve.resetGyro();
-                        vision.seedIMU(yaw);
                         vision.resetOffset();
-                        vision.resetWarmStart();
-                        // Trigger MT1 re-bootstrap so the next cycle hard-sets the full
-                        // pose (X/Y + heading) from multi-tag geometry, instead of slowly
-                        // converging through the Kalman filter.
-                        vision.requestRebootstrap();
                 }));
 
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
@@ -161,9 +152,4 @@ public class RobotContainer {
                 swerve.resetModulesToAbsolute();
         }
 
-        /** Re-bootstrap vision pose at auto→teleop transition. */
-        public void onTeleopStart() {
-                vision.requestRebootstrap();
-                vision.resetWarmStart();
-        }
 }
