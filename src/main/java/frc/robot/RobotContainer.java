@@ -17,15 +17,19 @@ import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
+import frc.robot.generated.Constants;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIOReplay;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeReplay;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
+import frc.robot.subsystems.shooter.ShooterIOReplay;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.Swerve;
@@ -69,16 +73,23 @@ public class RobotContainer {
         public RobotContainer() {
                 vision = new Vision(swerve);
 
-                if (Robot.isReal()) {
-                        shooter = new ShooterSubsystem(new ShooterIOKraken());
-                        intake = new Intake(new IntakeReal());
-                        hopper = new Hopper(new HopperIOReal());
-                        // swerve.resetGyro();
-
-                } else {
-                        shooter = new ShooterSubsystem(new ShooterIOSim());
-                        intake = new Intake(new IntakeSim());
-                        hopper = new Hopper(new HopperIOSim());
+                switch (Constants.currentMode) {
+                        case REAL:
+                                shooter = new ShooterSubsystem(new ShooterIOKraken());
+                                intake = new Intake(new IntakeReal());
+                                hopper = new Hopper(new HopperIOReal());
+                                break;
+                        case REPLAY:
+                                shooter = new ShooterSubsystem(new ShooterIOReplay());
+                                intake = new Intake(new IntakeReplay());
+                                hopper = new Hopper(new HopperIOReplay());
+                                break;
+                        case SIM:
+                        default:
+                                shooter = new ShooterSubsystem(new ShooterIOSim());
+                                intake = new Intake(new IntakeSim());
+                                hopper = new Hopper(new HopperIOSim());
+                                break;
                 }
                 hoodedShooter = new HoodedShooter();
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
