@@ -35,6 +35,10 @@ public class Vision extends SubsystemBase {
     private static final Translation2d RED_HUB_CENTER   = new Translation2d(12.513, 4.034);
     private static final Translation2d RED_HUB_FORWARD  = new Translation2d(-1, 0);  // hub faces -X (toward field center)
 
+    // Field boundary limits for rejecting wild MT2 poses (meters).
+    private static final double FIELD_LENGTH = 16.54;
+    private static final double FIELD_WIDTH  = 8.07;
+
     // -------------------------------------------------------------------------
 
     private final ShotCalculator shotCalc;
@@ -116,28 +120,17 @@ public class Vision extends SubsystemBase {
         // Fast rotation makes pose estimates unreliable; 360°/s is the recommended threshold.
         boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 360.0;
 
-        // 5. Process left Limelight.
-        if (!spinningTooFast && leftPose != null && leftPose.tagCount > 0) {
-            visionConfidence += 0.5;
-
-            // Base std dev is tighter with multiple tags, and increases with distance.
-            // 9999999 on heading tells the Kalman filter to ignore vision heading;
-            // MegaTag2 heading comes from the IMU, not vision.
-            double xyStdDev = leftPose.tagCount > 1 ? 0.1 : 0.5;
-            xyStdDev += Math.pow(leftPose.avgTagDist, 2.0) * 0.1;
-            swerve.addVisionMeasurement(leftPose.pose, leftPose.timestampSeconds,
-                    VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
-        }
-
-        // 6. Process right Limelight.
-        if (!spinningTooFast && rightPose != null && rightPose.tagCount > 0) {
-            visionConfidence += 0.5;
-
-            double xyStdDev = rightPose.tagCount > 1 ? 0.1 : 0.5;
-            xyStdDev += Math.pow(rightPose.avgTagDist, 2.0) * 0.1;
-            swerve.addVisionMeasurement(rightPose.pose, rightPose.timestampSeconds,
-                    VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
-        }
+        // 5. Process each Limelight independently (let the Kalman filter fuse them).
+        //    Sanity checks per MT2 best practices:
+        //      - Reject when spinning too fast (above)
+        //      - Reject null / zero-tag results
+        //      - Reject poses outside the field boundary
+        //      - Reject poses that jump >1m from current estimate
+        //    Std dev formula (Gray Matter / community consensus):
+        //      xyStdDev = 0.5 * avgTagDist² / tagCount
+        //    Heading std = 9999999 — always trust gyro, never vision heading.
+        visionConfidence += processCamera(leftPose, spinningTooFast);
+        visionConfidence += processCamera(rightPose, spinningTooFast);
 
         ShotCalculator.ShotInputs inputs = new ShotCalculator.ShotInputs(
                 swerve.getPose(),
@@ -193,19 +186,47 @@ public class Vision extends SubsystemBase {
     }
 
     /**
-     * Hard-seeds both Limelight IMUs with the current robot heading.
+     * Validates and processes a single camera's MT2 pose estimate.
+     * Returns 0.5 if the measurement was accepted, 0.0 if rejected.
+     */
+    private double processCamera(LimelightHelpers.PoseEstimate pose, boolean spinningTooFast) {
+        if (spinningTooFast || pose == null || pose.tagCount == 0) {
+            return 0.0;
+        }
+
+        // Reject poses outside the field boundary.
+        double x = pose.pose.getX();
+        double y = pose.pose.getY();
+        if (x < 0 || x > FIELD_LENGTH || y < 0 || y > FIELD_WIDTH) {
+            return 0.0;
+        }
+
+        // Reject poses that jump more than 1m from current estimate.
+        double jumpM = swerve.getPose().getTranslation().getDistance(pose.pose.getTranslation());
+        if (jumpM > 1.0) {
+            return 0.0;
+        }
+
+        // Community std dev formula: 0.5 * avgTagDist² / tagCount.
+        // Heading std = 9999999 — always trust gyro.
+        double xyStdDev = 0.5 * Math.pow(pose.avgTagDist, 2.0) / pose.tagCount;
+        swerve.addVisionMeasurement(pose.pose, pose.timestampSeconds,
+                VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+        return 0.5;
+    }
+
+    /**
+     * Hard-seeds both Limelight IMUs with the given heading.
      *
-     * In mode 4 (enabled), the Limelight uses its internal 1kHz IMU with only gentle
-     * external correction. After a gyro reset the internal IMU won't snap to the new
-     * heading for several seconds. Calling this immediately after resetGyro() forces a
-     * one-shot mode-1 seed so MegaTag2 estimates are correct right away.
-     * The next periodic() call will restore the correct mode (1 or 4).
-     *
-     * Call order matters: invoke this AFTER swerve.resetGyro() so getPose() already
-     * returns the new heading (0°).
+     * Since resetGyro() no longer calls gyro.setYaw(), we can't rely on reading
+     * the gyro here — the raw gyro value hasn't changed. Instead, callers pass
+     * the intended heading so the seed is always correct.
      */
     public void seedIMU() {
-        double headingDeg = swerve.getGyroYaw().getDegrees();
+        // After resetGyro(), the estimator heading is the new target heading.
+        // The raw gyro hasn't changed, but the estimator has been offset.
+        // Feed the estimator heading (which is now the desired heading) to the Limelights.
+        double headingDeg = swerve.getHeading().getDegrees();
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
