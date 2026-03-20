@@ -64,6 +64,12 @@ public class Vision extends SubsystemBase {
     // cycle until we get a reliable multi-tag result to localize from.
     private boolean poseBootstrapped = false;
 
+    // After seedIMU(), keep the Limelights in seed mode (mode 1) for this many
+    // cycles so the internal IMU actually absorbs the new heading before switching
+    // back to fused mode (mode 4). At 50 Hz, 10 cycles ≈ 200 ms.
+    private static final int SEED_COOLDOWN_CYCLES = 10;
+    private int seedCooldown = 0;
+
     // Rejection counters for field debugging (reset each cycle).
     private int rejectSpin = 0;
     private int rejectNull = 0;
@@ -104,8 +110,15 @@ public class Vision extends SubsystemBase {
     public void periodic() {
         // 1. IMU mode: seed internal IMU from external gyro while disabled (mode 1),
         //    switch to fused internal+external mode while enabled (mode 4).
-        //    Docs: mode 1 seeds each frame; mode 4 uses LL4's 1kHz IMU + gentle external correction.
-        int imuMode = DriverStation.isEnabled() ? 4 : 1;
+        //    After a seedIMU() call, stay in mode 1 for SEED_COOLDOWN_CYCLES so
+        //    the Limelight actually absorbs the new heading before fusing.
+        int imuMode;
+        if (seedCooldown > 0) {
+            imuMode = 1;   // still absorbing a seed
+            seedCooldown--;
+        } else {
+            imuMode = DriverStation.isEnabled() ? 4 : 1;
+        }
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, imuMode);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, imuMode);
 
@@ -361,10 +374,16 @@ public class Vision extends SubsystemBase {
      *                   resetGyro, NOT a live gyro read).
      */
     public void seedIMU(double headingDeg) {
-        LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
-        LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
+        // MUST set mode 1 (seed) BEFORE sending the heading. In mode 4 (fused),
+        // SetRobotOrientation is a gentle correction that takes many seconds to
+        // converge. In mode 1 it's a hard reset — instant effect.
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 1);
+        LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
+        LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
+        // Keep mode 1 for several cycles so the LL absorbs the seed before
+        // periodic() switches back to mode 4.
+        seedCooldown = SEED_COOLDOWN_CYCLES;
         // Manual seed means pose is known — skip MT1 bootstrap.
         poseBootstrapped = true;
     }
