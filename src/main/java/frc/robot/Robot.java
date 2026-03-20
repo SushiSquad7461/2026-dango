@@ -138,6 +138,10 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+    // Re-bootstrap full pose from vision at the start of teleop.
+    // If auto didn't finish cleanly, odometry may have drifted — a fresh
+    // MT1 multi-tag observation will snap position + heading back to reality.
+    robotContainer.onTeleopStart();
   }
 
   /** This function is called periodically during operator control. */

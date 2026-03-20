@@ -157,4 +157,10 @@ public class RobotContainer {
         public void resetModulesToAbsolute() {
                 swerve.resetModulesToAbsolute();
         }
+
+        /** Re-bootstrap vision pose at auto→teleop transition. */
+        public void onTeleopStart() {
+                vision.requestRebootstrap();
+                vision.resetWarmStart();
+        }
 }

@@ -59,10 +59,10 @@ public class Vision extends SubsystemBase {
     private final ShotCalculator shotCalc;
     private final Swerve swerve;
 
-    // True until the first multi-tag MT1 observation seeds the gyro offset.
-    // While bootstrapping, we use MT1 (which solves for heading from geometry)
-    // instead of MT2 (which requires a correct heading input).
-    private boolean headingBootstrapped = false;
+    // True once a multi-tag MT1 observation has seeded the full pose
+    // (position + heading + gyro offset). While false, we query MT1 each
+    // cycle until we get a reliable multi-tag result to localize from.
+    private boolean poseBootstrapped = false;
 
     // Rejection counters for field debugging (reset each cycle).
     private int rejectSpin = 0;
@@ -120,15 +120,14 @@ public class Vision extends SubsystemBase {
             hubForward = RED_HUB_FORWARD;
         }
 
-        // 3. Heading bootstrap: on first boot, the gyro offset is 0° which may be
-        //    wrong if the robot starts at an arbitrary orientation. Use MegaTag1
-        //    (which solves for heading from tag geometry alone) to get a reliable
-        //    multi-tag heading, seed the gyro offset, then switch to MT2 for all
-        //    subsequent cycles.
+        // 3. Pose bootstrap: on first boot (or after auto→teleop), the gyro offset
+        //    and position may be wrong. Use MegaTag1 (which solves for full pose
+        //    from tag geometry alone) to get a reliable multi-tag localization,
+        //    then switch to MT2 for all subsequent cycles.
         double yawRateDegPerSec = Math.toDegrees(swerve.getRobotRelativeSpeeds().omegaRadiansPerSecond);
 
-        if (!headingBootstrapped) {
-            tryBootstrapHeading(yawRateDegPerSec);
+        if (!poseBootstrapped) {
+            tryBootstrapPose(yawRateDegPerSec);
         }
 
         // 4. Feed heading and yaw rate to both Limelights for MegaTag2.
@@ -209,7 +208,7 @@ public class Vision extends SubsystemBase {
         SmartDashboard.putNumber("Vision/RejectJump", rejectJump);
         SmartDashboard.putNumber("Vision/RejectAmbiguity", rejectAmbiguity);
         SmartDashboard.putNumber("Vision/AcceptCount", acceptCount);
-        SmartDashboard.putBoolean("Vision/HeadingBootstrapped", headingBootstrapped);
+        SmartDashboard.putBoolean("Vision/PoseBootstrapped", poseBootstrapped);
         SmartDashboard.putNumber("Vision/GyroFieldHeadingDeg", headingDeg);
     }
 
@@ -230,12 +229,21 @@ public class Vision extends SubsystemBase {
     }
 
     /**
-     * Attempts to bootstrap heading from MegaTag1 multi-tag observations.
-     * MT1 solves for both position AND heading from tag geometry, so it doesn't
-     * need a correct heading input. Once a reliable multi-tag MT1 pose is found,
-     * we use its heading to seed the gyro offset, then switch to MT2 permanently.
+     * Forces a full MT1 re-bootstrap on the next cycle. Call this at the
+     * auto→teleop transition so the robot re-localizes its full pose
+     * even if the auto path didn't finish cleanly.
      */
-    private void tryBootstrapHeading(double yawRateDegPerSec) {
+    public void requestRebootstrap() {
+        poseBootstrapped = false;
+    }
+
+    /**
+     * Attempts to bootstrap the full pose from MegaTag1 multi-tag observations.
+     * MT1 solves for position AND heading from tag geometry alone, so it doesn't
+     * need a correct heading input. Once a reliable multi-tag MT1 pose is found,
+     * we seed the pose estimator and gyro offset, then switch to MT2.
+     */
+    private void tryBootstrapPose(double yawRateDegPerSec) {
         // Don't bootstrap while spinning — MT1 heading is unreliable during fast rotation.
         if (Math.abs(yawRateDegPerSec) > 120.0) {
             return;
@@ -261,7 +269,7 @@ public class Vision extends SubsystemBase {
         // (position + heading) and compute the gyro offset.
         Rotation2d mt1Heading = mt1.pose.getRotation();
         swerve.setPose(mt1.pose);
-        headingBootstrapped = true;
+        poseBootstrapped = true;
 
         // Also re-seed the Limelight IMUs with the corrected heading.
         seedIMU(mt1Heading.getDegrees());
@@ -326,9 +334,17 @@ public class Vision extends SubsystemBase {
             return 0.0;
         }
 
-        // Community std dev formula: 0.5 * avgTagDist² / tagCount.
+        // Tiered std dev formula — trust multi-tag poses much more aggressively.
+        // Multi-tag MT2 is geometrically well-constrained; single-tag needs caution.
+        //   2+ tags: 0.3 * avgDist / tagCount  (linear — e.g. 2 tags @ 2m → 0.3m)
+        //   1  tag:  0.5 * avgDist²             (quadratic — e.g. 1 tag @ 3m → 4.5m)
         // Heading std = 9999999 — always trust gyro.
-        double xyStdDev = 0.5 * Math.pow(pose.avgTagDist, 2.0) / pose.tagCount;
+        double xyStdDev;
+        if (pose.tagCount >= 2) {
+            xyStdDev = 0.3 * pose.avgTagDist / pose.tagCount;
+        } else {
+            xyStdDev = 0.5 * Math.pow(pose.avgTagDist, 2.0);
+        }
         swerve.addVisionMeasurement(pose.pose, pose.timestampSeconds,
                 VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
         acceptCount++;
@@ -349,7 +365,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, 1);
-        // Manual seed means heading is known — skip MT1 bootstrap.
-        headingBootstrapped = true;
+        // Manual seed means pose is known — skip MT1 bootstrap.
+        poseBootstrapped = true;
     }
 }
