@@ -43,6 +43,29 @@ public class Constants {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
+
+    // Hub positions (blue-origin coordinate system)
+    public static final Translation2d BLUE_HUB_CENTER  = new Translation2d(4.029, 4.034);
+    public static final Translation2d BLUE_HUB_FORWARD = new Translation2d(1, 0);
+    public static final Translation2d RED_HUB_CENTER   = new Translation2d(12.513, 4.034);
+    public static final Translation2d RED_HUB_FORWARD  = new Translation2d(-1, 0);
+
+    // Field boundary limits for rejecting wild MT2 poses (meters)
+    public static final double FIELD_LENGTH = 16.54;
+    public static final double FIELD_WIDTH  = 8.07;
+
+    // Jump-distance thresholds for pose rejection (meters)
+    public static final double JUMP_THRESHOLD_SINGLE_TAG = 1.0;
+    public static final double JUMP_THRESHOLD_MULTI_TAG  = 20.0;
+
+    // Maximum single-tag ambiguity to accept
+    public static final double MAX_SINGLE_TAG_AMBIGUITY = 0.7;
+
+    // Minimum tag count for MT1 bootstrap
+    public static final int MT1_BOOTSTRAP_MIN_TAGS = 2;
+
+    // Cycles to hold seed mode after seedIMU() (at 50 Hz, 10 ≈ 200 ms)
+    public static final int SEED_COOLDOWN_CYCLES = 10;
   }
   public static final class Shooter{
     // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.

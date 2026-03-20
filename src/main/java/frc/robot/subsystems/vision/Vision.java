@@ -12,50 +12,6 @@ import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 
 public class Vision extends SubsystemBase {
-    // -------------------------------------------------------------------------
-    // 2026 REBUILT field constants (WPILib blue-origin coordinate system)
-    //
-    //   Field: 16.54m long (X) x 8.07m wide (Y)
-    //   Origin: bottom-right corner of the BLUE alliance wall, +X toward Red.
-    //
-    //   Hub positions are derived from the FIRST field drawings:
-    //     - The Hub is a 47in x 47in (~1.194m x 1.194m) element.
-    //     - It is centered on the Y axis (Y = 8.07 / 2 = 4.035m).
-    //     - The front face of the Alliance Zone is 158.6in (~4.029m) from the
-    //       alliance wall; the Hub sits against the back of that zone, placing
-    //       its center roughly 120in (~3.048m) from its own alliance wall.
-    //
-    //   TODO: Verify HUB_CENTER_X_BLUE against the official Onshape model or
-    //   the WPILib 2026-rebuilt-welded.json AprilTag layout before competition.
-    //   The AprilTag layout file is the most reliable source once available on
-    //   your robot's WPILib installation.
-    // -------------------------------------------------------------------------
-    private static final Translation2d BLUE_HUB_CENTER  = new Translation2d(4.029, 4.034);
-    private static final Translation2d BLUE_HUB_FORWARD = new Translation2d(1, 0);  // hub faces +X (toward field center)
-
-    private static final Translation2d RED_HUB_CENTER   = new Translation2d(12.513, 4.034);
-    private static final Translation2d RED_HUB_FORWARD  = new Translation2d(-1, 0);  // hub faces -X (toward field center)
-
-    // Field boundary limits for rejecting wild MT2 poses (meters).
-    private static final double FIELD_LENGTH = 16.54;
-    private static final double FIELD_WIDTH  = 8.07;
-
-    // Jump-distance thresholds for pose rejection.
-    // Multi-tag poses are far more reliable, so we allow much larger jumps
-    // (including initial localization from any starting position on the field).
-    private static final double JUMP_THRESHOLD_SINGLE_TAG = 1.0;   // meters
-    private static final double JUMP_THRESHOLD_MULTI_TAG  = 20.0;  // meters (> field diagonal, allows init from anywhere)
-
-    // Maximum single-tag ambiguity to accept (MT2 resolves most ambiguity via
-    // gyro heading, but very high values indicate poor corner detection).
-    private static final double MAX_SINGLE_TAG_AMBIGUITY = 0.7;
-
-    // Minimum tag count required for the MT1 bootstrap to accept a heading.
-    // 2+ tags give MT1 a reliable heading; single-tag MT1 has severe ambiguity.
-    private static final int MT1_BOOTSTRAP_MIN_TAGS = 2;
-
-    // -------------------------------------------------------------------------
-
     private final ShotCalculator shotCalc;
     private final Swerve swerve;
 
@@ -64,10 +20,6 @@ public class Vision extends SubsystemBase {
     // cycle until we get a reliable multi-tag result to localize from.
     private boolean poseBootstrapped = false;
 
-    // After seedIMU(), keep the Limelights in seed mode (mode 1) for this many
-    // cycles so the internal IMU actually absorbs the new heading before switching
-    // back to fused mode (mode 4). At 50 Hz, 10 cycles ≈ 200 ms.
-    private static final int SEED_COOLDOWN_CYCLES = 10;
     private int seedCooldown = 0;
 
     // Rejection counters for field debugging (reset each cycle).
@@ -124,13 +76,13 @@ public class Vision extends SubsystemBase {
 
         // 2. Alliance-aware hub selection.
         //    Must live in periodic() so it picks up FMS alliance assignment after init.
-        Translation2d hubCenter  = BLUE_HUB_CENTER;
-        Translation2d hubForward = BLUE_HUB_FORWARD;
+        Translation2d hubCenter  = Constants.Vision.BLUE_HUB_CENTER;
+        Translation2d hubForward = Constants.Vision.BLUE_HUB_FORWARD;
 
         var alliance = DriverStation.getAlliance();
         if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
-            hubCenter  = RED_HUB_CENTER;
-            hubForward = RED_HUB_FORWARD;
+            hubCenter  = Constants.Vision.RED_HUB_CENTER;
+            hubForward = Constants.Vision.RED_HUB_FORWARD;
         }
 
         // 3. Pose bootstrap: on first boot (or after auto→teleop), the gyro offset
@@ -274,7 +226,7 @@ public class Vision extends SubsystemBase {
         // Validate the MT1 pose is on the field.
         double x = mt1.pose.getX();
         double y = mt1.pose.getY();
-        if (x < 0 || x > FIELD_LENGTH || y < 0 || y > FIELD_WIDTH) {
+        if (x < 0 || x > Constants.Vision.FIELD_LENGTH || y < 0 || y > Constants.Vision.FIELD_WIDTH) {
             return;
         }
 
@@ -294,8 +246,8 @@ public class Vision extends SubsystemBase {
      */
     private LimelightHelpers.PoseEstimate pickBestMT1(
             LimelightHelpers.PoseEstimate a, LimelightHelpers.PoseEstimate b) {
-        boolean aValid = a != null && a.tagCount >= MT1_BOOTSTRAP_MIN_TAGS;
-        boolean bValid = b != null && b.tagCount >= MT1_BOOTSTRAP_MIN_TAGS;
+        boolean aValid = a != null && a.tagCount >= Constants.Vision.MT1_BOOTSTRAP_MIN_TAGS;
+        boolean bValid = b != null && b.tagCount >= Constants.Vision.MT1_BOOTSTRAP_MIN_TAGS;
         if (!aValid && !bValid) return null;
         if (!bValid) return a;
         if (!aValid) return b;
@@ -321,7 +273,7 @@ public class Vision extends SubsystemBase {
         // Reject poses outside the field boundary.
         double x = pose.pose.getX();
         double y = pose.pose.getY();
-        if (x < 0 || x > FIELD_LENGTH || y < 0 || y > FIELD_WIDTH) {
+        if (x < 0 || x > Constants.Vision.FIELD_LENGTH || y < 0 || y > Constants.Vision.FIELD_WIDTH) {
             rejectBounds++;
             return 0.0;
         }
@@ -332,7 +284,7 @@ public class Vision extends SubsystemBase {
         if (pose.tagCount == 1
                 && pose.rawFiducials != null
                 && pose.rawFiducials.length > 0
-                && pose.rawFiducials[0].ambiguity > MAX_SINGLE_TAG_AMBIGUITY) {
+                && pose.rawFiducials[0].ambiguity > Constants.Vision.MAX_SINGLE_TAG_AMBIGUITY) {
             rejectAmbiguity++;
             return 0.0;
         }
@@ -340,7 +292,7 @@ public class Vision extends SubsystemBase {
         // Dynamic jump threshold: multi-tag poses are far more reliable, so
         // allow larger jumps. This also solves the startup problem where the
         // estimator begins at (0,0) and rejects the first valid vision pose.
-        double jumpThreshold = (pose.tagCount >= 2) ? JUMP_THRESHOLD_MULTI_TAG : JUMP_THRESHOLD_SINGLE_TAG;
+        double jumpThreshold = (pose.tagCount >= 2) ? Constants.Vision.JUMP_THRESHOLD_MULTI_TAG : Constants.Vision.JUMP_THRESHOLD_SINGLE_TAG;
         double jumpM = swerve.getPose().getTranslation().getDistance(pose.pose.getTranslation());
         if (jumpM > jumpThreshold) {
             rejectJump++;
@@ -383,7 +335,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         // Keep mode 1 for several cycles so the LL absorbs the seed before
         // periodic() switches back to mode 4.
-        seedCooldown = SEED_COOLDOWN_CYCLES;
+        seedCooldown = Constants.Vision.SEED_COOLDOWN_CYCLES;
         // Manual seed means pose is known — skip MT1 bootstrap.
         poseBootstrapped = true;
     }
