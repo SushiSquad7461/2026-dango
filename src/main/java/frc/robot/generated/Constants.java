@@ -17,10 +17,7 @@ import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
@@ -45,26 +42,7 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
-    public static final int[] BLUE_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
-    public static PIDController distancePID = new PIDController(1.3, 0, 0);
-    public static final double targetDistanceMeters = Units.feetToMeters(9);
-    // Max tag distance for the startup hard-reset. Beyond this, single-tag translation error
-    // is large enough that a hard reset could put the pose further off than leaving it alone.
-    public static final double POSE_INIT_MAX_TAG_DIST_M = 4.0;
-    // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
-    // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
-    public static Pose3d cameraPosePrimary = new Pose3d(
-        new Translation3d(-0.263525, 0.263525, 0.2439162),
-        new Rotation3d(0, Math.toRadians(20), Math.toRadians(150))
-    );
-    // limelight-right (secondary): forward=-0.263525m, right=0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=-150°
-    public static Pose3d cameraPoseSecondary = new Pose3d(
-        new Translation3d(-0.263525, -0.263525, 0.2439162),
-        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
-    );
   }
   public static final class Shooter{
     // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.

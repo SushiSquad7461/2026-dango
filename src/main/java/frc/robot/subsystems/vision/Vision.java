@@ -45,9 +45,6 @@ public class Vision extends SubsystemBase {
     // the main robot thread, so no synchronization is needed.
     private ShotCalculator.LaunchParameters currentShot = ShotCalculator.LaunchParameters.INVALID;
 
-    // Hard-reset the pose estimator once on the first confident multi-tag fix so
-    // the robot doesn't start at field origin (0, 0) and slowly converge.
-    private boolean poseInitialized = false;
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
@@ -99,7 +96,10 @@ public class Vision extends SubsystemBase {
         }
 
         // 4. Feed heading and yaw rate to both Limelights for MegaTag2.
-        double headingDeg    = swerve.getPose().getRotation().getDegrees();
+        //    MUST use raw gyro heading, NOT the pose estimator heading. The estimator
+        //    heading includes vision corrections, which creates a feedback loop:
+        //    wrong vision → wrong heading → worse MegaTag2 → pose drifts.
+        double headingDeg    = swerve.getHeading().getDegrees();
         double yawRateDegPerSec = Math.toDegrees(swerve.getRobotRelativeSpeeds().omegaRadiansPerSecond);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
@@ -120,14 +120,6 @@ public class Vision extends SubsystemBase {
         if (!spinningTooFast && leftPose != null && leftPose.tagCount > 0) {
             visionConfidence += 0.5;
 
-            // On the first confident multi-tag reading, hard-reset the pose estimator
-            // so the robot doesn't spend several seconds converging from (0, 0, 0°).
-            if (!poseInitialized && leftPose.tagCount >= 2 && leftPose.avgTagDist < Constants.Vision.POSE_INIT_MAX_TAG_DIST_M) {
-                swerve.setPose(leftPose.pose);
-                seedIMU();
-                poseInitialized = true;
-            }
-
             // Base std dev is tighter with multiple tags, and increases with distance.
             // 9999999 on heading tells the Kalman filter to ignore vision heading;
             // MegaTag2 heading comes from the IMU, not vision.
@@ -140,12 +132,6 @@ public class Vision extends SubsystemBase {
         // 7. Process right Limelight.
         if (!spinningTooFast && rightPose != null && rightPose.tagCount > 0) {
             visionConfidence += 0.5;
-
-            if (!poseInitialized && rightPose.tagCount >= 2 && rightPose.avgTagDist < Constants.Vision.POSE_INIT_MAX_TAG_DIST_M) {
-                swerve.setPose(rightPose.pose);
-                seedIMU();
-                poseInitialized = true;
-            }
 
             double xyStdDev = rightPose.tagCount > 1 ? 0.1 : 0.5;
             xyStdDev += Math.pow(rightPose.avgTagDist, 2.0) * 0.1;
@@ -219,7 +205,7 @@ public class Vision extends SubsystemBase {
      * returns the new heading (0°).
      */
     public void seedIMU() {
-        double headingDeg = swerve.getPose().getRotation().getDegrees();
+        double headingDeg = swerve.getHeading().getDegrees();
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, 0, 0, 0, 0, 0);
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName,   1);
