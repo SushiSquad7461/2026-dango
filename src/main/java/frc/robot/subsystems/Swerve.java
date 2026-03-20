@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import org.photonvision.EstimatedRobotPose;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
@@ -309,10 +309,11 @@ public class Swerve extends SubsystemBase {
 
     public Command resetHeading() {
         return runOnce(() -> {
-            setPose(
-                    new Pose2d(
-                            getPose().getTranslation(),
-                            AllianceUtil.isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()));
+            double yaw = AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
+            gyro.setYaw(yaw);
+            Rotation2d targetYaw = Rotation2d.fromDegrees(yaw);
+            poseEstimator.resetPosition(targetYaw, getModulePositions(),
+                    new Pose2d(getPose().getTranslation(), targetYaw));
         });
     }
     
@@ -339,7 +340,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getHeading() {
-        return getGyroYaw();// getPose().getRotation();
+        return getPose().getRotation();
     }
 
     public Rotation2d getGyroYaw() {
@@ -360,34 +361,21 @@ public class Swerve extends SubsystemBase {
                     ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
                     : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0));
             gyro.setYaw(targetPose.getRotation().getDegrees());
-            setPose(targetPose);
+            poseEstimator.resetPosition(targetPose.getRotation(), getModulePositions(), targetPose);
         });
     }
 
     public void resetGyro() {
-        if (AllianceUtil.isRedAlliance()) {
-            gyro.setYaw(180);
-            setPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(180)));
-        } else {
-            gyro.setYaw(0);
-            setPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
-        }
+        double yaw = AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
+        gyro.setYaw(yaw);
+        // Pass target yaw directly — gyro.setYaw() is async (CAN), so getGyroYaw()
+        // still returns the old value. Using the stale reading causes the estimator
+        // to compute a wrong internal offset, which makes the heading jump once the
+        // gyro actually updates.
+        Rotation2d targetYaw = Rotation2d.fromDegrees(yaw);
+        poseEstimator.resetPosition(targetYaw, getModulePositions(),
+                new Pose2d(getPose().getTranslation(), targetYaw));
     }
-
-    /**
-     * The latest estimated robot pose on the field from vision data. This may be
-     * empty. This should
-     * only be called once per loop.
-     *
-     * <p>
-     * Also includes updates for the standard deviations, which can (optionally) be
-     * retrieved with
-     * {@link getEstimationStdDevs}
-     *
-     * @return An {@link EstimatedRobotPose} with an estimated pose, estimate
-     *         timestamp, and targets
-     *         used for estimation.
-     */
 
     @Override
     public void periodic() {
