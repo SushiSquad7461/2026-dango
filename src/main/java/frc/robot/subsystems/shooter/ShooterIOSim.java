@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.generated.Constants;
 
 public class ShooterIOSim implements ShooterIO {
@@ -9,6 +10,15 @@ public class ShooterIOSim implements ShooterIO {
     public static class ShooterData{
         public double appliedVolts = 0.0;
         public double currentAmps = 0.0;
+        public double legacyFlywheelRPM = 0.0;
+        public boolean legacyReady = false;
+        public double sotmFlywheelRPM = 0.0;
+        public boolean sotmReady = false;
+        public boolean sotmShotActive = false;
+        public double sotmConfidence = 0.0;
+        public double sotmTofSec = 0.0;
+        public double sotmDragCompensatedTofSec = 0.0;
+        public boolean shotSourceIsSotm = true;
     }
 
     public final ShooterData data = new ShooterData();
@@ -17,17 +27,20 @@ public class ShooterIOSim implements ShooterIO {
     private static final double SHOOTER_SUPPLY_CURRENT_LIMIT_AMPS = 70.0;
     private static final double FEEDER_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
-    private double simulatedRPM = 0; 
+    private double legacySimulatedRPM = 0; 
     private double targetRPM = 0;  
     private int feederDirection = 0;
     private double flywheelAppliedVolts = 0.0;
     private double hoodPos = 0;    
+    private double lastModelUpdateSec = Timer.getFPGATimestamp();
+    private final SOTMShotPhysicsSim sotmShotSim = new SOTMShotPhysicsSim();
 
     @Override
     public void runShooter(double rpm) {
         targetRPM = rpm;
         flywheelAppliedVolts = calculateFlywheelAppliedVolts(targetRPM);
         data.appliedVolts = flywheelAppliedVolts;
+        updateShotModels();
         updateCurrentDraw();
     }
 
@@ -35,21 +48,22 @@ public class ShooterIOSim implements ShooterIO {
     @Override
     public void runFeeder() {
         feederDirection = -1;
+        updateShotModels();
         updateCurrentDraw();
     }
 
     @Override
     public void stopFeeder() {
         feederDirection = 0;
+        updateShotModels();
         updateCurrentDraw();
     }
 
     @Override
     public double getFlywheelRPM() {
-        double diff = targetRPM - simulatedRPM;
-        simulatedRPM += diff * 0.1; 
+        updateShotModels();
         updateCurrentDraw();
-        return simulatedRPM;
+        return data.sotmFlywheelRPM;
     }
 
     public double getHoodPos() {
@@ -64,7 +78,8 @@ public class ShooterIOSim implements ShooterIO {
 
     @Override
     public boolean isShooterReady() {
-        return Math.abs(simulatedRPM - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
+        updateShotModels();
+        return data.sotmReady;
     }
 
     @Override
@@ -75,6 +90,7 @@ public class ShooterIOSim implements ShooterIO {
     @Override
     public void runFeederBack() {
         feederDirection = 1;
+        updateShotModels();
         updateCurrentDraw();
     }
 
@@ -83,7 +99,40 @@ public class ShooterIOSim implements ShooterIO {
         targetRPM = rpm / 2.0;
         flywheelAppliedVolts = calculateFlywheelAppliedVolts(targetRPM);
         data.appliedVolts = flywheelAppliedVolts;
+        updateShotModels();
         updateCurrentDraw();
+    }
+
+    private void updateShotModels() {
+        double nowSec = Timer.getFPGATimestamp();
+        double dtSec = nowSec - lastModelUpdateSec;
+        if (dtSec <= 0.0) {
+            data.legacyFlywheelRPM = legacySimulatedRPM;
+            data.legacyReady =
+                Math.abs(legacySimulatedRPM - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
+            return;
+        }
+        if (dtSec > 0.1) dtSec = 0.1;
+        lastModelUpdateSec = nowSec;
+
+        double legacyGain = 0.1 * (dtSec / 0.02);
+        if (legacyGain < 0.0) legacyGain = 0.0;
+        if (legacyGain > 1.0) legacyGain = 1.0;
+        legacySimulatedRPM += (targetRPM - legacySimulatedRPM) * legacyGain;
+        data.legacyFlywheelRPM = legacySimulatedRPM;
+        data.legacyReady =
+            Math.abs(legacySimulatedRPM - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
+
+        var sotmOutput =
+            sotmShotSim.update(
+                targetRPM, feederDirection, Constants.Shooter.SHOOTER_RPM_TOLERANCE, dtSec);
+        data.sotmFlywheelRPM = sotmOutput.flywheelRPM;
+        data.sotmReady = sotmOutput.shooterReady;
+        data.sotmShotActive = sotmOutput.shotActive;
+        data.sotmConfidence = sotmOutput.confidence;
+        data.sotmTofSec = sotmOutput.tofSec;
+        data.sotmDragCompensatedTofSec = sotmOutput.dragCompensatedTofSec;
+        data.shotSourceIsSotm = true;
     }
 
     private double calculateFlywheelAppliedVolts(double rpm) {

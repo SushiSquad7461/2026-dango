@@ -123,6 +123,16 @@ public class ShooterSubsystem extends SubsystemBase {
         if (io instanceof ShooterIOSim simIo) {
           Logger.recordOutput("Shooter/AppliedVolts", simIo.data.appliedVolts);
           Logger.recordOutput("Shooter/CurrentAmps", simIo.data.currentAmps);
+          Logger.recordOutput("Shooter/LegacyFlywheelRPM", simIo.data.legacyFlywheelRPM);
+          Logger.recordOutput("Shooter/LegacyReady", simIo.data.legacyReady);
+          Logger.recordOutput("Shooter/SOTMFlywheelRPM", simIo.data.sotmFlywheelRPM);
+          Logger.recordOutput("Shooter/SOTMReady", simIo.data.sotmReady);
+          Logger.recordOutput("Shooter/SOTMShotActive", simIo.data.sotmShotActive);
+          Logger.recordOutput("Shooter/SOTMConfidence", simIo.data.sotmConfidence);
+          Logger.recordOutput("Shooter/SOTMTofSec", simIo.data.sotmTofSec);
+          Logger.recordOutput(
+              "Shooter/SOTMDragCompensatedTofSec", simIo.data.sotmDragCompensatedTofSec);
+          Logger.recordOutput("Shooter/ShotSourceIsSotm", simIo.data.shotSourceIsSotm);
         }
       }
       
