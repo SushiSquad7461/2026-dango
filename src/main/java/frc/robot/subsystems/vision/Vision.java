@@ -1,7 +1,7 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -45,6 +45,9 @@ public class Vision extends SubsystemBase {
     // the main robot thread, so no synchronization is needed.
     private ShotCalculator.LaunchParameters currentShot = ShotCalculator.LaunchParameters.INVALID;
 
+    // Track the last MT2 timestamp so we only setPose() on genuinely new frames.
+    private double lastMT2Timestamp = -1.0;
+
 
     public Vision(Swerve swerve) {
         this.swerve = swerve;
@@ -84,7 +87,7 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetIMUMode(Constants.Vision.primaryLimelightName, imuMode);
         LimelightHelpers.SetIMUMode(Constants.Vision.secondaryLimelightName, imuMode);
 
-        // 3. Alliance-aware hub selection.
+        // 2. Alliance-aware hub selection.
         //    Must live in periodic() so it picks up FMS alliance assignment after init.
         Translation2d hubCenter  = BLUE_HUB_CENTER;
         Translation2d hubForward = BLUE_HUB_FORWARD;
@@ -95,7 +98,7 @@ public class Vision extends SubsystemBase {
             hubForward = RED_HUB_FORWARD;
         }
 
-        // 4. Feed heading and yaw rate to both Limelights for MegaTag2.
+        // 3. Feed heading and yaw rate to both Limelights for MegaTag2.
         //    MUST use raw gyro heading, NOT the pose estimator heading. The estimator
         //    heading includes vision corrections, which creates a feedback loop:
         //    wrong vision → wrong heading → worse MegaTag2 → pose drifts.
@@ -104,39 +107,49 @@ public class Vision extends SubsystemBase {
         LimelightHelpers.SetRobotOrientation(Constants.Vision.primaryLimelightName,   headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
         LimelightHelpers.SetRobotOrientation(Constants.Vision.secondaryLimelightName, headingDeg, yawRateDegPerSec, 0, 0, 0, 0);
 
-        // 5. Fetch MegaTag2 pose estimates.
+        // 4. Fetch MegaTag2 pose estimates.
         LimelightHelpers.PoseEstimate leftPose  = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.primaryLimelightName);
         LimelightHelpers.PoseEstimate rightPose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(Constants.Vision.secondaryLimelightName);
 
         // visionConfidence is normalized to [0.0, 1.0] and passed into ShotInputs.
-        // Note: this is NOT the same scale as LaunchParameters.confidence(), which is 0–100.
         double visionConfidence = 0.0;
 
         // Limelight docs: reject vision updates when spinning too fast.
-        // Fast rotation makes pose estimates unreliable; 360°/s is the recommended threshold.
         boolean spinningTooFast = Math.abs(yawRateDegPerSec) > 360.0;
 
-        // 6. Process left Limelight.
-        if (!spinningTooFast && leftPose != null && leftPose.tagCount > 0) {
-            visionConfidence += 0.5;
+        boolean leftValid  = !spinningTooFast && leftPose  != null && leftPose.tagCount  > 0;
+        boolean rightValid = !spinningTooFast && rightPose != null && rightPose.tagCount > 0;
 
-            // Base std dev is tighter with multiple tags, and increases with distance.
-            // 9999999 on heading tells the Kalman filter to ignore vision heading;
-            // MegaTag2 heading comes from the IMU, not vision.
-            double xyStdDev = leftPose.tagCount > 1 ? 0.1 : 0.5;
-            xyStdDev += Math.pow(leftPose.avgTagDist, 2.0) * 0.1;
-            swerve.addVisionMeasurement(leftPose.pose, leftPose.timestampSeconds,
-                    VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+        if (leftValid)  visionConfidence += 0.5;
+        if (rightValid) visionConfidence += 0.5;
+
+        // 5. Direct MT2 pose: pick the best camera and hard-set the pose.
+        //    Prefer more tags; break ties by closer average tag distance.
+        //    No Kalman filtering — MT2 is the source of truth for X/Y.
+        //    Heading comes from the gyro (already seeded into MT2 above).
+        LimelightHelpers.PoseEstimate bestPose = null;
+        if (leftValid && rightValid) {
+            if (leftPose.tagCount > rightPose.tagCount) {
+                bestPose = leftPose;
+            } else if (rightPose.tagCount > leftPose.tagCount) {
+                bestPose = rightPose;
+            } else {
+                bestPose = leftPose.avgTagDist <= rightPose.avgTagDist ? leftPose : rightPose;
+            }
+        } else if (leftValid) {
+            bestPose = leftPose;
+        } else if (rightValid) {
+            bestPose = rightPose;
         }
 
-        // 7. Process right Limelight.
-        if (!spinningTooFast && rightPose != null && rightPose.tagCount > 0) {
-            visionConfidence += 0.5;
-
-            double xyStdDev = rightPose.tagCount > 1 ? 0.1 : 0.5;
-            xyStdDev += Math.pow(rightPose.avgTagDist, 2.0) * 0.1;
-            swerve.addVisionMeasurement(rightPose.pose, rightPose.timestampSeconds,
-                    VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
+        if (bestPose != null && bestPose.timestampSeconds != lastMT2Timestamp) {
+            // Only setPose on genuinely new MT2 frames. Between frames, the pose
+            // estimator integrates wheel odometry so the pose keeps tracking.
+            lastMT2Timestamp = bestPose.timestampSeconds;
+            Pose2d visionPose = new Pose2d(
+                    bestPose.pose.getTranslation(),
+                    swerve.getHeading());
+            swerve.setPose(visionPose);
         }
 
         ShotCalculator.ShotInputs inputs = new ShotCalculator.ShotInputs(
