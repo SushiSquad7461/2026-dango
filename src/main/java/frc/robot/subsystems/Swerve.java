@@ -14,6 +14,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -34,6 +35,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,6 +49,7 @@ public class Swerve extends SubsystemBase {
     private final SwerveModule[] mSwerveMods;
     private final BaseStatusSignal[] modStatusSignals;
     private final Pigeon2 gyro;
+    private final Pigeon2SimState gyroSimState;
     private final StatusSignal<Angle> gyroYaw;
     private final SysIdRoutine driveSysIdRoutine;
     private final SysIdRoutine steerSysIdRoutine;
@@ -76,6 +79,7 @@ public class Swerve extends SubsystemBase {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         gyro.setYaw(0);
+        gyroSimState = Constants.IS_SIM ? gyro.getSimState() : null;
         gyroYaw = gyro.getYaw();
         alignmentPID = new PIDController(0.15, 0, 0);
         alignmentPID.setTolerance(10, 10);
@@ -423,6 +427,11 @@ public class Swerve extends SubsystemBase {
         simCurrentDrawAmps = 0;
         for (var mod : mSwerveMods) {
             simCurrentDrawAmps += mod.simulationPeriodic();
+        }
+        if (gyroSimState != null) {
+            gyroSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+            var simOmegaDegPerSec = Math.toDegrees(getRobotRelativeSpeeds().omegaRadiansPerSecond);
+            gyroSimState.addYaw(simOmegaDegPerSec * 0.02);
         }
         Logger.recordOutput("Swerve/SimCurrentDrawAmps", simCurrentDrawAmps);
 
