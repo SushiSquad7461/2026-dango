@@ -334,16 +334,16 @@ public class Vision extends SubsystemBase {
             return 0.0;
         }
 
-        // Tiered std dev formula — trust multi-tag poses much more aggressively.
-        // Multi-tag MT2 is geometrically well-constrained; single-tag needs caution.
-        //   2+ tags: 0.3 * avgDist / tagCount  (linear — e.g. 2 tags @ 2m → 0.3m)
-        //   1  tag:  0.5 * avgDist²             (quadratic — e.g. 1 tag @ 3m → 4.5m)
+        // Linear std dev formula. MT2 resolves single-tag ambiguity via the
+        // gyro heading, so even single-tag poses are accurate — just slightly
+        // less trusted than multi-tag. The ambiguity filter above catches
+        // genuinely bad single-tag detections.
+        //   2+ tags: 0.3 * avgDist / tagCount  (e.g. 2 tags @ 2m → 0.3m)
+        //   1  tag:  0.5 * avgDist              (e.g. 1 tag @ 3m → 1.5m)
         // Heading std = 9999999 — always trust gyro.
-        double xyStdDev;
+        double xyStdDev = 0.5 * pose.avgTagDist / pose.tagCount;
         if (pose.tagCount >= 2) {
             xyStdDev = 0.3 * pose.avgTagDist / pose.tagCount;
-        } else {
-            xyStdDev = 0.5 * Math.pow(pose.avgTagDist, 2.0);
         }
         swerve.addVisionMeasurement(pose.pose, pose.timestampSeconds,
                 VecBuilder.fill(xyStdDev, xyStdDev, 9999999.0));
