@@ -312,10 +312,11 @@ public class Swerve extends SubsystemBase {
 
     public Command resetHeading() {
         return runOnce(() -> {
-            double yaw = AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
-            gyro.setYaw(yaw);
-            Rotation2d targetYaw = Rotation2d.fromDegrees(yaw);
-            poseEstimator.resetPosition(targetYaw, getModulePositions(),
+            // Don't call gyro.setYaw() — it's async over CAN and creates a race condition.
+            // Just tell the estimator "the gyro currently reads X, and I want heading Y".
+            // The estimator computes the offset internally.
+            Rotation2d targetYaw = Rotation2d.fromDegrees(AllianceUtil.isRedAlliance() ? 180.0 : 0.0);
+            poseEstimator.resetPosition(getGyroYaw(), getModulePositions(),
                     new Pose2d(getPose().getTranslation(), targetYaw));
         });
     }
@@ -367,20 +368,18 @@ public class Swerve extends SubsystemBase {
             Pose2d targetPose = AllianceUtil.isRedAlliance()
                     ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
                     : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0));
-            gyro.setYaw(targetPose.getRotation().getDegrees());
-            poseEstimator.resetPosition(targetPose.getRotation(), getModulePositions(), targetPose);
+            poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), targetPose);
         });
     }
 
+    /**
+     * Resets the estimator heading to 0° (Blue) or 180° (Red) without touching
+     * the hardware gyro. The estimator computes an internal offset from the
+     * current raw gyro reading, so there is no CAN race condition.
+     */
     public void resetGyro() {
-        double yaw = AllianceUtil.isRedAlliance() ? 180.0 : 0.0;
-        gyro.setYaw(yaw);
-        // Pass target yaw directly — gyro.setYaw() is async (CAN), so getGyroYaw()
-        // still returns the old value. Using the stale reading causes the estimator
-        // to compute a wrong internal offset, which makes the heading jump once the
-        // gyro actually updates.
-        Rotation2d targetYaw = Rotation2d.fromDegrees(yaw);
-        poseEstimator.resetPosition(targetYaw, getModulePositions(),
+        Rotation2d targetYaw = Rotation2d.fromDegrees(AllianceUtil.isRedAlliance() ? 180.0 : 0.0);
+        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(),
                 new Pose2d(getPose().getTranslation(), targetYaw));
     }
 
