@@ -58,10 +58,16 @@ public class Vision extends SubsystemBase {
             double camYaw = bestCam.equals(Constants.Vision.primaryLimelightName)
                     ? LEFT_CAM_YAW_DEG : RIGHT_CAM_YAW_DEG;
 
-            // Shooter alignment error: how far the shooter axis is off from the target.
-            // cameraYaw + tx = target angle from robot forward.
-            // Subtract shooter yaw (180°) to get error relative to shooter axis.
-            shooterErrorDeg = MathUtil.inputModulus(camYaw + tx - SHOOTER_YAW_DEG, -180, 180);
+            // Shooter alignment error.
+            // Limelight tx: positive = target to the RIGHT of camera center.
+            // In CCW-positive robot frame, "right" = decreasing angle, so:
+            //   target_angle = camYaw - tx
+            // We want the PID to output positive → CCW when the target is CCW from the shooter,
+            // and negative → CW when the target is CW from the shooter.
+            // error = SHOOTER_YAW - target_angle = 180 - camYaw + tx
+            // When error > 0: target is CW from shooter → PID outputs negative → CW rotation ✓
+            // When error < 0: target is CCW from shooter → PID outputs positive → CCW rotation ✓
+            shooterErrorDeg = MathUtil.inputModulus(SHOOTER_YAW_DEG - camYaw + tx, -180, 180);
 
             // Distance via trig: d = (tagH - camH) / tan(camPitch + ty)
             double angleDeg = CAMERA_PITCH_DEG + ty;
@@ -103,11 +109,11 @@ public class Vision extends SubsystemBase {
         boolean rightHas = LimelightHelpers.getTV(Constants.Vision.secondaryLimelightName);
         if (leftHas && rightHas) {
             double leftError  = Math.abs(MathUtil.inputModulus(
-                    LEFT_CAM_YAW_DEG + LimelightHelpers.getTX(Constants.Vision.primaryLimelightName)
-                            - SHOOTER_YAW_DEG, -180, 180));
+                    SHOOTER_YAW_DEG - LEFT_CAM_YAW_DEG
+                            + LimelightHelpers.getTX(Constants.Vision.primaryLimelightName), -180, 180));
             double rightError = Math.abs(MathUtil.inputModulus(
-                    RIGHT_CAM_YAW_DEG + LimelightHelpers.getTX(Constants.Vision.secondaryLimelightName)
-                            - SHOOTER_YAW_DEG, -180, 180));
+                    SHOOTER_YAW_DEG - RIGHT_CAM_YAW_DEG
+                            + LimelightHelpers.getTX(Constants.Vision.secondaryLimelightName), -180, 180));
             return (leftError <= rightError) ? Constants.Vision.primaryLimelightName
                                              : Constants.Vision.secondaryLimelightName;
         }
@@ -119,7 +125,7 @@ public class Vision extends SubsystemBase {
     // --- Public getters for AutoAlign ---
 
     public boolean hasTarget()              { return hasTarget; }
-    /** Degrees the shooter axis is off from the target. Positive = target is CW from shooter. */
+    /** Shooter-to-target error in degrees. Positive = target is CW from shooter (robot should rotate CW). */
     public double getShooterErrorDeg()      { return shooterErrorDeg; }
     public double getDistanceM()            { return distanceM; }
     public double getTargetRPM()            { return targetRPM; }
