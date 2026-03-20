@@ -42,7 +42,7 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
+    public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
   }
   public static final class Shooter{
     // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
