@@ -117,26 +117,33 @@ public class SOTMShotPhysicsSim {
             double targetDistanceMeters,
             double robotVxMetersPerSecond,
             double robotVyMetersPerSecond) {
-        double launchSpeedMps =
-                (Math.abs(output.flywheelRPM) / 60.0) * Constants.Swerve.wheelCircumference;
         double launchAngleDeg = hoodAngleDeg;
         if (!Double.isFinite(launchAngleDeg)) launchAngleDeg = 0.0;
         if (launchAngleDeg < 0.0) launchAngleDeg = 0.0;
         if (launchAngleDeg > 90.0) launchAngleDeg = 90.0;
+        double launchHeightMeters = Constants.Vision.cameraPosePrimary.getZ();
+        double targetHeightMeters = Constants.Vision.cameraPosePrimary.getZ();
+        double launchSpeedMps =
+                calculateLaunchSpeedMps(
+                        output.flywheelRPM,
+                        launchAngleDeg,
+                        targetDistanceMeters,
+                        launchHeightMeters,
+                        targetHeightMeters);
         double launchAngleRad = Math.toRadians(launchAngleDeg);
 
         shotInFlight = launchSpeedMps > EPSILON;
         shotTimeSec = 0.0;
         shotX = 0.0;
         shotY = 0.0;
-        shotZ = Constants.Vision.cameraPosePrimary.getZ();
+        shotZ = launchHeightMeters;
         shotVx = launchSpeedMps * Math.cos(launchAngleRad) + robotVxMetersPerSecond;
         shotVy = robotVyMetersPerSecond;
         shotVz = launchSpeedMps * Math.sin(launchAngleRad);
         shotInitialSpeedMps = hypot3(shotVx, shotVy, shotVz);
         shotTargetDistanceMeters = Math.max(targetDistanceMeters, 0.0);
         shotTargetYMeters = 0.0;
-        shotTargetHeightMeters = Constants.Vision.cameraPosePrimary.getZ();
+        shotTargetHeightMeters = targetHeightMeters;
         shotNoDragTofSec = shotVx > EPSILON ? shotTargetDistanceMeters / shotVx : 0.0;
         shotCooldownSec = 0.0;
         trajectory.clear();
@@ -195,6 +202,34 @@ public class SOTMShotPhysicsSim {
             }
         }
         return false;
+    }
+
+    private static double calculateLaunchSpeedMps(
+            double flywheelRpm,
+            double hoodAngleDeg,
+            double targetDistanceMeters,
+            double launchHeightMeters,
+            double targetHeightMeters) {
+        double distanceMeters = Math.max(targetDistanceMeters, 0.0);
+        double launchAngleRad = Math.toRadians(clamp(hoodAngleDeg, 0.0, 89.0));
+        double cos = Math.cos(launchAngleRad);
+        double tan = Math.tan(launchAngleRad);
+        double deltaHeightMeters = targetHeightMeters - launchHeightMeters;
+        double denominator = 2.0 * cos * cos * ((distanceMeters * tan) - deltaHeightMeters);
+        if (distanceMeters <= EPSILON || denominator <= EPSILON) {
+            return 0.0;
+        }
+        double speedAtDefaultTargetRpmMps =
+                Math.sqrt((GRAVITY_MPS2 * distanceMeters * distanceMeters) / denominator);
+        if (!Double.isFinite(speedAtDefaultTargetRpmMps)) {
+            return 0.0;
+        }
+        double defaultTargetRpm = Math.abs(Constants.Shooter.TARGET_RPM_DEFAULT);
+        if (defaultTargetRpm <= EPSILON) {
+            return 0.0;
+        }
+        double rpmScale = Math.abs(flywheelRpm) / defaultTargetRpm;
+        return speedAtDefaultTargetRpmMps * rpmScale;
     }
 
     private static double minShotIntervalSec() {

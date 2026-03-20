@@ -318,6 +318,8 @@ public class Constants {
         public static final double pivotD = 0.0;
 
         public static final double rollerSpeed = -0.35;//0.60;
+        public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
+        public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;

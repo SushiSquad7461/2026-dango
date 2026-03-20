@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.generated.Constants;
+import org.littletonrobotics.junction.Logger;
 
 public class ShooterIOSim implements ShooterIO {
 
@@ -175,6 +176,12 @@ public class ShooterIOSim implements ShooterIO {
         data.sotmNotePose = sotmOutput.notePose;
         data.sotmTrajectory = sotmOutput.trajectory;
         data.shotSourceIsSotm = true;
+        if (data.sotmShotActive || data.sotmTrajectory.length > 0) {
+            Logger.recordOutput("Gamepieces/SOTMNote", new Pose3d[] {data.sotmNotePose});
+        } else {
+            Logger.recordOutput("Gamepieces/SOTMNote", new Pose3d[] {});
+        }
+        Logger.recordOutput("Gamepieces/SOTMTrajectory", data.sotmTrajectory);
     }
 
     private double calculateFlywheelAppliedVolts(double rpm) {

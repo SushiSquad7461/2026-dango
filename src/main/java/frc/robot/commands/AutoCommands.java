@@ -43,14 +43,11 @@ public class AutoCommands {
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
-            autoChooser.addOption("B1_Hub_HP", new PathPlannerAuto("B1_Hub_HP"));
-            autoChooser.addOption("B2_Hub_HP", new PathPlannerAuto("B2_Hub_HP"));
-            autoChooser.addOption("B3_Hub_HP", new PathPlannerAuto("B3_Hub_HP"));
+            autoChooser.addOption("N_Shoot", new PathPlannerAuto("N_Shoot"));
+            autoChooser.addOption("Ideal_N_Shoot", new PathPlannerAuto("Ideal_N_Shoot"));
+            autoChooser.addOption("Test_Ideal_N_Shoot", new PathPlannerAuto("Test_Ideal_N_Shoot"));
             autoChooser.addOption("Shoot_Still", new PathPlannerAuto("Shoot_Still"));
-            autoChooser.addOption("B1_Hub_HP_Shoot", new PathPlannerAuto("B1_Hub_HP_Shoot"));
-            autoChooser.addOption("B2_Hub_HP_Shoot", new PathPlannerAuto("B2_Hub_HP_Shoot"));
             autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
-            autoChooser.addOption("B3_Hub_HP_Shoot", new PathPlannerAuto("B3_Hub_HP_Shoot"));
             autoChooser.addOption("Shoot_N_Shoot", new PathPlannerAuto("Shoot_N_Shoot"));
             autoChooser.addOption("Shoot_Neutral_Trench", new PathPlannerAuto("Shoot_Neutral_Trench"));
             SmartDashboard.putData("Auto Chooser", autoChooser);

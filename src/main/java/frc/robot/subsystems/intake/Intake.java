@@ -40,6 +40,9 @@ public class Intake extends SubsystemBase{
     public IntakeState getState(){
         return this.state;
     }
+    public void setWantedState(IntakeState newState) {
+        changeState(newState).schedule();
+    }
     public Command changeState(IntakeState newState) {
         return Commands.runOnce(()->{
             this.state = newState;

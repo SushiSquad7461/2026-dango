@@ -78,15 +78,22 @@ public class Swerve extends SubsystemBase {
     private long yPosEntryLastChanged;
     private final DoubleEntry rotEntry;
     private long rotEntryLastChanged;
+    private Rotation2d replayGyroYaw = Rotation2d.kZero;
 
     public Swerve() {
         field = new Field2d();
         useAkModuleIo = Constants.currentMode != Constants.Mode.REAL;
-        gyro = new Pigeon2(Constants.Swerve.pigeonID);
-        gyro.getConfigurator().apply(new Pigeon2Configuration());
-        gyro.setYaw(0);
-        gyroSimState = Constants.IS_SIM ? gyro.getSimState() : null;
-        gyroYaw = gyro.getYaw();
+        if (Constants.currentMode == Constants.Mode.REPLAY) {
+            gyro = null;
+            gyroSimState = null;
+            gyroYaw = null;
+        } else {
+            gyro = new Pigeon2(Constants.Swerve.pigeonID);
+            gyro.getConfigurator().apply(new Pigeon2Configuration());
+            gyro.setYaw(0);
+            gyroSimState = Constants.IS_SIM ? gyro.getSimState() : null;
+            gyroYaw = gyro.getYaw();
+        }
         alignmentPID = new PIDController(0.15, 0, 0);
         alignmentPID.setTolerance(10, 10);
         if (useAkModuleIo) {
@@ -109,7 +116,7 @@ public class Swerve extends SubsystemBase {
                     new Module(blIo, 2, Constants.AKBackLeft),
                     new Module(brIo, 3, Constants.AKBackRight)
             };
-            modStatusSignals = new BaseStatusSignal[] {gyroYaw};
+            modStatusSignals = gyroYaw != null ? new BaseStatusSignal[] {gyroYaw} : new BaseStatusSignal[] {};
         } else {
             akModules = new Module[] {};
             mSwerveMods = new SwerveModule[] {
@@ -398,6 +405,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
+        if (gyroYaw == null) {
+            replayGyroYaw = pose.getRotation();
+        }
         poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
@@ -411,7 +421,10 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getGyroYaw() {
-        return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
+        if (gyroYaw != null) {
+            return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
+        }
+        return replayGyroYaw;
     }
 
     public void resetModulesToAbsolute() {
@@ -428,8 +441,8 @@ public class Swerve extends SubsystemBase {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
         return Commands.sequence(
                 runOnce(() -> {
-                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0))
-                            : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
+                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180.0))
+                            : new Pose2d(bluePoint.anchor(), Rotation2d.fromDegrees(0.0)));
                     resetGyro();
                 }));
 
@@ -438,7 +451,11 @@ public class Swerve extends SubsystemBase {
     public void resetGyro() {
         // if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
         // else
-        gyro.setYaw(0);
+        if (gyro != null) {
+            gyro.setYaw(0);
+        } else {
+            replayGyroYaw = Rotation2d.kZero;
+        }
     }
 
     /**
@@ -548,8 +565,18 @@ public class Swerve extends SubsystemBase {
         return simCurrentDrawAmps;
     }
 
+    private void updateReplayGyroYaw() {
+        replayGyroYaw =
+                replayGyroYaw.plus(
+                        Rotation2d.fromRadians(getRobotRelativeSpeeds().omegaRadiansPerSecond * 0.02));
+    }
+
     private void updateOdom() {
-        gyroYaw.refresh();
+        if (gyroYaw != null) {
+            gyroYaw.refresh();
+        } else if (Constants.currentMode == Constants.Mode.REPLAY) {
+            updateReplayGyroYaw();
+        }
         poseEstimator.update(getGyroYaw(), getModulePositions());
         
     }
