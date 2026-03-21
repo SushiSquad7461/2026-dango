@@ -64,18 +64,20 @@ public class Constants {
         new Translation2d(FIELD_LENGTH_METERS - BLUE_HUB_CENTER.getX(), BLUE_HUB_CENTER.getY());
     public static final Translation2d RED_HUB_FORWARD = new Translation2d(-1.0, 0.0);
 
-    // 2026 REBUILT FUEL dimensions from AndyMark:
-    // diameter = 5.91 in, weight range = 0.448..0.5 lb.
-    // Mass uses midpoint of range.
-    public static final double FUEL_DIAMETER_METERS = Units.inchesToMeters(5.91);
-    public static final double FUEL_MASS_KG = ((0.448 + 0.5) / 2.0) * 0.45359237;
-    public static final double FUEL_FRONTAL_AREA_SQ_METERS =
-        Math.PI * Math.pow(FUEL_DIAMETER_METERS / 2.0, 2.0);
+    // 2026 REBUILT FUEL game piece properties from the official game manual:
+    // diameter = 5.91 in, weight = 0.448..0.5 lb.
+    public static final double FUEL_DIAMETER_METERS = 0.150114;
+    public static final double FUEL_RADIUS_METERS = 0.075057;
+    // Sphere reference frontal area A = pi * r^2.
+    public static final double FUEL_FRONTAL_AREA_SQ_METERS = 0.01769832950066531;
+    // Midpoint mass of 0.448..0.5 lb converted to kg.
+    public static final double FUEL_MASS_KG = 0.21500278338;
 
-    // Drag follows NASA's standard equation: D = 0.5 * rho * Cd * A * v^2.
+    // Drag equation: D = 0.5 * rho * Cd * A * v^2.
     public static final double AIR_DENSITY_KG_PER_M3 = 1.225;
-    public static final double DRAG_COEFFICIENT = 0.47;
-    public static final double MAGNUS_COEFFICIENT = 0.0;
+    // Cd for a sphere.
+    public static final double FUEL_DRAG_COEFFICIENT = 0.47;
+    public static final double FUEL_MAGNUS_COEFFICIENT = 0.0;
     public static final double GRAVITY_MPS2 = 9.81;
 
     // Launcher/target geometry used by the LUT solver and runtime projectile sim.
@@ -110,8 +112,8 @@ public class Constants {
             FUEL_MASS_KG,
             FUEL_DIAMETER_METERS,
             FUEL_FRONTAL_AREA_SQ_METERS,
-            DRAG_COEFFICIENT,
-            MAGNUS_COEFFICIENT,
+            FUEL_DRAG_COEFFICIENT,
+            FUEL_MAGNUS_COEFFICIENT,
             AIR_DENSITY_KG_PER_M3,
             GRAVITY_MPS2,
             LAUNCHER_RELEASE_HEIGHT_METERS,

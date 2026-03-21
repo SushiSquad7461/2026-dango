@@ -37,13 +37,14 @@ public class SOTMShotPhysicsSim {
   }
 
   private final ProjectileSimulator.SimParameters params;
-  private final double kDrag;
+  // k = 0.5 * rho * Cd * A / m from the standard drag equation.
+  private final double dragAccelerationFactorK;
   private final double kMagnus;
   private final List<ActiveProjectile> activeProjectiles = new ArrayList<>();
 
   public SOTMShotPhysicsSim(ProjectileSimulator.SimParameters params) {
     this.params = params;
-    this.kDrag =
+    this.dragAccelerationFactorK =
         (params.airDensity() * params.dragCoeff() * params.ballFrontalAreaM2())
             / (2.0 * params.ballMassKg());
     this.kMagnus =
@@ -150,10 +151,24 @@ public class SOTMShotPhysicsSim {
     double vz = state[5];
     double speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
 
-    double ax = -kDrag * speed * vx;
-    double ay = -kDrag * speed * vy;
-    // Magnus is modeled as simple upward lift (same assumption family as ProjectileSimulator).
-    double az = -params.gravityMps2() - kDrag * speed * vz + kMagnus * speed * speed;
+    if (speed < 1e-9) {
+      return new double[] {vx, vy, vz, 0.0, 0.0, -params.gravityMps2()};
+    }
+
+    // Quadratic drag component form:
+    // a_drag_x = -k * |v| * vx
+    // a_drag_y = -k * |v| * vy
+    // a_drag_z = -k * |v| * vz
+    double axDrag = -dragAccelerationFactorK * speed * vx;
+    double ayDrag = -dragAccelerationFactorK * speed * vy;
+    double azDrag = -dragAccelerationFactorK * speed * vz;
+
+    // Magnus is kept parameterized, defaulting to zero.
+    double magnusLift = kMagnus * speed * speed;
+
+    double ax = axDrag;
+    double ay = ayDrag;
+    double az = -params.gravityMps2() + azDrag + magnusLift;
 
     return new double[] {vx, vy, vz, ax, ay, az};
   }
