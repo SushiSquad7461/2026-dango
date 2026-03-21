@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import org.photonvision.EstimatedRobotPose;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
@@ -37,7 +37,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
@@ -62,6 +61,11 @@ public class Swerve extends SubsystemBase {
 
     // private final HttpCamera camStream;
 
+    // Offset between raw gyro and field heading, updated on every pose reset.
+    // fieldHeading = rawGyro + gyroOffset. This avoids both the CAN race
+    // condition of setYaw() AND the feedback loop of using estimator heading.
+    private Rotation2d gyroOffset = Rotation2d.kZero;
+
     private double simCurrentDrawAmps = 0;
     private final DoubleEntry xPosEntry;
     private long xPosEntryLastChanged;
@@ -84,9 +88,12 @@ public class Swerve extends SubsystemBase {
                 new SwerveModule(2, Constants.Swerve.Mod2.constants), //Back Left Module
                 new SwerveModule(3, Constants.Swerve.Mod3.constants) //Back Right Module
         };
+        // Use the target yaw (0°) directly — gyro.setYaw(0) above is async (CAN bus),
+        // so getGyroYaw() still returns the stale pre-reset value. Using it would give
+        // the estimator a wrong internal offset, making the initial heading incorrect.
         poseEstimator = new SwerveDrivePoseEstimator(
                 Constants.Swerve.swerveKinematics,
-                getGyroYaw(),
+                Rotation2d.fromDegrees(0),
                 getModulePositions(),
                 new Pose2d());
 
@@ -132,16 +139,6 @@ public class Swerve extends SubsystemBase {
             xPosEntry = null;
             yPosEntry = null;
             rotEntry = null;
-        }
-        // gyroDoublePublisher = table.getDoubleTopic("GyroYaw").publish();
-        // cancoderPubs = new DoublePublisher[4];
-        // anglePubs = new DoublePublisher[4];
-        // velocityPubs = new DoublePublisher[4];
-
-        for (int i = 0; i < 4; i++) {
-            cancoderPubs[i] = table.getDoubleTopic("Module " + i + "/CANcoder").publish();
-            anglePubs[i] = table.getDoubleTopic("Module " + i + "/Angle").publish();
-            velocityPubs[i] = table.getDoubleTopic("Module " + i + "/Velocity").publish();
         }
         driveSysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
@@ -261,8 +258,13 @@ public class Swerve extends SubsystemBase {
         RIGHT
     }
 
-    private ChassisSpeeds getRobotRelativeSpeeds() {
+    public ChassisSpeeds getRobotRelativeSpeeds() {
         return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
+    }
+    
+    public ChassisSpeeds getFieldVelocity() { // Added this new method
+        // Uses your existing methods to get the robot speeds and the gyro heading
+        return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotRelativeSpeeds(), getHeading());
     }
 
     private void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
@@ -315,10 +317,14 @@ public class Swerve extends SubsystemBase {
 
     public Command resetHeading() {
         return runOnce(() -> {
-            setPose(
-                    new Pose2d(
-                            getPose().getTranslation(),
-                            AllianceUtil.isRedAlliance() ? new Rotation2d(Math.PI) : new Rotation2d()));
+            // Don't call gyro.setYaw() — it's async over CAN and creates a race condition.
+            // Just tell the estimator "the gyro currently reads X, and I want heading Y".
+            // The estimator computes the offset internally.
+            Rotation2d rawYaw = getGyroYaw();
+            Rotation2d targetYaw = Rotation2d.fromDegrees(AllianceUtil.isRedAlliance() ? 180.0 : 0.0);
+            gyroOffset = targetYaw.minus(rawYaw);
+            poseEstimator.resetPosition(rawYaw, getModulePositions(),
+                    new Pose2d(getPose().getTranslation(), targetYaw));
         });
     }
     
@@ -336,7 +342,13 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
+        // Refresh the gyro signal so we read the latest CAN value, not a stale cache.
+        // A stale reading here produces a wrong internal offset in the estimator,
+        // causing odometry to drift until vision corrects it.
+        gyroYaw.refresh();
+        Rotation2d rawYaw = getGyroYaw();
+        gyroOffset = pose.getRotation().minus(rawYaw);
+        poseEstimator.resetPosition(rawYaw, getModulePositions(), pose);
     }
 
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
@@ -345,11 +357,20 @@ public class Swerve extends SubsystemBase {
     }
 
     public Rotation2d getHeading() {
-        return getGyroYaw();// getPose().getRotation();
+        return getPose().getRotation();
     }
 
     public Rotation2d getGyroYaw() {
         return Rotation2d.fromDegrees(gyroYaw.getValueAsDouble());
+    }
+
+    /**
+     * Returns the field-relative heading derived purely from the gyro, with
+     * the offset applied from the last pose reset. Unlike getHeading(), this
+     * is never influenced by vision corrections — safe for SetRobotOrientation.
+     */
+    public Rotation2d getFieldHeadingFromGyro() {
+        return getGyroYaw().plus(gyroOffset);
     }
 
     public void resetModulesToAbsolute() {
@@ -361,35 +382,28 @@ public class Swerve extends SubsystemBase {
 
     public Command resetPositionToFrontReef() {
         Waypoint bluePoint = new Waypoint(null, new Translation2d(3.171, 4.024), null);
-        return Commands.sequence(
-                runOnce(() -> {
-                    setPose(AllianceUtil.isRedAlliance() ? new Pose2d(bluePoint.flip().anchor(), new Rotation2d(180.0))
-                            : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0)));
-                    resetGyro();
-                }));
-
-    }
-
-    public void resetGyro() {
-        // if (AllianceUtil.isRedAlliance()) gyro.setYaw(180);
-        // else
-        gyro.setYaw(0);
+        return runOnce(() -> {
+            Rotation2d rawYaw = getGyroYaw();
+            Pose2d targetPose = AllianceUtil.isRedAlliance()
+                    ? new Pose2d(bluePoint.flip().anchor(), Rotation2d.fromDegrees(180))
+                    : new Pose2d(bluePoint.anchor(), new Rotation2d(0.0));
+            gyroOffset = targetPose.getRotation().minus(rawYaw);
+            poseEstimator.resetPosition(rawYaw, getModulePositions(), targetPose);
+        });
     }
 
     /**
-     * The latest estimated robot pose on the field from vision data. This may be
-     * empty. This should
-     * only be called once per loop.
-     *
-     * <p>
-     * Also includes updates for the standard deviations, which can (optionally) be
-     * retrieved with
-     * {@link getEstimationStdDevs}
-     *
-     * @return An {@link EstimatedRobotPose} with an estimated pose, estimate
-     *         timestamp, and targets
-     *         used for estimation.
+     * Resets the estimator heading to 0° (Blue) or 180° (Red) without touching
+     * the hardware gyro. The estimator computes an internal offset from the
+     * current raw gyro reading, so there is no CAN race condition.
      */
+    public void resetGyro() {
+        Rotation2d rawYaw = getGyroYaw();
+        Rotation2d targetYaw = Rotation2d.fromDegrees(AllianceUtil.isRedAlliance() ? 180.0 : 0.0);
+        gyroOffset = targetYaw.minus(rawYaw);
+        poseEstimator.resetPosition(rawYaw, getModulePositions(),
+                new Pose2d(getPose().getTranslation(), targetYaw));
+    }
 
     @Override
     public void periodic() {
@@ -406,7 +420,6 @@ public class Swerve extends SubsystemBase {
         updateOdom();
 
         Pose2d currentPose = getPose();
-        currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
     }

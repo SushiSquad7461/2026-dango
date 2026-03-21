@@ -3,12 +3,12 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
-
 public class ShooterSubsystem extends SubsystemBase {
   // private double shootStartTime = 0; // could come in useful later, especially for logging
   private final PIDController shooterPidController = new PIDController(Constants.Shooter.SHOOTER_KP, Constants.Shooter.SHOOTER_KI, Constants.Shooter.SHOOTER_KD);
@@ -17,7 +17,8 @@ public class ShooterSubsystem extends SubsystemBase {
   public enum ShooterState {
     IDLE, // shooter inactive
     PRESHOOT, // shooter spinning up, waiting for hood to come into position, or waiting for robot to turn to goal
-    SHOOT // shooting
+    SHOOT, // shooting
+    SHOOT_INIT
   }
 
   private ShooterState state = ShooterState.IDLE;
@@ -55,14 +56,24 @@ public class ShooterSubsystem extends SubsystemBase {
         return Commands.parallel(
           Commands.runOnce(()->io.runShooter(targetRPM)),
            Commands.waitUntil(() -> isShooterReady()).andThen(Commands.runOnce(() -> {
-               this.state = ShooterState.SHOOT;
-               io.runShooter(targetRPM);
-               io.runFeeder();
+               if (state == ShooterState.PRESHOOT) {
+                   this.state = ShooterState.SHOOT;
+                   io.runShooter(targetRPM);
+                   io.runFeeder();
+               }
            })));
       case SHOOT:
         return Commands.parallel(
             Commands.runOnce(()->{
                 io.runShooter(targetRPM);
+            }),
+            Commands.runOnce(()->{
+                io.runFeeder();
+            }));
+      case SHOOT_INIT:
+        return Commands.parallel(
+            Commands.runOnce(()->{
+                //io.runShooter(targetRPM);
             }),
             Commands.runOnce(()->{
                 io.runFeeder();
@@ -86,6 +97,15 @@ public class ShooterSubsystem extends SubsystemBase {
   //   double rpm = distance * Constants.Shooter.RPM_DISTANCE_MULTIPLIER + Constants.Shooter.RPM_DISTANCE_OFFSET;
   //   this.targetRPM = rpm;
   // }
+  public void setTargetRPM(double rpm) {
+    this.targetRPM = rpm;
+  }
+
+  /** Set target RPM and immediately command the motor. Use in continuous commands like SOTM. */
+  public void commandRPM(double rpm) {
+    this.targetRPM = rpm;
+    io.runShooter(rpm);
+  }
   public void setTargetRPM(String location) {
     switch (location) {
       case "hub":
@@ -108,7 +128,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-
       SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
       SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
       

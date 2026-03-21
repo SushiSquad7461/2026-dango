@@ -39,7 +39,7 @@ public class IntakeSim implements IntakeIO{
     }
 
     @Override
-    public void setState(IntakeState newState) {
+    public void setState(double newState) {
         
     }
 
@@ -86,6 +86,12 @@ public class IntakeSim implements IntakeIO{
     public void setStateRollers(double rollerSpeed) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setStateRollers'");
+    }
+
+    @Override
+    public boolean isPivotAtSetpoint(double targetDeg) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isPivotAtSetpoint'");
     }
 }
 

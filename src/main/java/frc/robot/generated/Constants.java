@@ -17,10 +17,7 @@ import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
@@ -31,6 +28,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 import frc.robot.subsystems.SwerveModule;
+
 import frc.robot.Robot;
 
 
@@ -44,25 +42,12 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
-    public static final int[] RED_HUB_TAGS = {5, 8, 9, 10, 11, 2};
-    public static final int[] BLUE_HUB_TAGS = {18, 27, 21, 24, 25, 26};
-    public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
-    public static PIDController distancePID = new PIDController(1.3, 0, 0);
-    public static final double targetDistanceMeters = Units.feetToMeters(9);
-    // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
-    // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
-    public static Pose3d cameraPosePrimary = new Pose3d(
-        new Translation3d(-0.263525, 0.263525, 0.2439162),
-        new Rotation3d(0, Math.toRadians(20), Math.toRadians(150))
-    );
-    // limelight-right (secondary): forward=-0.263525m, right=0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=-150°
-    public static Pose3d cameraPoseSecondary = new Pose3d(
-        new Translation3d(-0.263525, -0.263525, 0.2439162),
-        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
-    );
+    public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
   }
   public static final class Shooter{
+    // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
+    // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
+    public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
     public static final double TARGET_RPM_DEFAULT = 4500;
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
@@ -290,7 +275,7 @@ public class Constants {
         public static final int rightPivotMotorId = 6;
         public static final int rollerMotorId = 10;
 
-        public static final double intakeAngleDeg = 135; 
+        public static final double intakeAngleDeg = 145; 
         public static final double angleToleranceDeg = 5.0;
         public static final double stowedAngleDeg = 0;
 
@@ -304,6 +289,8 @@ public class Constants {
         public static final double pivotD = 0.0;
 
         public static final double rollerSpeed = -0.35;//0.60;
+        public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
+        public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;
@@ -320,12 +307,19 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
-        public static final double cruiseVelocityRps = .25;
-        public static final double accelRps2 =.125;
+        public static final double cruiseVelocityRps = 5.0;  // motor rps → ~97°/s hood
+        public static final double accelRps2 = 20.0;
 
-        public static final double hoodP = 0.8;
+        public static final double hoodP = 5.0;
         public static final double hoodI = 0.0;
         public static final double hoodD = 0.0;
+
+        public static final double hoodStepDegrees = 5.0;
+        public static final double hoodMinDegrees  = 5.0;   // mechanical limit (degrees)
+        public static final double hoodMaxDegrees  = 35.0;   // mechanical limit (degrees)
+
+        // Full gear chain: (24/18) * (167/12) = 18.556 motor rotations per hood rotation
+        public static final double motorRotationsPerHoodRotation = (24.0 / 18.0) * (167.0 / 12.0);
     }
 
     public static final class AutoConstants { //TODO: Need to tune constants!

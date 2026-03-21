@@ -18,17 +18,17 @@ public class StateMachine extends SubsystemBase {
 
 
         IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.IDLE),
-        SHOOT_ONLY(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.IDLE),//IntakeState.DEPLOYED
+        SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING, IntakeState.WIGGLING),//IntakeState.DEPLOYED
         INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
         //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(ShooterState.SHOOT,HopperState.RUNNING, IntakeState.DEPLOYED);
+        INTAKE_DOWN_AND_SHOOT(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.WIGGLING);
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
-    
+
         public final ShooterState shooterState;
         public final HopperState hopperState;
         public final IntakeState intakeState;
@@ -56,7 +56,7 @@ public class StateMachine extends SubsystemBase {
         this.intake = intake;
         this.state = RobotState.IDLE;
 
-       
+
         this.stateTable = NetworkTableInstance.getDefault().getTable("StateMachine");
          this.currentStatePub = stateTable.getStringTopic("CurrentState").publish();
     }
@@ -79,15 +79,15 @@ public class StateMachine extends SubsystemBase {
 
     //TODO: Combine
     public Command changeState(RobotState newState) {
-        
+
         return Commands.sequence(
-            Commands.runOnce(() -> 
+            Commands.runOnce(() ->
             state = newState
             ),
             Commands.parallel(
                 shooter.changeState(newState.shooterState),
                 hopper.changeState(newState.hopperState),
-                intake.changeState(newState.intakeState))
+                Commands.runOnce(() -> intake.setWantedState(newState.intakeState)))
         );
     }
 
