@@ -4,7 +4,6 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.wpilibj.Timer;
 
 import frc.robot.generated.Constants.IntakeConstants;
-import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class IntakeSim implements IntakeIO{
  @AutoLog
@@ -35,8 +34,6 @@ public class IntakeSim implements IntakeIO{
     // Roller simulation
     private double rollerOutput = 0.0;
 
-    private IntakeState state = IntakeState.IDLE;
-
     @Override
     public void configurePivot() {
         // Nothing needed for sim
@@ -48,9 +45,8 @@ public class IntakeSim implements IntakeIO{
     }
 
     @Override
-    public void setState(IntakeState newState) {
-        state = newState;
-        pivotTargetDeg = newState.pivotAngle;
+    public void setState(double newState) {
+        pivotTargetDeg = newState;
         updatePivotModel();
         updateElectricalTelemetry();
     }
@@ -107,6 +103,13 @@ public class IntakeSim implements IntakeIO{
     public void setStateRollers(double rollerSpeed) {
         rollerOutput = rollerSpeed;
         updateElectricalTelemetry();
+    }
+
+    @Override
+    public boolean isPivotAtSetpoint(double targetDeg) {
+        updatePivotModel();
+        updateElectricalTelemetry();
+        return Math.abs(pivotAngleDeg - targetDeg) <= pivotToleranceDeg;
     }
 
     private void updatePivotModel() {

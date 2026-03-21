@@ -1,7 +1,6 @@
 package frc.robot.subsystems.intake;
 
 import frc.robot.generated.Constants.IntakeConstants;
-import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class IntakeReplay implements IntakeIO {
     private double pivotAngleDeg = IntakeConstants.stowedAngleDeg;
@@ -46,8 +45,8 @@ public class IntakeReplay implements IntakeIO {
     }
 
     @Override
-    public void setState(IntakeState newState) {
-        pivotTargetDeg = newState.pivotAngle;
+    public void setState(double newState) {
+        pivotTargetDeg = newState;
         pivotAngleDeg = pivotTargetDeg;
     }
 
@@ -57,5 +56,10 @@ public class IntakeReplay implements IntakeIO {
     @Override
     public void setStateRollers(double rollerSpeed) {
         this.rollerSpeed = rollerSpeed;
+    }
+
+    @Override
+    public boolean isPivotAtSetpoint(double targetDeg) {
+        return Math.abs(pivotAngleDeg - targetDeg) <= IntakeConstants.angleToleranceDeg;
     }
 }
