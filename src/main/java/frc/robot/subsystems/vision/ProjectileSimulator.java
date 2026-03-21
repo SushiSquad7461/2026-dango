@@ -42,9 +42,11 @@ public class ProjectileSimulator {
   public record SimParameters(
       double ballMassKg,
       double ballDiameterM,
+      double ballFrontalAreaM2,
       double dragCoeff,
       double magnusCoeff,
       double airDensity,
+      double gravityMps2,
       double exitHeightM,
       double wheelDiameterM,
       double targetHeightM,
@@ -73,10 +75,15 @@ public class ProjectileSimulator {
 
   public ProjectileSimulator(SimParameters params) {
     this.params = params;
-    double area = Math.PI * (params.ballDiameterM() / 2.0) * (params.ballDiameterM() / 2.0);
-    this.kDrag = (params.airDensity() * params.dragCoeff() * area) / (2.0 * params.ballMassKg());
+    // NASA drag equation: D = 0.5 * rho * Cd * A * v^2.
+    // Acceleration form in vector components:
+    // a_drag = -(0.5 * rho * Cd * A / m) * |v| * v.
+    this.kDrag =
+        (params.airDensity() * params.dragCoeff() * params.ballFrontalAreaM2())
+            / (2.0 * params.ballMassKg());
     this.kMagnus =
-        (params.airDensity() * params.magnusCoeff() * area) / (2.0 * params.ballMassKg());
+        (params.airDensity() * params.magnusCoeff() * params.ballFrontalAreaM2())
+            / (2.0 * params.ballMassKg());
   }
 
   /** RPM to ball exit speed (m/s). Accounts for slip between the wheel surface and ball. */
@@ -86,14 +93,14 @@ public class ProjectileSimulator {
 
   // state = [x, z, vx, vz]
   // ax = -kDrag * |v| * vx
-  // az = -g - kDrag * |v| * vz + kMagnus * |v|^2 (Magnus acts as upward lift)
+  // az = -g + a_drag_z (+ optional Magnus lift term if configured)
   private double[] derivatives(double[] state) {
     double svx = state[2];
     double svz = state[3];
     double speed = Math.hypot(svx, svz);
 
     double ax = -kDrag * speed * svx;
-    double az = -9.81 - kDrag * speed * svz + kMagnus * speed * speed;
+    double az = -params.gravityMps2() - kDrag * speed * svz + kMagnus * speed * speed;
 
     return new double[] {svx, svz, ax, az};
   }

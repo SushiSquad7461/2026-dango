@@ -67,6 +67,7 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
+                vision = new Vision(swerve);
 
                 if (Robot.isReal()) {
                         shooter = new ShooterSubsystem(new ShooterIOKraken());
@@ -75,12 +76,17 @@ public class RobotContainer {
                         // swerve.resetGyro();
 
                 } else {
-                        shooter = new ShooterSubsystem(new ShooterIOSim());
+                        ShooterIOSim shooterIOSim = new ShooterIOSim();
+                        shooter = new ShooterSubsystem(shooterIOSim);
                         intake = new Intake(new IntakeSim());
                         hopper = new Hopper(new HopperIOSim());
+                        shooterIOSim.configureShotSpawning(
+                                vision::getCurrentShot,
+                                swerve::getPose,
+                                swerve::getFieldVelocity,
+                                vision::onSimShotLaunch);
                 }
                 hoodedShooter = new HoodedShooter();
-                vision = new Vision(swerve);
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, hoodedShooter, swerve, vision);

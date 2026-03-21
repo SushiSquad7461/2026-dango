@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.util.COTSTalonFXSwerveConstants;
 import frc.lib.util.SwerveModuleConstants;
 import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.vision.ProjectileSimulator;
 
 import frc.robot.Robot;
 
@@ -46,25 +47,101 @@ public class Constants {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
     public static final double ERROR_DEGREES = 5.0; //TODO: Tune this if needed
+    public static final double FIELD_LENGTH_METERS = 16.54;
+    public static final double FIELD_WIDTH_METERS = 8.07;
+
     public static final int[] RED_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
     public static final int[] BLUE_HUB_TAGS = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32};
     public static PIDController rotationPID = new PIDController(0.12, 0, 0.0);
     public static PIDController distancePID = new PIDController(1.3, 0, 0);
     public static final double targetDistanceMeters = Units.feetToMeters(9);
-    // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=150°
-    // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right
+
+    // Hub centers use 2026 field geometry from FIRST resources.
+    // TODO: verify BLUE_HUB_CENTER_X against the final 2026 welded field drawing / WPILib field model.
+    public static final Translation2d BLUE_HUB_CENTER = new Translation2d(4.029, 4.034);
+    public static final Translation2d BLUE_HUB_FORWARD = new Translation2d(1.0, 0.0);
+    public static final Translation2d RED_HUB_CENTER =
+        new Translation2d(FIELD_LENGTH_METERS - BLUE_HUB_CENTER.getX(), BLUE_HUB_CENTER.getY());
+    public static final Translation2d RED_HUB_FORWARD = new Translation2d(-1.0, 0.0);
+
+    // 2026 REBUILT FUEL dimensions from AndyMark:
+    // diameter = 5.91 in, weight range = 0.448..0.5 lb.
+    // Mass uses midpoint of range.
+    public static final double FUEL_DIAMETER_METERS = Units.inchesToMeters(5.91);
+    public static final double FUEL_MASS_KG = ((0.448 + 0.5) / 2.0) * 0.45359237;
+    public static final double FUEL_FRONTAL_AREA_SQ_METERS =
+        Math.PI * Math.pow(FUEL_DIAMETER_METERS / 2.0, 2.0);
+
+    // Drag follows NASA's standard equation: D = 0.5 * rho * Cd * A * v^2.
+    public static final double AIR_DENSITY_KG_PER_M3 = 1.225;
+    public static final double DRAG_COEFFICIENT = 0.47;
+    public static final double MAGNUS_COEFFICIENT = 0.0;
+    public static final double GRAVITY_MPS2 = 9.81;
+
+    // Launcher/target geometry used by the LUT solver and runtime projectile sim.
+    public static final Translation2d LAUNCHER_OFFSET_METERS = new Translation2d(-0.1905, 0.0);
+    public static final double LAUNCHER_RELEASE_HEIGHT_METERS = 0.43;
+    public static final double SHOOTER_WHEEL_DIAMETER_METERS = Units.inchesToMeters(4.0);
+    public static final double SHOOTER_SLIP_FACTOR = 0.6;
+    // TODO: verify target center height from the official 2026 game manual drawing.
+    public static final double TARGET_CENTER_HEIGHT_METERS = 1.83;
+
+    // tx/ty fallback constraints when full SOTM solve is invalid.
+    public static final double TXTY_MIN_DISTANCE_METERS = 0.5;
+    public static final double TXTY_MAX_DISTANCE_METERS = 15.0;
+    public static final double TXTY_FALLBACK_CONFIDENCE = 35.0;
+    public static final double TXTY_DEFAULT_HOOD_ANGLE_DEG = 20.0;
+
+    // LUT search settings.
+    public static final double LUT_MIN_HOOD_ANGLE_DEG = 12.0;
+    public static final double LUT_MAX_HOOD_ANGLE_DEG = 40.0;
+    public static final double LUT_MAX_TOF_SEC = 3.0;
+    public static final double LUT_ANGLE_STEP_DEG = 1.0;
+    public static final double LUT_DT_SEC = 0.001;
+    public static final double LUT_MIN_RPM = 1500.0;
+    public static final double LUT_MAX_RPM = 6000.0;
+    public static final int LUT_BINARY_SEARCH_ITERS = 25;
+    public static final double LUT_MAX_SIM_TIME_SEC = 5.0;
+    public static final boolean USE_STATIC_SHOT_TABLE_FALLBACK = true;
+
+    // Shared parameters for ProjectileSimulator LUT generation and live sim flight updates.
+    public static final ProjectileSimulator.SimParameters SOTM_PARAMETERS =
+        new ProjectileSimulator.SimParameters(
+            FUEL_MASS_KG,
+            FUEL_DIAMETER_METERS,
+            FUEL_FRONTAL_AREA_SQ_METERS,
+            DRAG_COEFFICIENT,
+            MAGNUS_COEFFICIENT,
+            AIR_DENSITY_KG_PER_M3,
+            GRAVITY_MPS2,
+            LAUNCHER_RELEASE_HEIGHT_METERS,
+            SHOOTER_WHEEL_DIAMETER_METERS,
+            TARGET_CENTER_HEIGHT_METERS,
+            SHOOTER_SLIP_FACTOR,
+            LUT_MIN_HOOD_ANGLE_DEG,
+            LUT_MAX_HOOD_ANGLE_DEG,
+            LUT_MAX_TOF_SEC,
+            LUT_ANGLE_STEP_DEG,
+            LUT_DT_SEC,
+            LUT_MIN_RPM,
+            LUT_MAX_RPM,
+            LUT_BINARY_SEARCH_ITERS,
+            LUT_MAX_SIM_TIME_SEC);
+
+    // limelight-left (primary): forward=-0.263525m, right=-0.263525m, up=0.2439162m, roll=0 deg, pitch=20 deg, yaw=150 deg
+    // Y is negated because pose3dToArray outputs WPILib Y (left) but Limelight interprets it as right.
     public static Pose3d cameraPosePrimary = new Pose3d(
         new Translation3d(-0.263525, 0.263525, 0.2439162),
         new Rotation3d(0, Math.toRadians(20), Math.toRadians(150))
     );
-    // limelight-right (secondary): forward=-0.263525m, right=0.263525m, up=0.2439162m, roll=0°, pitch=20°, yaw=-150°
+    // limelight-right (secondary): forward=-0.263525m, right=0.263525m, up=0.2439162m, roll=0 deg, pitch=20 deg, yaw=-150 deg
     public static Pose3d cameraPoseSecondary = new Pose3d(
         new Translation3d(-0.263525, -0.263525, 0.2439162),
         new Rotation3d(0, Math.toRadians(20), Math.toRadians(-150))
     );
   }
   public static final class Shooter{
-    // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
+    // 3T motor pulley : 4T flywheel pulley - flywheel spins 4/3 faster than motor.
     // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
     public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
     public static final double TARGET_RPM_DEFAULT = 4500;
@@ -326,7 +403,7 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
-        public static final double cruiseVelocityRps = 5.0;  // motor rps → ~97°/s hood
+        public static final double cruiseVelocityRps = 5.0;  // motor rps ??? ~97??/s hood
         public static final double accelRps2 = 20.0;
 
         public static final double hoodP = 5.0;
@@ -636,9 +713,9 @@ public class Constants {
 //      * @param odometryUpdateFrequency The frequency to run the odometry loop. If unspecified or set
 //      *     to 0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN 2.0.
 //      * @param odometryStandardDeviation The standard deviation for odometry calculation in the form
-//      *     [x, y, theta]ᵀ, with units in meters and radians
+//      *     [x, y, theta]???, with units in meters and radians
 //      * @param visionStandardDeviation The standard deviation for vision calculation in the form [x,
-//      *     y, theta]ᵀ, with units in meters and radians
+//      *     y, theta]???, with units in meters and radians
 //      * @param modules Constants for each specific module
 //      */
 //     public TunerSwerveDrivetrain(
@@ -659,3 +736,5 @@ public class Constants {
 //     }
   //}
 }
+
+

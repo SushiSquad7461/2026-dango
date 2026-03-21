@@ -8,7 +8,8 @@ class ProjectileSimulatorTest {
 
     private static final ProjectileSimulator.SimParameters PARAMS =
         new ProjectileSimulator.SimParameters(
-            0.215, 0.1501, 0.47, 0.2, 1.225,
+            0.215, 0.1501, Math.PI * Math.pow(0.1501 / 2.0, 2.0),
+            0.47, 0.0, 1.225, 9.81,
             0.43, 0.1016, 1.83, 0.6,
             12.0, 40.0, 3.0, 1.0,
             0.001, 1500, 6000, 25, 5.0);
@@ -45,7 +46,8 @@ class ProjectileSimulatorTest {
     @Test
     void generateLUT_tightTofCeiling_requiresHigherRPM() {
         ProjectileSimulator.SimParameters tightParams = new ProjectileSimulator.SimParameters(
-            0.215, 0.1501, 0.47, 0.2, 1.225,
+            0.215, 0.1501, Math.PI * Math.pow(0.1501 / 2.0, 2.0),
+            0.47, 0.0, 1.225, 9.81,
             0.43, 0.1016, 1.83, 0.6,
             12.0, 40.0, 0.5, 1.0,
             0.001, 1500, 6000, 25, 5.0);
