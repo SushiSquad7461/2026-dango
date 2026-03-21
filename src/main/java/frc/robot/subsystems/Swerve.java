@@ -420,7 +420,6 @@ public class Swerve extends SubsystemBase {
         updateOdom();
 
         Pose2d currentPose = getPose();
-        currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
     }

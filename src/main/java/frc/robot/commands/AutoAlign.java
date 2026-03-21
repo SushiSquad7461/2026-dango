@@ -39,7 +39,7 @@ public class AutoAlign extends Command {
         this.xTranslation = xTranslation;
         this.yTranslation = yTranslation;
         this.driverRotation = driverRotation;
-        addRequirements(swerve);
+        addRequirements(swerve, shooter, hoodedShooter);
 
         // PID on shooter error (degrees). 0 = shooter axis aligned with target.
         txPID = new PIDController(

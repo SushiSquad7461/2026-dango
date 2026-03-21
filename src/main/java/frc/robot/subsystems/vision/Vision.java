@@ -79,7 +79,7 @@ public class Vision extends SubsystemBase {
             }
 
             // Clamp distance to LUT range for sensible outputs.
-            double clampedDist = MathUtil.clamp(distanceM, 1.5, 5.0);
+            double clampedDist = MathUtil.clamp(distanceM, 1.5, 4.0);
             ShotLUT.ShotParameters params = lut.get(clampedDist);
             targetRPM = params.rpm() + rpmOffset;
             targetHoodAngleDeg = params.angle();
