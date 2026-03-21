@@ -88,11 +88,6 @@ public class Module {
     io.setTurnPosition(Rotation2d.kZero);
   }
 
-  public void runTurnCharacterization(double output) {
-    io.setDriveOpenLoop(0.0);
-    io.setTurnOpenLoop(output);
-  }
-
   /** Disables all outputs to motors. */
   public void stop() {
     io.setDriveOpenLoop(0.0);
@@ -142,9 +137,5 @@ public class Module {
   /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
     return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
-  }
-
-  public double getCurrentDrawAmps() {
-    return Math.abs(inputs.driveCurrentAmps) + Math.abs(inputs.turnCurrentAmps);
   }
 }

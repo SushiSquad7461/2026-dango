@@ -77,7 +77,7 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return false; // runs until trigger is released (whileTrue in RobotContainer)
+        return rotationPID.atSetpoint() && distancePID.atSetpoint();
     }
 
     @Override

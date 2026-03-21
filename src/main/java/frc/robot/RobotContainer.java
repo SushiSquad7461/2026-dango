@@ -17,19 +17,15 @@ import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
-import frc.robot.generated.Constants;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIOReplay;
 import frc.robot.subsystems.hopper.HopperIOReal;
 import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeReplay;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.shooter.HoodedShooter;
 import frc.robot.subsystems.shooter.ShooterIOKraken;
-import frc.robot.subsystems.shooter.ShooterIOReplay;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.Swerve;
@@ -73,26 +69,18 @@ public class RobotContainer {
         public RobotContainer() {
                 vision = new Vision(swerve);
 
-                switch (Constants.currentMode) {
-                        case REAL:
-                                shooter = new ShooterSubsystem(new ShooterIOKraken());
-                                intake = new Intake(new IntakeReal());
-                                hopper = new Hopper(new HopperIOReal());
-                                hoodedShooter = new HoodedShooter();
-                                break;
-                        case REPLAY:
-                                shooter = new ShooterSubsystem(new ShooterIOReplay());
-                                intake = new Intake(new IntakeReplay());
-                                hopper = new Hopper(new HopperIOReplay());
-                                hoodedShooter = null;
-                                break;
-                        case SIM:
-                        default:
-                                shooter = new ShooterSubsystem(new ShooterIOSim());
-                                intake = new Intake(new IntakeSim());
-                                hopper = new Hopper(new HopperIOSim());
-                                hoodedShooter = null;
-                                break;
+                if (Robot.isReal()) {
+                        shooter = new ShooterSubsystem(new ShooterIOKraken());
+                        intake = new Intake(new IntakeReal());
+                        hopper = new Hopper(new HopperIOReal());
+                        hoodedShooter = new HoodedShooter();
+                        // swerve.resetGyro();
+
+                } else {
+                        shooter = new ShooterSubsystem(new ShooterIOSim());
+                        intake = new Intake(new IntakeSim());
+                        hopper = new Hopper(new HopperIOSim());
+                        hoodedShooter = null;
                 }
                 shooter.setRobotSpeedsSupplier(swerve::getRobotRelativeSpeeds);
                 this.stateMachine = new StateMachine(shooter, hopper,intake);
@@ -165,8 +153,8 @@ public class RobotContainer {
                 driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));//.onFalse(stateMachine.changeState(RobotState.INTAKE_DOWN));
                 driverController.rightBumper().onTrue(
                         Commands.either(
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.IDLE)),
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.DEPLOYED)),
+                                intake.changeState(IntakeState.IDLE),
+                                intake.changeState(IntakeState.DEPLOYED),
                                 () -> intake.getState() == IntakeState.DEPLOYED));
 
                  // Intake & Shooter
@@ -193,18 +181,15 @@ public class RobotContainer {
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)):
                 //                 stateMachine.changeState(RobotState.IDLE)
                 //                 .andThen(Commands.runOnce(()->intakeDown=!intakeDown)));
-                // driverController.leftBumper().onTrue(
-                //         Commands.parallel(//shooter.runFeederBack(), hopper.runHopperBack(),
-                //         stateMachine.changeState(RobotState.WIGGLING))
-                //         //Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
-                // ).onFalse
-                // (
-                //         Commands.either(
-                //                 Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
-                //                 Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
-                //                 () -> 
-                //                 stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
-                //                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
+
+                driverController.leftBumper().onTrue(
+                        Commands.parallel(shooter.runFeederBack(), hopper.runHopperBack())
+                ).onFalse(
+                        Commands.either(
+                                Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
+                                Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
+                                () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
+                                      stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
                 
                 driverController.povDown().onTrue(Commands.runOnce(() -> {
                         setHoodSpeed(-0.05);
@@ -242,7 +227,7 @@ public class RobotContainer {
         }
 
         public double[] getSimulatedCurrentDrawsAmps() {
-                if (Constants.currentMode != Constants.Mode.SIM) {
+                if (!Robot.isSimulation()) {
                         return new double[] {0.0};
                 }
                 return new double[] {
@@ -254,14 +239,12 @@ public class RobotContainer {
         }
 
         private void setHoodSpeed(double speed) {
-                if (Constants.currentMode != Constants.Mode.REAL) {
-                        shooter.runHood(speed);
-                        return;
-                }
-                if (hoodedShooter != null) {
-                        hoodedShooter.moveHood(speed);
+                if (Robot.isReal()) {
+                        if (hoodedShooter != null) {
+                                hoodedShooter.moveHood(speed);
+                        }
                 } else {
-                        shooter.stopHood();
+                        shooter.runHood(speed);
                 }
         }
 }

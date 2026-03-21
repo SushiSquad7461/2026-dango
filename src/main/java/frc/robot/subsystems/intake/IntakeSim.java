@@ -4,6 +4,7 @@ import org.littletonrobotics.junction.AutoLog;
 import edu.wpi.first.wpilibj.Timer;
 
 import frc.robot.generated.Constants.IntakeConstants;
+import frc.robot.subsystems.intake.Intake.IntakeState;
 
 public class IntakeSim implements IntakeIO{
  @AutoLog
@@ -12,6 +13,8 @@ public class IntakeSim implements IntakeIO{
         public double currentAmps = 0.0;
     }
 
+    public final IntakeData data = new IntakeData();
+
     private static final double PIVOT_SUPPLY_CURRENT_LIMIT_AMPS = 10.0;
     private static final double ROLLER_SUPPLY_CURRENT_LIMIT_AMPS = 30.0;
     private static final double NOMINAL_VOLTAGE = 12.0;
@@ -19,8 +22,6 @@ public class IntakeSim implements IntakeIO{
         (IntakeConstants.cruiseVelocityRps / IntakeConstants.motorRotationsPerArmRotation) * 360.0;
     private static final double MAX_PIVOT_ACCEL_DEG_PER_SEC2 =
         (IntakeConstants.accelRps2 / IntakeConstants.motorRotationsPerArmRotation) * 360.0;
-
-    public final IntakeData data = new IntakeData();
 
     // Pivot simulation
     private double pivotAngleDeg = 0.0;
@@ -45,8 +46,8 @@ public class IntakeSim implements IntakeIO{
     }
 
     @Override
-    public void setState(double newState) {
-        pivotTargetDeg = newState;
+    public void setState(IntakeState newState) {
+        pivotTargetDeg = newState.pivotAngle;
         updatePivotModel();
         updateElectricalTelemetry();
     }
@@ -103,13 +104,6 @@ public class IntakeSim implements IntakeIO{
     public void setStateRollers(double rollerSpeed) {
         rollerOutput = rollerSpeed;
         updateElectricalTelemetry();
-    }
-
-    @Override
-    public boolean isPivotAtSetpoint(double targetDeg) {
-        updatePivotModel();
-        updateElectricalTelemetry();
-        return Math.abs(pivotAngleDeg - targetDeg) <= pivotToleranceDeg;
     }
 
     private void updatePivotModel() {

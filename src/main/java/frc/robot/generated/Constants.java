@@ -38,23 +38,9 @@ import frc.robot.Robot;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public class Constants {
   public static final double stickDeadband = 0.1;
-  public static final Mode simMode = getSimModeFromConfig();
+  public static final Mode simMode = Mode.SIM;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
   public static final boolean IS_SIM = Robot.isSimulation();
-
-  private static Mode getSimModeFromConfig() {
-    String configuredMode = System.getProperty("akit.mode");
-    if (configuredMode == null || configuredMode.isBlank()) {
-      configuredMode = System.getenv("AKIT_MODE");
-    }
-    if (configuredMode == null) {
-      return Mode.SIM;
-    }
-    return switch (configuredMode.trim().toUpperCase()) {
-      case "REPLAY" -> Mode.REPLAY;
-      default -> Mode.SIM;
-    };
-  }
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
@@ -318,8 +304,6 @@ public class Constants {
         public static final double pivotD = 0.0;
 
         public static final double rollerSpeed = -0.35;//0.60;
-        public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
-        public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
         // public static final double wiggleLowDeg = 90.0;
         // public static final double wiggleHighDeg = 110.0;
@@ -526,59 +510,6 @@ public class Constants {
 
   private static final Distance kBackRightXPos = Inches.of(-10);
   private static final Distance kBackRightYPos = Inches.of(-10);
-
-  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
-          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-      AKFrontLeft =
-          ConstantCreator.createModuleConstants(
-              kFrontLeftSteerMotorId,
-              kFrontLeftDriveMotorId,
-              kFrontLeftEncoderId,
-              kFrontLeftEncoderOffset,
-              kFrontLeftXPos,
-              kFrontLeftYPos,
-              kInvertLeftSide,
-              kFrontLeftSteerMotorInverted,
-              kFrontLeftEncoderInverted);
-  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
-          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-      AKFrontRight =
-          ConstantCreator.createModuleConstants(
-              kFrontRightSteerMotorId,
-              kFrontRightDriveMotorId,
-              kFrontRightEncoderId,
-              kFrontRightEncoderOffset,
-              kFrontRightXPos,
-              kFrontRightYPos,
-              kInvertRightSide,
-              kFrontRightSteerMotorInverted,
-              kFrontRightEncoderInverted);
-  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
-          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-      AKBackLeft =
-          ConstantCreator.createModuleConstants(
-              kBackLeftSteerMotorId,
-              kBackLeftDriveMotorId,
-              kBackLeftEncoderId,
-              kBackLeftEncoderOffset,
-              kBackLeftXPos,
-              kBackLeftYPos,
-              kInvertLeftSide,
-              kBackLeftSteerMotorInverted,
-              kBackLeftEncoderInverted);
-  public static final com.ctre.phoenix6.swerve.SwerveModuleConstants<
-          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-      AKBackRight =
-          ConstantCreator.createModuleConstants(
-              kBackRightSteerMotorId,
-              kBackRightDriveMotorId,
-              kBackRightEncoderId,
-              kBackRightEncoderOffset,
-              kBackRightXPos,
-              kBackRightYPos,
-              kInvertRightSide,
-              kBackRightSteerMotorInverted,
-              kBackRightEncoderInverted);
 
 //   public static final SwerveModuleConstants<
 //           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
