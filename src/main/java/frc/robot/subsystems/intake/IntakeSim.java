@@ -167,4 +167,3 @@ public class IntakeSim implements IntakeIO{
         return value;
     }
 }
-

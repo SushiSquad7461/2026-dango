@@ -9,7 +9,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
-import org.littletonrobotics.junction.Logger;
 import java.util.function.Supplier;
 
 public class ShooterSubsystem extends SubsystemBase {
@@ -135,34 +134,8 @@ public class ShooterSubsystem extends SubsystemBase {
       if (robotSpeeds != null) {
         io.setRobotVelocity(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond);
       }
-      double flywheelRPM = io.getFlywheelRPM();
-      double flywheelTargetRPM = io.getFlywheelTargetRPM();
-      boolean shooterReady = io.isShooterReady();
-
-      SmartDashboard.putNumber("Shooter/FlywheelRPM",flywheelRPM);
-      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",flywheelTargetRPM);
-      if (Constants.currentMode != Constants.Mode.REAL) {
-        Logger.recordOutput("Shooter/State", state.name());
-        Logger.recordOutput("Shooter/FlywheelRPM", flywheelRPM);
-        Logger.recordOutput("Shooter/FlywheelTargetRPM", flywheelTargetRPM);
-        Logger.recordOutput("Shooter/Ready", shooterReady);
-        if (io instanceof ShooterIOSim simIo) {
-          Logger.recordOutput("Shooter/AppliedVolts", simIo.data.appliedVolts);
-          Logger.recordOutput("Shooter/CurrentAmps", simIo.data.currentAmps);
-          Logger.recordOutput("Shooter/LegacyFlywheelRPM", simIo.data.legacyFlywheelRPM);
-          Logger.recordOutput("Shooter/LegacyReady", simIo.data.legacyReady);
-          Logger.recordOutput("Shooter/SOTMFlywheelRPM", simIo.data.sotmFlywheelRPM);
-          Logger.recordOutput("Shooter/SOTMReady", simIo.data.sotmReady);
-          Logger.recordOutput("Shooter/SOTMShotActive", simIo.data.sotmShotActive);
-          Logger.recordOutput("Shooter/SOTMConfidence", simIo.data.sotmConfidence);
-          Logger.recordOutput("Shooter/SOTMTofSec", simIo.data.sotmTofSec);
-          Logger.recordOutput(
-              "Shooter/SOTMDragCompensatedTofSec", simIo.data.sotmDragCompensatedTofSec);
-          Logger.recordOutput("Shooter/ShotSourceIsSotm", simIo.data.shotSourceIsSotm);
-          Logger.recordOutput("Shooter/SOTMNotePose", simIo.data.sotmNotePose);
-          Logger.recordOutput("Shooter/SOTMTrajectory", simIo.data.sotmTrajectory);
-        }
-      }
+      SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
+      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
       
       //System.out.println(io.getFlywheelRPM());
 

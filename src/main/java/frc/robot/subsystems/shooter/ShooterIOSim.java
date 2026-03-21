@@ -34,11 +34,11 @@ public class ShooterIOSim implements ShooterIO {
     private static final double HOOD_MAX_VELOCITY_DEG_PER_SEC =
         (Constants.HoodedShooterConstants.cruiseVelocityRps / Constants.IntakeConstants.motorRotationsPerArmRotation) * 360.0;
 
-    private double legacySimulatedRPM = 0; 
-    private double targetRPM = 0;  
+    private double legacySimulatedRPM = 0;
+    private double targetRPM = 0;
     private int feederDirection = 0;
     private double flywheelAppliedVolts = 0.0;
-    private double hoodPos = 0;    
+    private double hoodPos = 0;
     private double hoodVelocityCmd = 0.0;
     private double robotVxMetersPerSecond = 0.0;
     private double robotVyMetersPerSecond = 0.0;

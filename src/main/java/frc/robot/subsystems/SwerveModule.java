@@ -9,7 +9,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -63,7 +62,6 @@ public class SwerveModule {
         
     private TalonFXSimState driveMotorSim;
     private TalonFXSimState angleMotorSim;
-    private CANcoderSimState angleEncoderSim;
 
     public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
         this.moduleNumber = moduleNumber;
@@ -93,8 +91,7 @@ public class SwerveModule {
         if (Constants.IS_SIM) {
             driveMotorSim = driveMotor.getSimState();
             angleMotorSim = angleMotor.getSimState();
-            angleEncoderSim = angleEncoder.getSimState();
-            angleEncoderSim.setRawPosition(angleOffset.getRotations());    
+            angleEncoder.getSimState().setRawPosition(angleOffset.getRotations());    
         }
 
         resetToAbsolute();
@@ -180,17 +177,12 @@ public class SwerveModule {
         angleMotorSim.setSupplyVoltage(supplyVoltage);
         driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
         angleSim.setInputVoltage(angleMotorSim.getMotorVoltage());
-        driveSim.update(0.02);
-        angleSim.update(0.02);
 
         
         driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.driveGearRatio);
         driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.driveGearRatio));
         angleMotorSim.setRawRotorPosition(angleSim.getAngularPositionRotations() * Constants.Swerve.angleGearRatio);
         angleMotorSim.setRotorVelocity(Units.radiansToRotations(angleSim.getAngularVelocityRadPerSec()) * Constants.Swerve.angleGearRatio);
-        if (angleEncoderSim != null) {
-            angleEncoderSim.setRawPosition(angleSim.getAngularPositionRotations() + angleOffset.getRotations());
-        }
 
         return Math.abs(driveSim.getCurrentDrawAmps()) + Math.abs(angleSim.getCurrentDrawAmps());
     }
