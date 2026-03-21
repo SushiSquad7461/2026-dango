@@ -73,7 +73,7 @@ public class Constants {
     public static final double TARGET_HOOD_HUB = 0;
 
     public static final double FEEDER_RPM = 1000;
-    public static final double SHOOTER_RPM_TOLERANCE = 200;
+    public static final double SHOOTER_RPM_TOLERANCE = 100;
     // public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
     // public static final double RPM_DISTANCE_OFFSET = 2000;
   }
@@ -288,7 +288,7 @@ public class Constants {
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
-        public static final double rollerSpeed = 0.45;//0.60;
+        public static final double rollerSpeed = 0.42;//0.60;
         public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
         public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
