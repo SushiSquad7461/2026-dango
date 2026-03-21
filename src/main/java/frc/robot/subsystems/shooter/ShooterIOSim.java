@@ -32,7 +32,9 @@ public class ShooterIOSim implements ShooterIO {
     private static final double FEEDER_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
     private static final double HOOD_SUPPLY_CURRENT_LIMIT_AMPS = 10.0;
     private static final double HOOD_MAX_VELOCITY_DEG_PER_SEC =
-        (Constants.HoodedShooterConstants.cruiseVelocityRps / Constants.IntakeConstants.motorRotationsPerArmRotation) * 360.0;
+        (Constants.HoodedShooterConstants.cruiseVelocityRps
+            / Constants.HoodedShooterConstants.motorRotationsPerHoodRotation)
+            * 360.0;
 
     private double legacySimulatedRPM = 0;
     private double targetRPM = 0;
@@ -126,7 +128,7 @@ public class ShooterIOSim implements ShooterIO {
 
     @Override
     public void stopShooter(double rpm) {
-        targetRPM = rpm / 2.0;
+        targetRPM = 0.0;
         flywheelAppliedVolts = calculateFlywheelAppliedVolts(targetRPM);
         data.appliedVolts = flywheelAppliedVolts;
         updateShotModels();

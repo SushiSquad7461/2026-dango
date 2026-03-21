@@ -320,6 +320,7 @@ public class Constants {
   }
 
     public static final class HoodedShooterConstants{
+        public static final double motorRotationsPerHoodRotation = 1.0;
         public static final double cruiseVelocityRps = .25;
         public static final double accelRps2 =.125;
 
