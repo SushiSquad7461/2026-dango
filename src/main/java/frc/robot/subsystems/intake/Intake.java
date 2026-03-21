@@ -16,7 +16,7 @@ public class Intake extends SubsystemBase{
     
     public enum IntakeState {
             IDLE(false, 0,IntakeConstants.stowedAngleDeg),
-            DEPLOYED(true, 0.35,IntakeConstants.intakeAngleDeg),
+            DEPLOYED(true, 0.5,IntakeConstants.intakeAngleDeg),
             WIGGLING(true, 0,80);
 
             public final boolean intakeExtended;
