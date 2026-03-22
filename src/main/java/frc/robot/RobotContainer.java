@@ -139,6 +139,26 @@ public class RobotContainer {
                         () -> -driverController.getRightX()
                 ));
 
+                // Passing mode toggle (operator A button)
+                operatorController.a().onTrue(
+                        Commands.either(
+                                // Already passing → revert to IDLE
+                                Commands.sequence(
+                                        Commands.runOnce(() -> shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT)),
+                                        stateMachine.changeState(RobotState.IDLE)
+                                ),
+                                // Not passing → enter passing mode
+                                Commands.sequence(
+                                        Commands.runOnce(() -> {
+                                                shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_PASS);
+                                                hoodedShooter.moveHoodToSetpoint(Constants.Shooter.TARGET_HOOD_PASS);
+                                        }),
+                                        stateMachine.changeState(RobotState.PASSING)
+                                ),
+                                () -> stateMachine.getCurrentState() == RobotState.PASSING
+                        )
+                );
+
                 // bind to copilot D-pad
                 operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(100.0)));
                 operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-100.0)));

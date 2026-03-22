@@ -72,6 +72,9 @@ public class Constants {
     public static final double TARGET_HOOD_OUTPOST = 0;
     public static final double TARGET_HOOD_HUB = 0;
 
+    public static final double TARGET_RPM_PASS = 6000;
+    public static final double TARGET_HOOD_PASS = 30.0;
+
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 100;
     // public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
