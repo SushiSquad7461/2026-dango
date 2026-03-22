@@ -49,6 +49,7 @@ public class AutoCommands {
             autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
             autoChooser.addOption("Shoot_N_Shoot", new PathPlannerAuto("Shoot_N_Shoot"));
             autoChooser.addOption("Shoot_Neutral_Trench", new PathPlannerAuto("Shoot_Neutral_Trench"));
+            autoChooser.addOption("BestIdeal_N_Shoot_Extra", new PathPlannerAuto("BestIdeal_N_Shoot_Extra"));
             SmartDashboard.putData("Auto Chooser", autoChooser);
 
     }
