@@ -73,7 +73,7 @@ public class Constants {
     public static final double TARGET_HOOD_HUB = 0;
 
     public static final double TARGET_RPM_PASS = 6000;
-    public static final double TARGET_HOOD_PASS = 30.0;
+    public static final double TARGET_HOOD_PASS = 35.0;
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 100;
@@ -284,7 +284,7 @@ public class Constants {
 
         public static final double motorRotationsPerArmRotation = 64.0;
 
-        public static final double cruiseVelocityRps = 24;
+        public static final double cruiseVelocityRps = 32;
         public static final double accelRps2 =64;
 
         public static final double pivotP = 0.8;

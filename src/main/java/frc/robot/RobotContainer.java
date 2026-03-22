@@ -140,7 +140,7 @@ public class RobotContainer {
                 ));
 
                 // Passing mode toggle (operator A button)
-                operatorController.a().onTrue(
+                operatorController.a().whileTrue(
                         Commands.either(
                                 // Already passing → revert to IDLE
                                 Commands.sequence(
