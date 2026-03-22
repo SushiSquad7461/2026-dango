@@ -93,7 +93,8 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return false; // runs until trigger is released
+        return false;
+        //return txPID.atSetpoint();
     }
 
     @Override

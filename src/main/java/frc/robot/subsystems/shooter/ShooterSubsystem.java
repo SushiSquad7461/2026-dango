@@ -70,6 +70,10 @@ public class ShooterSubsystem extends SubsystemBase {
             Commands.runOnce(()->{
                 io.runFeeder();
             }));
+
+            //Commands.runOnce(()->{io.runShooter(targetRPM);}),
+            //Commands.waitUntil(() -> isShooterReady()).andThen(Commands.runOnce(()->{io.runFeeder();})));
+
       case SHOOT_INIT:
         return Commands.parallel(
             Commands.runOnce(()->{
@@ -123,13 +127,17 @@ public class ShooterSubsystem extends SubsystemBase {
     }
   }
   public boolean isShooterReady() {
-    return io.isShooterReady();
+    //return io.isShooterReady();
+    return io.getFlywheelRPM() == targetRPM;
   }
 
   @Override
   public void periodic() {
-      SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
-      SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+      // SmartDashboard.putNumber("Shooter/FlywheelRPM",io.getFlywheelRPM());
+      // SmartDashboard.putNumber("Shooter/FlywheelTargetRPM",io.getFlywheelTargetRPM());
+      SmartDashboard.putNumber("Shooter/CurretRPM",io.getFlywheelRPM());
+      SmartDashboard.putNumber("Shooter/MotorTargetRPM",io.getFlywheelTargetRPM());
+      SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
       
       //System.out.println(io.getFlywheelRPM());
 
