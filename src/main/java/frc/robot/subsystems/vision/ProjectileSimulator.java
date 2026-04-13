@@ -109,6 +109,10 @@ public class ProjectileSimulator {
 
   /** Simulate a ball launched at the given RPM and explicit angle. */
   public TrajectoryResult simulate(double rpm, double targetDistanceM, double launchAngleDeg) {
+    if (targetDistanceM <= 0.0) {
+      return new TrajectoryResult(params.exitHeightM(), 0.0, true, params.exitHeightM(), 0.0);
+    }
+
     double v0 = exitVelocity(rpm);
     double launchRad = Math.toRadians(launchAngleDeg);
     double vx = v0 * Math.cos(launchRad);
@@ -123,6 +127,10 @@ public class ProjectileSimulator {
     double maxTime = params.maxSimTime();
 
     while (t < maxTime) {
+      double prevX = x;
+      double prevZ = z;
+      double prevT = t;
+
       double[] state = {x, z, vx, vz};
       double[] k1 = derivatives(state);
       double[] s2 = addScaled(state, k1, dt / 2.0);
@@ -141,11 +149,11 @@ public class ProjectileSimulator {
       if (z > maxHeight) { maxHeight = z; apexX = x; }
 
       if (x >= targetDistanceM) {
-        double prevX = x - vx * dt;
-        double prevZ = z - vz * dt;
-        double frac = (targetDistanceM - prevX) / (x - prevX);
+        double dx = x - prevX;
+        double frac = Math.abs(dx) > 1e-9 ? (targetDistanceM - prevX) / dx : 0.0;
+        frac = Math.max(0.0, Math.min(1.0, frac));
         double zAtTarget = prevZ + frac * (z - prevZ);
-        double tofAtTarget = t - dt + frac * dt;
+        double tofAtTarget = prevT + frac * dt;
         return new TrajectoryResult(zAtTarget, tofAtTarget, true, maxHeight, apexX);
       }
 

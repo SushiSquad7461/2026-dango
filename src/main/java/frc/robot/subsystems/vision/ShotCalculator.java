@@ -421,20 +421,21 @@ public class ShotCalculator {
       compTargetX = hubX - vx * headingDriftTOF;
       compTargetY = hubY - vy * headingDriftTOF;
     }
-    double aimX = compTargetX - robotX;
-    double aimY = compTargetY - robotY;
-    Rotation2d driveAngle = new Rotation2d(aimX, aimY);
+    double aimX = compTargetX - launcherX;
+    double aimY = compTargetY - launcherY;
+    Rotation2d targetBearing = new Rotation2d(aimX, aimY);
+    Rotation2d driveAngle = targetBearing.minus(new Rotation2d(config.shooterAngleOffsetRad));
 
     // Heading error for confidence calculation
-    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading - config.shooterAngleOffsetRad);
+    double headingErrorRad = MathUtil.angleModulus(driveAngle.getRadians() - heading);
 
     // Angular velocity feedforward: rate of change of aim angle.
     // Use the velocity-compensated aim vector (not raw hub displacement) so
     // the feedforward matches the actual target the robot is tracking.
     double driveAngularVelocity = 0;
     if (!velocityFiltered && projDist > 0.1) {
-      double compRx = compTargetX - robotX;
-      double compRy = compTargetY - robotY;
+      double compRx = compTargetX - launcherX;
+      double compRy = compTargetY - launcherY;
       double compDist = Math.hypot(compRx, compRy);
       if (compDist > 0.1) {
         double tangentialVel = (compRy * vx - compRx * vy) / compDist;
@@ -459,7 +460,7 @@ public class ShotCalculator {
     }
 
     double confidence = computeConfidence(
-        solverQuality, robotSpeed, headingErrorRad, distance, inputs.visionConfidence());
+        solverQuality, robotSpeed, headingErrorRad, projDist, inputs.visionConfidence());
 
     previousSpeed = robotSpeed;
 
