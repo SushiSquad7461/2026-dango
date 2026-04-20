@@ -17,14 +17,14 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.IDLE),
-        SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING, IntakeState.WIGGLING),//IntakeState.DEPLOYED
+        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
+        SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
         INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
         //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.WIGGLING),
-        PASSING(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.IDLE);
+        INTAKE_DOWN_AND_SHOOT(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.DEPLOYED),
+        PASSING(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.DEPLOYED);
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
