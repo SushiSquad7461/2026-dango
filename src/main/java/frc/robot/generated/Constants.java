@@ -82,7 +82,6 @@ public class Constants {
   }
     public static final class Swerve {
         public static final int pigeonID = 20;
-        public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
         public static final double LOW_ROT = 0.1;
         public static final int CAMERA_RESOLUTIONX = 1280;
@@ -120,7 +119,7 @@ public class Constants {
         public static final double angleCurrentLowerTime = 0.1;
         public static final boolean angleEnableCurrentLimit = true;
 
-        public static final int driveCurrentLimit = 60;
+        public static final int driveCurrentLimit = 40;
         public static final int driveCurrentLowerLimit = 35;
         public static final double driveCurrentLowerTime = 0.1;
         public static final boolean driveEnableCurrentLimit = true;
@@ -148,7 +147,8 @@ public class Constants {
 
         /* Swerve Profiling Values */
         /** Meters per Second */
-        public static final double maxSpeed = 4.5;
+        public static final double maxSpeed = 3;
+        public static final double babyMaxSpeed = 1;
         /** Radians per Second */
         public static final double maxAngularVelocity = 7.2;
 

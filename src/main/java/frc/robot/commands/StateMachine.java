@@ -17,7 +17,7 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
+        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.IDLE),
         SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
         INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
         //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),

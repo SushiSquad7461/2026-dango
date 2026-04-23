@@ -41,6 +41,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
+    private boolean babyMode = false;
+
     private final SwerveDrivePoseEstimator poseEstimator;
     private final SwerveModule[] mSwerveMods;
     private final BaseStatusSignal[] modStatusSignals;
@@ -281,6 +283,10 @@ public class Swerve extends SubsystemBase {
         }
     }
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+        if(babyMode) {
+            translation = new Translation2d(translation.getX() * Constants.Swerve.LOW_SPEED, translation.getY() * Constants.Swerve.LOW_SPEED);
+            rotation = rotation * Constants.Swerve.LOW_ROT;
+        }
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                         translation.getX(),
@@ -473,5 +479,13 @@ public class Swerve extends SubsystemBase {
         gyroYaw.refresh();
         poseEstimator.update(getGyroYaw(), getModulePositions());
         
+    }
+
+    public void babyMode() {
+        if(babyMode) {
+            babyMode = false;
+        } else {
+            babyMode = true;
+        }
     }
 }

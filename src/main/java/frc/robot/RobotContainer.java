@@ -162,7 +162,7 @@ public class RobotContainer {
                 // bind to copilot D-pad
                 operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(100.0)));
                 operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-100.0)));
-
+                driverController.b().onTrue(Commands.runOnce(() -> swerve.babyMode()));                       
                 driverController.x().whileTrue(Commands.sequence(Commands.runOnce(() -> shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT), shooter), stateMachine.changeState(RobotState.SHOOT_ONLY))).onFalse(stateMachine.changeState(RobotState.IDLE));
         }
 
