@@ -20,12 +20,15 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.Waypoint;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -73,6 +76,7 @@ public class Swerve extends SubsystemBase {
     private long yPosEntryLastChanged;
     private final DoubleEntry rotEntry;
     private long rotEntryLastChanged;
+    private int rejectedVisionMeasurementCount = 0;
 
     public Swerve() {
         field = new Field2d();
@@ -352,8 +356,35 @@ public class Swerve extends SubsystemBase {
     }
 
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
-            edu.wpi.first.math.Matrix<edu.wpi.first.math.numbers.N3, edu.wpi.first.math.numbers.N1> visionMeasurementStdDevs) {
+            Matrix<N3, N1> visionMeasurementStdDevs) {
+        if (!isValidVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs)) {
+            rejectedVisionMeasurementCount++;
+            return;
+        }
+
         poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    }
+
+    private static boolean isValidVisionMeasurement(Pose2d pose, double timestampSeconds,
+            Matrix<N3, N1> stdDevs) {
+        if (pose == null || stdDevs == null || !Double.isFinite(timestampSeconds) || timestampSeconds < 0.0) {
+            return false;
+        }
+
+        if (!Double.isFinite(pose.getX())
+                || !Double.isFinite(pose.getY())
+                || !Double.isFinite(pose.getRotation().getRadians())) {
+            return false;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            double stdDev = stdDevs.get(i, 0);
+            if (!Double.isFinite(stdDev) || stdDev <= 0.0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public Rotation2d getHeading() {
@@ -409,6 +440,7 @@ public class Swerve extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("GyroYaw", getGyroYaw().getDegrees());
         SmartDashboard.putNumber("PoseYaw", getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("Swerve/VisionMeasurementsRejected", rejectedVisionMeasurementCount);
         BaseStatusSignal.refreshAll(modStatusSignals);
         for (SwerveModule mod : mSwerveMods) {
             cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
