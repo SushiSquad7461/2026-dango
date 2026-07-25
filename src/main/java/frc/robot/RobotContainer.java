@@ -81,7 +81,7 @@ public class RobotContainer {
                 }
                 hoodedShooter = new HoodedShooter();
                 vision = new Vision();
-                this.stateMachine = new StateMachine(shooter, hopper,intake);
+                this.stateMachine = new StateMachine(shooter, hopper);
 
                 this.autos = new AutoCommands(stateMachine, intake, shooter, hoodedShooter, swerve, vision);
 
