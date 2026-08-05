@@ -24,11 +24,22 @@ public class ShooterIOSim implements ShooterIO {
         data.appliedVolts = rpm / 5000.0 * 12.0; 
     }
 
+    @Override
+    public void stopShooter(double rpm) {
+        targetRPM = 0;
+        data.appliedVolts = 0.0;
+    }
 
     @Override
     public void runFeeder() {
         feederRunning = true;
         data.currentAmps = 5.0; 
+    }
+
+    @Override
+    public void runFeederBack() {
+        feederRunning = true;
+        data.currentAmps = 5.0;
     }
 
     @Override
@@ -42,6 +53,11 @@ public class ShooterIOSim implements ShooterIO {
         double diff = targetRPM - simulatedRPM;
         simulatedRPM += diff * 0.1; 
         return simulatedRPM;
+    }
+
+    @Override
+    public double getFlywheelTargetRPM() {
+        return targetRPM;
     }
 
     public double getHoodPos() {
@@ -58,23 +74,4 @@ public class ShooterIOSim implements ShooterIO {
     public boolean isShooterReady() {
         return Math.abs(simulatedRPM - targetRPM) < RPM_TOLERANCE && feederRunning;
     }
-
-    @Override
-    public double getFlywheelTargetRPM() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
-    }
-
-    @Override
-    public void runFeederBack() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'runFeederBack'");
-    }
-
-    @Override
-    public void stopShooter(double rpm) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stopShooter'");
-    }
-
 }

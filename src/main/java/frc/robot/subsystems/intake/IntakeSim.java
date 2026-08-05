@@ -14,15 +14,12 @@ public class IntakeSim implements IntakeIO{
 
     public final IntakeData data = new IntakeData();
 
-    // Pivot simulation
     private double pivotAngleDeg = 0.0;
     private double pivotTargetDeg = 0.0;
     private final double pivotToleranceDeg = 2.0;
 
-    // Roller simulation
     private double rollerOutput = 0.0;
 
-    // Wiggle logic
     private boolean wiggleHigh = false;
     private boolean wiggleReady = true;
 
@@ -30,26 +27,22 @@ public class IntakeSim implements IntakeIO{
 
     @Override
     public void configurePivot() {
-        // Nothing needed for sim
     }
 
     @Override
     public void configureRoller() {
-        // Nothing needed for sim
     }
 
     @Override
     public void setState(double newState) {
-        
+        pivotTargetDeg = newState;
+        pivotAngleDeg += Math.signum(pivotTargetDeg - pivotAngleDeg)
+                * Math.min(4.0, Math.abs(pivotTargetDeg - pivotAngleDeg));
     }
 
     @Override
     public void getMotorPos() {
-        // Simulate encoder output (put on SmartDashboard if you want)
     }
-
-
-
 
     @Override
     public boolean isPivotAtTarget() {
@@ -84,14 +77,11 @@ public class IntakeSim implements IntakeIO{
 
     @Override
     public void setStateRollers(double rollerSpeed) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setStateRollers'");
+        rollerOutput = rollerSpeed;
     }
 
     @Override
     public boolean isPivotAtSetpoint(double targetDeg) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isPivotAtSetpoint'");
+        return Math.abs(pivotAngleDeg - targetDeg) <= pivotToleranceDeg;
     }
 }
-

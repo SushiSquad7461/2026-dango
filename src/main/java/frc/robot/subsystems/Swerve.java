@@ -28,6 +28,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
@@ -54,6 +55,8 @@ public class Swerve extends SubsystemBase {
     private final NetworkTable table;
 
     private final DoublePublisher gyroDoublePublisher;
+    private final StructPublisher<Pose2d> posePublisher =
+            NetworkTableInstance.getDefault().getStructTopic("Swerve/Pose", Pose2d.struct).publish();
     private final Field2d field;
     private final DoublePublisher[] cancoderPubs;
     private final DoublePublisher[] anglePubs;
@@ -422,6 +425,7 @@ public class Swerve extends SubsystemBase {
         Pose2d currentPose = getPose();
         currentPose = getPose();
         field.setRobotPose(currentPose);
+        posePublisher.set(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
     }
 
@@ -431,6 +435,8 @@ public class Swerve extends SubsystemBase {
         for (var mod : mSwerveMods) {
             simCurrentDrawAmps += mod.simulationPeriodic();
         }
+
+        gyro.getSimState().addYaw(Math.toDegrees(getRobotRelativeSpeeds().omegaRadiansPerSecond) * 0.02);
 
         boolean resetRequested = false;
         var curPose = getPose();

@@ -178,7 +178,9 @@ public class SwerveModule {
         driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
         angleSim.setInputVoltage(angleMotorSim.getMotorVoltage());
 
-        
+        driveSim.update(0.02);
+        angleSim.update(0.02);
+
         driveMotorSim.setRawRotorPosition(driveSim.getAngularPositionRotations() * Constants.Swerve.driveGearRatio);
         driveMotorSim.setRotorVelocity(Units.radiansToRotations(driveSim.getAngularVelocityRadPerSec() * Constants.Swerve.driveGearRatio));
         angleMotorSim.setRawRotorPosition(angleSim.getAngularPositionRotations() * Constants.Swerve.angleGearRatio);
