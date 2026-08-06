@@ -83,6 +83,11 @@ public class HoodedShooter extends SubsystemBase{
         moveHoodToSetpoint(target);
     }
 
+    public double getHoodAngleDegrees(){
+        return hoodMotor.getPosition().getValueAsDouble()
+                / Constants.HoodedShooterConstants.motorRotationsPerHoodRotation * 360.0;
+    }
+
     @Override
     public void periodic(){
         // Convert motor rotations back to hood degrees using gear ratio

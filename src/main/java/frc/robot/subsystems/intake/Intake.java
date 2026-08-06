@@ -53,6 +53,10 @@ public class Intake extends SubsystemBase{
         return this.wantedState;
     }
 
+    public double getPivotAngleDegrees(){
+        return io.getPivotAngle();
+    }
+
     public void setWantedState(IntakeState state) {
         this.wantedState = state;
     }
