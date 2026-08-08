@@ -17,32 +17,29 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
-        SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
-        INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE,IntakeState.DEPLOYED),
+        IDLE(HopperState.IDLE,IntakeState.DEPLOYED),
+        SHOOT_ONLY(HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
+        INTAKE_DOWN(HopperState.IDLE,IntakeState.DEPLOYED),
         //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
         //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.DEPLOYED),
-        PASSING(ShooterState.PRESHOOT,HopperState.RUNNING, IntakeState.DEPLOYED);
+        INTAKE_DOWN_AND_SHOOT(HopperState.RUNNING, IntakeState.DEPLOYED),
+        PASSING(HopperState.RUNNING, IntakeState.DEPLOYED);
         //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
         //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
         //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
 
 
-        public final ShooterState shooterState;
         public final HopperState hopperState;
         public final IntakeState intakeState;
 
-        private RobotState( ShooterState shooterState,HopperState hopperState,IntakeState intakeState) {
-            this.shooterState = shooterState;
+        private RobotState(HopperState hopperState,IntakeState intakeState) {
             this.hopperState = hopperState;
             this.intakeState = intakeState;
         }
     }
 
     private RobotState state;
-    private final ShooterSubsystem shooter;
     private final Hopper hopper;
     private final Intake intake;
     private final NetworkTable stateTable;
@@ -51,8 +48,7 @@ public class StateMachine extends SubsystemBase {
     /**
      * Constructs the State Machine
      */
-    public StateMachine(ShooterSubsystem shooter, Hopper hopper, Intake intake) {
-        this.shooter = shooter;
+    public StateMachine(Hopper hopper, Intake intake) {
         this.hopper = hopper;
         this.intake = intake;
         this.state = RobotState.IDLE;
@@ -86,7 +82,6 @@ public class StateMachine extends SubsystemBase {
             state = newState
             ),
             Commands.parallel(
-                shooter.changeState(newState.shooterState),
                 hopper.changeState(newState.hopperState),
                 Commands.runOnce(() -> intake.setWantedState(newState.intakeState)))
         );

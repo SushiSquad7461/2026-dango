@@ -22,16 +22,13 @@ public class AutoCommands {
     private final StringPublisher selectedAuto;
     private final NetworkTable autoNetworkTable;
 
-    public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter, HoodedShooter hoodedShooter, Swerve swerve, Vision vision){
+    public AutoCommands(StateMachine stateMachine, Intake intake, Swerve swerve){
             autoNetworkTable = NetworkTableInstance.getDefault().getTable("Auto");
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
-            NamedCommands.registerCommand("AutoAlign",
-                new AutoAlign(swerve, vision, shooter, hoodedShooter,
-                    () -> 0.0, () -> 0.0, () -> 0.0));
 
-             NamedCommands.registerCommand("Shoot",
+            NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN_AND_SHOOT)));

@@ -44,42 +44,6 @@ public class Constants {
     public static final String secondaryLimelightName = "limelight-right";
     public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
   }
-  public static final class Shooter{
-    // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
-    // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
-    public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
-    public static final double TARGET_RPM_DEFAULT = 7000; // TODO: for robot reveal
-    public static double SHOOTER_KS = 0.0;
-    public static double SHOOTER_KV = 0.12; //0.12
-    public static double SHOOTER_KP = 0.1;
-    public static double SHOOTER_KI = 0;
-    public static double SHOOTER_KD = 0;
-    // TODO: tune shooter intake PID
-    public static final double KICKER_KS = 0.1;
-    public static final double KICKER_KV = 0.12;
-    public static final double KICKER_KP = 0.0;
-    public static final double KICKER_KI = 0;
-    public static final double KICKER_KD = 0;
-    // TODO: tune hood PID
-    public static final double HOOD_KP = 2.4;
-    public static final double HOOD_KI = 0;
-    public static final double HOOD_KD = 0.1;
-    // TODO: tune shooter presets
-    public static final double TARGET_RPM_TRENCH = 0;
-    public static final double TARGET_RPM_OUTPOST = 0;
-    public static final double TARGET_RPM_HUB = 0;
-    public static final double TARGET_HOOD_TRENCH = 0;
-    public static final double TARGET_HOOD_OUTPOST = 0;
-    public static final double TARGET_HOOD_HUB = 0;
-
-    public static final double TARGET_RPM_PASS = 6000;
-    public static final double TARGET_HOOD_PASS = 30.0;
-
-    public static final double FEEDER_RPM = 1000;
-    public static final double SHOOTER_RPM_TOLERANCE = 100;
-    // public static final double RPM_DISTANCE_MULTIPLIER = 12.5; //TODO: Tune this
-    // public static final double RPM_DISTANCE_OFFSET = 2000;
-  }
     public static final class Swerve {
         public static final int pigeonID = 20;
         public static final boolean REDUCE_SPEED = true;
