@@ -48,12 +48,14 @@ public class Constants {
     // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
     // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
     public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
-    public static final double TARGET_RPM_DEFAULT = 4000; // ONLY FOR SHOOTING STRAIGHT UP
+    public static final double TARGET_RPM_DEFAULT = 9000; // ONLY FOR SHOOTING STRAIGHT UP
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
     public static double SHOOTER_KP = 0.1;
     public static double SHOOTER_KI = 0;
     public static double SHOOTER_KD = 0;
+    
+
     // TODO: tune shooter intake PID
     public static final double KICKER_KS = 0.1;
     public static final double KICKER_KV = 0.12;
@@ -72,7 +74,7 @@ public class Constants {
     public static final double TARGET_HOOD_OUTPOST = 0;
     public static final double TARGET_HOOD_HUB = 0;
 
-    public static final double TARGET_RPM_PASS = 6000;
+    public static final double TARGET_RPM_PASS = 4000;
     public static final double TARGET_HOOD_PASS = 30.0;
 
     public static final double FEEDER_RPM = 1000;
