@@ -42,7 +42,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import jdk.jshell.Snippet;
 
 public class Swerve extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -480,53 +479,43 @@ public class Swerve extends SubsystemBase {
         StatusSignal<AngularVelocity> yawRate = gyro.getAngularVelocityZDevice();
 
         boolean useMegaTag2 = true; //set to false to use MegaTag1
-        boolean doRejectUpdate = false;
-        if(!useMegaTag2)
-        {
-            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
-
-            if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1)
-            {
-                if(mt1.rawFiducials[0].ambiguity > .7)
-                {
-                    doRejectUpdate = true;
-                }
-                if(mt1.rawFiducials[0].distToCamera > 3)
-                {
-                    doRejectUpdate = true;
-                }
-            }
-            if(mt1.tagCount == 0)
-            {
-                doRejectUpdate = true;
-            }
-
-            if(!doRejectUpdate)
-            {
-                poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,9999999));
-                poseEstimator.addVisionMeasurement(
-                        mt1.pose,
-                        mt1.timestampSeconds);
-            }
-        }
-        else if (useMegaTag2 == true)
-        {
-            LimelightHelpers.SetRobotOrientation("limelight", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+        boolean doRejectUpdateLeft = false;
+        boolean doRejectUpdateRight = false;
+        if (useMegaTag2 == true) {
+            LimelightHelpers.SetRobotOrientation("limelight-left", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+            LimelightHelpers.PoseEstimate mt2Left = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
             if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
             {
-                doRejectUpdate = true;
+                doRejectUpdateLeft = true;
             }
-            if(mt2.tagCount == 0)
+            if(mt2Left.tagCount == 0)
             {
-                doRejectUpdate = true;
+                doRejectUpdateLeft = true;
             }
-            if(!doRejectUpdate)
+            if(!doRejectUpdateLeft)
             {
                 poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
                 poseEstimator.addVisionMeasurement(
-                        mt2.pose,
-                        mt2.timestampSeconds);
+                        mt2Left.pose,
+                        mt2Left.timestampSeconds);
+            }
+
+            LimelightHelpers.SetRobotOrientation("limelight-right", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+            LimelightHelpers.PoseEstimate mt2Right = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
+            if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+            {
+                doRejectUpdateRight = true;
+            }
+            if(mt2Right.tagCount == 0)
+            {
+                doRejectUpdateRight = true;
+            }
+            if(!doRejectUpdateRight)
+            {
+                poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+                poseEstimator.addVisionMeasurement(
+                        mt2Right.pose,
+                        mt2Right.timestampSeconds);
             }
         }
     }
