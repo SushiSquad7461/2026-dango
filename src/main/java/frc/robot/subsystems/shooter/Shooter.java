@@ -6,14 +6,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.generated.Constants;
 
 public class Shooter extends SubsystemBase {
-    private final ShooterHW flywheel;
-    private final HoodHW hood;
+    private final ShooterHW flywheel = new ShooterHW();
+    private final HoodHW hood = new HoodHW();
     private double targetRPM = 0.0;
-
-    public Shooter(ShooterHW flywheel, HoodHW hood) {
-        this.flywheel = flywheel;
-        this.hood = hood;
-    }
 
     public void setShot(double rpm, double hoodDegrees) {
         targetRPM = rpm;
@@ -29,7 +24,7 @@ public class Shooter extends SubsystemBase {
 
     public boolean isReady() {
         return targetRPM > 0
-                && Math.abs(flywheel.getRPM() - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
+                && Math.abs(Math.abs(flywheel.getRPM()) - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
     }
 
     public Command shoot(double rpm, double hoodDegrees) {
@@ -41,7 +36,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public Command stepHood(double deltaDegrees) {
-        return runOnce(() -> hood.stepHood(deltaDegrees));
+        return Commands.runOnce(() -> hood.stepHood(deltaDegrees));
     }
 
     public Command zeroHood() {

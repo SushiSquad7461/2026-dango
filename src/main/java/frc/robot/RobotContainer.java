@@ -23,7 +23,6 @@ import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.shooter.HoodHW;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterHW;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
@@ -42,7 +41,7 @@ public class RobotContainer {
         private final Swerve swerve = new Swerve();
         private final Intake intake;
         private final Hopper hopper;
-        private final Shooter shooter = new Shooter(new ShooterHW(), new HoodHW());
+        private final Shooter shooter = new Shooter();
         private final StateMachine stateMachine;
         private final AutoCommands autos;
 
