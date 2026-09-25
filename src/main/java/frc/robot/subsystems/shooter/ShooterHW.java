@@ -12,7 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.generated.Constants;
 
-public class ShooterHW implements ShooterIO {
+class ShooterHW implements ShooterIO {
     CANBus rioCanBus = new CANBus("rio");
 
     // initialize shooter, shooter intake, and hood motors
@@ -22,7 +22,7 @@ public class ShooterHW implements ShooterIO {
     private final VelocityVoltage shooterRequest = new VelocityVoltage(0).withSlot(0); // create a velocity closed-loop request, voltage output, slot 0 configs
     private final VelocityVoltage feederRequest = new VelocityVoltage(0).withSlot(0);
 
-    public ShooterHW() {
+    ShooterHW() {
         // shooter flywheel motor config
         TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         shooterConfig.CurrentLimits.StatorCurrentLimit = 120.0;
