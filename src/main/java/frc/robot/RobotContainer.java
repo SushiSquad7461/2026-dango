@@ -21,6 +21,9 @@ import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.shooter.HoodHW;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterHW;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
@@ -39,6 +42,7 @@ public class RobotContainer {
         private final Swerve swerve = new Swerve();
         private final Intake intake;
         private final Hopper hopper;
+        private final Shooter shooter = new Shooter(new ShooterHW(), new HoodHW());
         private final StateMachine stateMachine;
         private final AutoCommands autos;
 
@@ -108,6 +112,11 @@ public class RobotContainer {
                                 Commands.parallel(hopper.stopHopper()),
                                 () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
+
+
+                driverController.leftTrigger().toggleOnTrue(shooter.shoot(3000, 25));
+                driverController.povUp().onTrue(shooter.stepHood(5));
+                driverController.povDown().onTrue(shooter.stepHood(-5));
         }
 
         public Command getAutonomousCommand() {
