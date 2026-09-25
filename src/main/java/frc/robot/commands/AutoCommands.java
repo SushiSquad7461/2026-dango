@@ -14,7 +14,6 @@ import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.vision.Vision;
 
 public class AutoCommands {
     private final SendableChooser<Command> autoChooser=new SendableChooser<Command>();;
