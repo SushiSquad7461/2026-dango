@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
@@ -112,6 +113,11 @@ public class RobotContainer {
                                 () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
+
+                driverController.x().whileTrue(new AutoAlign(
+                                swerve,
+                                () -> -driverController.getLeftY(),
+                                () -> -driverController.getLeftX()));
 
                 driverController.leftTrigger().toggleOnTrue(shooter.shoot(3000, 25));
                 driverController.povUp().onTrue(shooter.stepHood(5));
