@@ -47,11 +47,11 @@ public class Constants {
     public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
   }
   public static final class Shooter {
-      public static final double SHOOTER_KS = 0;
-      public static final double SHOOTER_KV = 0;
-      public static final double SHOOTER_KP = 0;
-      public static final double SHOOTER_KI = 0;
-      public static final double SHOOTER_KD = 0;
+      public static double SHOOTER_KS = 0.0;
+    public static double SHOOTER_KV = 0.12; //0.12
+    public static double SHOOTER_KP = 0.1;
+    public static double SHOOTER_KI = 0;
+    public static double SHOOTER_KD = 0;
       public static final double FEEDER_RPM = 1000;
       public static final double FEEDER_ANGLE = 0;
       public static final double FEEDER_KS = 0;
