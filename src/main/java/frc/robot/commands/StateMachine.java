@@ -9,8 +9,6 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.Hopper.HopperState;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
 
 
 public class StateMachine extends SubsystemBase {

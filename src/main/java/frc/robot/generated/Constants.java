@@ -59,6 +59,7 @@ public class Constants {
       public static final double FEEDER_KP = 0;
       public static final double FEEDER_KI = 0;
       public static final double FEEDER_KD = 0;
+      public static final double SHOOTER_RPM_TOLERANCE = 100;
   }
     public static final class Swerve {
         public static final int pigeonID = 20;
