@@ -69,7 +69,7 @@ public class RobotContainer {
                         intake = new Intake(new IntakeSim());
                         hopper = new Hopper(new HopperIOSim());
                 }
-                this.stateMachine = new StateMachine(hopper,intake);
+                this.stateMachine = new StateMachine(hopper,intake, shooter);
 
                 this.autos = new AutoCommands(stateMachine, intake, swerve);
 
@@ -114,7 +114,7 @@ public class RobotContainer {
                                       stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
 
-                driverController.x().whileTrue(new AutoAlign(
+                driverController.x().onTrue(new AutoAlign(
                                 swerve,
                                 () -> -driverController.getLeftY(),
                                 () -> -driverController.getLeftX()));

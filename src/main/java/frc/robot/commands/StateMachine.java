@@ -9,6 +9,7 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.Hopper.HopperState;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeState;
+import frc.robot.subsystems.shooter.Shooter;
 
 
 public class StateMachine extends SubsystemBase {
@@ -42,14 +43,16 @@ public class StateMachine extends SubsystemBase {
     private final Intake intake;
     private final NetworkTable stateTable;
     private final StringPublisher currentStatePub;
+    private final Shooter shooter;
 
     /**
      * Constructs the State Machine
      */
-    public StateMachine(Hopper hopper, Intake intake) {
+    public StateMachine(Hopper hopper, Intake intake, Shooter shooter) {
         this.hopper = hopper;
         this.intake = intake;
         this.state = RobotState.IDLE;
+        this.shooter = shooter;
 
 
         this.stateTable = NetworkTableInstance.getDefault().getTable("StateMachine");
@@ -74,14 +77,26 @@ public class StateMachine extends SubsystemBase {
 
     //TODO: Combine
     public Command changeState(RobotState newState) {
-
+        boolean shoot = newState == RobotState.SHOOT_ONLY;
+        if(shoot) {
+            return Commands.sequence(
+            Commands.runOnce(() ->
+            state = newState
+            ),
+            Commands.parallel(
+                hopper.changeState(newState.hopperState),
+                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
+                Commands.run(() -> shooter.shoot(3000, 25))
+            );
+        }
         return Commands.sequence(
             Commands.runOnce(() ->
             state = newState
             ),
             Commands.parallel(
                 hopper.changeState(newState.hopperState),
-                Commands.runOnce(() -> intake.setWantedState(newState.intakeState)))
+                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
+                Commands.runOnce(() -> shooter.stop())
         );
     }
 
@@ -89,7 +104,7 @@ public class StateMachine extends SubsystemBase {
         return state;
     }
 
-      private void publishStates() {
-         currentStatePub.set(state.toString());
-      }
+    private void publishStates() {
+        currentStatePub.set(state.toString());
+    }
  }
