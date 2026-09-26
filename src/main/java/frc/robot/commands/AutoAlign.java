@@ -30,7 +30,7 @@ public class AutoAlign extends Command {
         addRequirements(swerve);
 
         AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-        int hubTagId = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 9 : 25;
+        int hubTagId = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26;
         hubPose = fieldLayout.getTagPose(hubTagId).get().toPose2d();
 
         rotationPID = new PIDController(
