@@ -17,7 +17,21 @@ import frc.robot.subsystems.intake.Intake.IntakeState;
 
 
 public class IntakeReal implements IntakeIO {
-    
+    public enum IntakeState {
+            IDLE(false, 0,IntakeConstants.stowedAngleDeg),
+            DEPLOYED(true,Constants.IntakeConstants.rollerSpeed,IntakeConstants.intakeAngleDeg),
+            WIGGLING(true, 0,80);
+
+            public final boolean intakeExtended;
+            public final double rollerSpeed;
+            public final double pivotAngle;
+
+            private IntakeState(boolean extended, double rollerSpeed, double pivotAngle) {
+                this.intakeExtended = extended;
+                this.rollerSpeed = rollerSpeed;
+                this.pivotAngle = pivotAngle;
+            }
+    }
     
     private final TalonFX leftPivotMotor = new TalonFX(IntakeConstants.leftPivotMotorId);
     private final TalonFX rightPivotMotor = new TalonFX(IntakeConstants.rightPivotMotorId);
