@@ -44,7 +44,7 @@ public class Constants {
   public static final class Vision {
     public static final String primaryLimelightName = "limelight-left";
     public static final String secondaryLimelightName = "limelight-right";
-    public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
+    public static PIDController rotationPID = new PIDController(0.09, 0, 0.0145);
   }
   public static final class Shooter {
       public static double SHOOTER_KS = 0.0;
