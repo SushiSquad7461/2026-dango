@@ -8,7 +8,7 @@ public interface ShooterIO {
     void runFeeder();
     void runFeederBack();
     void stopFeeder();
-    double getFlywheelRPM();
-    double getFlywheelTargetRPM();
+    double getRPM();
+    double getTargetRPM();
     boolean isShooterReady();
 }

@@ -38,7 +38,7 @@ public class ShooterIOSim implements ShooterIO {
     }
 
     @Override
-    public double getFlywheelRPM() {
+    public double getRPM() {
         double diff = targetRPM - simulatedRPM;
         simulatedRPM += diff * 0.1; 
         return simulatedRPM;
@@ -60,9 +60,9 @@ public class ShooterIOSim implements ShooterIO {
     }
 
     @Override
-    public double getFlywheelTargetRPM() {
+    public double getTargetRPM() {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFlywheelTargetRPM'");
+        throw new UnsupportedOperationException("Unimplemented method 'getTargetRPM'");
     }
 
     @Override

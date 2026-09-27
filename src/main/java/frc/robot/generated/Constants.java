@@ -45,9 +45,6 @@ public class Constants {
     public static PIDController rotationPID = new PIDController(0.1, 0, 0.0);
   }
   public static final class Shooter{
-    // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
-    // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
-    public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
     public static final double TARGET_RPM_DEFAULT = 7000; // ONLY FOR SHOOTING STRAIGHT UP
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
