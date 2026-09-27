@@ -31,7 +31,6 @@ public class Shooter extends SubsystemBase {
         return runOnce(() -> setShot(rpm, hoodDegrees))
                 .andThen(Commands.waitUntil(() -> isReady()))
                 .andThen(runOnce(() -> flywheel.setFeeder(true)))
-                .andThen(Commands.idle())
                 .finallyDo(() -> stop());
     }
 
