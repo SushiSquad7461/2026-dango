@@ -48,12 +48,14 @@ public class Constants {
     // 3T motor pulley : 4T flywheel pulley — flywheel spins 4/3 faster than motor.
     // All RPM values in this codebase are FLYWHEEL RPM. ShooterIOKraken applies this ratio internally.
     public static final double FLYWHEEL_GEAR_RATIO = 3.0 / 4.0; // motor rotations per flywheel rotation
-    public static final double TARGET_RPM_DEFAULT = 12000; // TODO: for robot reveal
+    public static final double TARGET_RPM_DEFAULT = 7000; // ONLY FOR SHOOTING STRAIGHT UP
     public static double SHOOTER_KS = 0.0;
     public static double SHOOTER_KV = 0.12; //0.12
     public static double SHOOTER_KP = 0.1;
     public static double SHOOTER_KI = 0;
     public static double SHOOTER_KD = 0;
+    
+
     // TODO: tune shooter intake PID
     public static final double KICKER_KS = 0.1;
     public static final double KICKER_KV = 0.12;
@@ -72,8 +74,8 @@ public class Constants {
     public static final double TARGET_HOOD_OUTPOST = 0;
     public static final double TARGET_HOOD_HUB = 0;
 
-    public static final double TARGET_RPM_PASS = 6000;
-    public static final double TARGET_HOOD_PASS = 35.0;
+    public static final double TARGET_RPM_PASS = 4000;
+    public static final double TARGET_HOOD_PASS = 30.0;
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 100;
@@ -82,7 +84,6 @@ public class Constants {
   }
     public static final class Swerve {
         public static final int pigeonID = 20;
-        public static final boolean REDUCE_SPEED = true;
         public static final double LOW_SPEED = 0.1;
         public static final double LOW_ROT = 0.1;
         public static final int CAMERA_RESOLUTIONX = 1280;
@@ -120,7 +121,7 @@ public class Constants {
         public static final double angleCurrentLowerTime = 0.1;
         public static final boolean angleEnableCurrentLimit = true;
 
-        public static final int driveCurrentLimit = 60;
+        public static final int driveCurrentLimit = 40;
         public static final int driveCurrentLowerLimit = 35;
         public static final double driveCurrentLowerTime = 0.1;
         public static final boolean driveEnableCurrentLimit = true;
@@ -148,7 +149,8 @@ public class Constants {
 
         /* Swerve Profiling Values */
         /** Meters per Second */
-        public static final double maxSpeed = 4.5;
+        public static final double maxSpeed = 3;
+        public static final double babyMaxSpeed = 1;
         /** Radians per Second */
         public static final double maxAngularVelocity = 7.2;
 
@@ -284,14 +286,14 @@ public class Constants {
 
         public static final double motorRotationsPerArmRotation = 64.0;
 
-        public static final double cruiseVelocityRps = 32;
-        public static final double accelRps2 =64;
+        public static final double cruiseVelocityRps = 24;
+        public static final double accelRps2 = 64;
 
         public static final double pivotP = 0.8;
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
-        public static final double rollerSpeed = 0.42;//0.60;
+        public static final double rollerSpeed = 0.37;//0.60;
         public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
         public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
