@@ -13,14 +13,13 @@ import frc.robot.generated.Constants;
 
 
 
-public class HoodHW implements HoodIO {
+class HoodHW {
     private TalonFX hoodMotor;
-    private final MotionMagicVelocityVoltage hoodControlV = new MotionMagicVelocityVoltage(0);
     private final MotionMagicVoltage hoodControl = new MotionMagicVoltage(0);
     private double hoodSetpointDegrees = 0.0;
     private double lastCommandedDegrees = 0.0;
 
-    public HoodHW(){
+    HoodHW(){
         hoodMotor = new TalonFX(15);
         TalonFXConfiguration hoodMotorConfig = new TalonFXConfiguration();
         hoodMotorConfig.CurrentLimits.StatorCurrentLimit = 20.0;
@@ -44,25 +43,24 @@ public class HoodHW implements HoodIO {
     }
 
     //TODO: Make the degrees negative if hood moves in the wrong direction
-    public void setPosition(double angleInDegrees){
+    void setPosition(double angleInDegrees){
         // Convert hood degrees → motor rotations via gear ratio
         double rotations = (angleInDegrees / 360.0) * Constants.HoodedShooterConstants.motorRotationsPerHoodRotation;
         lastCommandedDegrees = angleInDegrees;
         hoodMotor.setControl(hoodControl.withPosition(rotations));
     }
 
-    @Override
-    public double getPosition() {
+    double getPosition() {
         return 0;
     }
 
-    public void zeroHood(){
+    void zeroHood(){
         hoodMotor.setPosition(0);
     }
 
 
     /** D-pad: steps the hood setpoint by ±5° and holds position via Motion Magic. */
-    public void stepHood(double deltaDegrees) {
+    void stepHood(double deltaDegrees) {
         hoodSetpointDegrees = MathUtil.clamp(
                 hoodSetpointDegrees + deltaDegrees,
                 Constants.HoodedShooterConstants.hoodMinDegrees,

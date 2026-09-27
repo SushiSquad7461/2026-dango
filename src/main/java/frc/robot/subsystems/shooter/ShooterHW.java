@@ -12,7 +12,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import frc.robot.generated.Constants;
 
-class ShooterHW implements ShooterIO {
+class ShooterHW {
     CANBus rioCanBus = new CANBus("rio");
 
     // initialize shooter, shooter intake, and hood motors
@@ -67,23 +67,23 @@ class ShooterHW implements ShooterIO {
         krakenShooterFeeder.getConfigurator().apply(shooterFeederPID);
     }
     //sets shooter motor rpm
-    @Override
+    
     public void setRPM(double rpm) {
         double rps = rpm / 60.0;
         krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps));
     }
     //gets shooter motor rpm
-    @Override
+    
     public double getRPM() {
         return krakenShooterLeft.getVelocity().getValueAsDouble() * 60.0;
     }
     //stops shooter by coasting to 0, rather than setting 0rpm and the shooter braking
-    @Override
+    
     public void stopShooter() {
         krakenShooterLeft.set(0);
     }
     //feeder is on/off
-    @Override
+    
     public void setFeeder(boolean on) {
         double rps = Constants.Shooter.FEEDER_RPM / 60;
         if(on) {
@@ -93,7 +93,7 @@ class ShooterHW implements ShooterIO {
         }
     }
     //check if feeder is running
-    @Override
+    
     public boolean getFeeder() {
         return krakenShooterFeeder.getVelocity().getValueAsDouble() > 2; //margin of error of 120rpm/2rps
     }
