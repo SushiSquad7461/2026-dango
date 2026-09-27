@@ -39,7 +39,7 @@ public class AutoAlign extends Command {
         this.xTranslation = xTranslation;
         this.yTranslation = yTranslation;
         this.driverRotation = driverRotation;
-        addRequirements(swerve, shooter, hoodedShooter);
+        addRequirements(swerve);
 
         // PID on shooter error (degrees). 0 = shooter axis aligned with target.
         txPID = new PIDController(
@@ -93,7 +93,8 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return false; // runs until trigger is released
+        return false;
+        //return txPID.atSetpoint();
     }
 
     @Override

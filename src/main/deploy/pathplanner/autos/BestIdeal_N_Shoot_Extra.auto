@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Trench_Neutral"
+                  "pathName": "Fix_Trench_Neutral"
                 }
               },
               {
@@ -53,9 +53,60 @@
                 }
               },
               {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "parallel",
+                      "data": {
+                        "commands": [
+                          {
+                            "type": "wait",
+                            "data": {
+                              "waitTime": 0.5
+                            }
+                          },
+                          {
+                            "type": "named",
+                            "data": {
+                              "name": "Down"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 6.5
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
                 "type": "named",
                 "data": {
                   "name": "Down"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Shoot_DS"
                 }
               }
             ]
@@ -64,13 +115,13 @@
         {
           "type": "named",
           "data": {
-            "name": "Shoot"
+            "name": "Down"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 20.0
+            "waitTime": 10.0
           }
         },
         {

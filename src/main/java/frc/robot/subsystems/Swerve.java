@@ -20,15 +20,12 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.Waypoint;
 
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -44,6 +41,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
+    private boolean babyMode = false;
+
     private final SwerveDrivePoseEstimator poseEstimator;
     private final SwerveModule[] mSwerveMods;
     private final BaseStatusSignal[] modStatusSignals;
@@ -76,7 +75,6 @@ public class Swerve extends SubsystemBase {
     private long yPosEntryLastChanged;
     private final DoubleEntry rotEntry;
     private long rotEntryLastChanged;
-    private int rejectedVisionMeasurementCount = 0;
 
     public Swerve() {
         field = new Field2d();
@@ -285,6 +283,10 @@ public class Swerve extends SubsystemBase {
         }
     }
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+        if(babyMode) {
+            translation = new Translation2d(translation.getX() * Constants.Swerve.LOW_SPEED, translation.getY() * Constants.Swerve.LOW_SPEED);
+            rotation = rotation * Constants.Swerve.LOW_ROT;
+        }
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                         translation.getX(),
@@ -356,35 +358,8 @@ public class Swerve extends SubsystemBase {
     }
 
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
-            Matrix<N3, N1> visionMeasurementStdDevs) {
-        if (!isValidVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs)) {
-            rejectedVisionMeasurementCount++;
-            return;
-        }
-
+            edu.wpi.first.math.Matrix<edu.wpi.first.math.numbers.N3, edu.wpi.first.math.numbers.N1> visionMeasurementStdDevs) {
         poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    }
-
-    private static boolean isValidVisionMeasurement(Pose2d pose, double timestampSeconds,
-            Matrix<N3, N1> stdDevs) {
-        if (pose == null || stdDevs == null || !Double.isFinite(timestampSeconds) || timestampSeconds < 0.0) {
-            return false;
-        }
-
-        if (!Double.isFinite(pose.getX())
-                || !Double.isFinite(pose.getY())
-                || !Double.isFinite(pose.getRotation().getRadians())) {
-            return false;
-        }
-
-        for (int i = 0; i < 3; i++) {
-            double stdDev = stdDevs.get(i, 0);
-            if (!Double.isFinite(stdDev) || stdDev <= 0.0) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public Rotation2d getHeading() {
@@ -440,7 +415,6 @@ public class Swerve extends SubsystemBase {
     public void periodic() {
         SmartDashboard.putNumber("GyroYaw", getGyroYaw().getDegrees());
         SmartDashboard.putNumber("PoseYaw", getPose().getRotation().getDegrees());
-        SmartDashboard.putNumber("Swerve/VisionMeasurementsRejected", rejectedVisionMeasurementCount);
         BaseStatusSignal.refreshAll(modStatusSignals);
         for (SwerveModule mod : mSwerveMods) {
             cancoderPubs[mod.moduleNumber].set(mod.getCANcoder().getDegrees());
@@ -452,6 +426,7 @@ public class Swerve extends SubsystemBase {
         updateOdom();
 
         Pose2d currentPose = getPose();
+        currentPose = getPose();
         field.setRobotPose(currentPose);
         gyroDoublePublisher.set(getGyroYaw().getDegrees());
     }
@@ -504,5 +479,13 @@ public class Swerve extends SubsystemBase {
         gyroYaw.refresh();
         poseEstimator.update(getGyroYaw(), getModulePositions());
         
+    }
+
+    public void babyMode() {
+        if(babyMode) {
+            babyMode = false;
+        } else {
+            babyMode = true;
+        }
     }
 }
