@@ -74,8 +74,8 @@ public class Constants {
     public static final double TARGET_HOOD_OUTPOST = 0;
     public static final double TARGET_HOOD_HUB = 0;
 
-    public static final double TARGET_RPM_PASS = 4000;
-    public static final double TARGET_HOOD_PASS = 30.0;
+    public static final double TARGET_RPM_PASS = 6000;
+    public static final double TARGET_HOOD_PASS = 35.0;
 
     public static final double FEEDER_RPM = 1000;
     public static final double SHOOTER_RPM_TOLERANCE = 100;
@@ -121,7 +121,7 @@ public class Constants {
         public static final double angleCurrentLowerTime = 0.1;
         public static final boolean angleEnableCurrentLimit = true;
 
-        public static final int driveCurrentLimit = 40;
+        public static final int driveCurrentLimit = 60;
         public static final int driveCurrentLowerLimit = 35;
         public static final double driveCurrentLowerTime = 0.1;
         public static final boolean driveEnableCurrentLimit = true;
@@ -149,7 +149,7 @@ public class Constants {
 
         /* Swerve Profiling Values */
         /** Meters per Second */
-        public static final double maxSpeed = 3;
+        public static final double maxSpeed = 4.5;
         public static final double babyMaxSpeed = 1;
         /** Radians per Second */
         public static final double maxAngularVelocity = 7.2;
@@ -293,7 +293,7 @@ public class Constants {
         public static final double pivotI = 0.0;
         public static final double pivotD = 0.0;
 
-        public static final double rollerSpeed = 0.37;//0.60;
+        public static final double rollerSpeed = 0.42;//0.60;
         public static final double HIGH_WIGGLE_POSITION_DEGREES = 80;
         public static final double LOW_WIGGLE_POSITION_DEGREES = 100;
 
