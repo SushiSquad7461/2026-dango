@@ -42,4 +42,9 @@ public class Shooter extends SubsystemBase {
     public Command zeroHood() {
         return runOnce(() -> hood.zeroHood());
     }
+
+    public Command idleRPM() {
+        return runOnce(() -> flywheel.setRPM(Constants.Shooter.SHOOTER_IDLE_RPM));
+    }
+    
 }
