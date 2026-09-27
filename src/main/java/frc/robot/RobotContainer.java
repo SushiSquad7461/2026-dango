@@ -17,12 +17,9 @@ import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIOReal;
-import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeReal;
 import frc.robot.subsystems.intake.IntakeSim;
-import frc.robot.subsystems.shooter.HoodHW;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.Swerve;
@@ -62,12 +59,12 @@ public class RobotContainer {
 
                 if (Robot.isReal()) {
                         intake = new Intake(new IntakeReal());
-                        hopper = new Hopper(new HopperIOReal());
+                        hopper = new Hopper();
                         // swerve.resetGyro();
 
                 } else {
                         intake = new Intake(new IntakeSim());
-                        hopper = new Hopper(new HopperIOSim());
+                        hopper = new Hopper();
                 }
                 this.stateMachine = new StateMachine(hopper,intake, shooter);
 
