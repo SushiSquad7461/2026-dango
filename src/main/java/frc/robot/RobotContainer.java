@@ -18,8 +18,6 @@ import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeReal;
-import frc.robot.subsystems.intake.IntakeSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.Swerve;
@@ -58,12 +56,12 @@ public class RobotContainer {
         public RobotContainer() {
 
                 if (Robot.isReal()) {
-                        intake = new Intake(new IntakeReal());
+                        intake = new Intake();
                         hopper = new Hopper();
                         // swerve.resetGyro();
 
                 } else {
-                        intake = new Intake(new IntakeSim());
+                        intake = new Intake();
                         hopper = new Hopper();
                 }
                 this.stateMachine = new StateMachine(hopper,intake, shooter);
@@ -82,39 +80,37 @@ public class RobotContainer {
          * it to a {@link
          * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
          */
-        private void configureButtonBindings() {
+       private void configureButtonBindings() {
                 swerve.setDefaultCommand(new TeleopSwerve(
-                                swerve,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX(),
-                                () -> -driverController.getRightX(),
-                                () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
-                                                                                // only while holding down the button
+                        swerve,
+                        () -> -driverController.getLeftY(),
+                        () -> -driverController.getLeftX(),
+                        () -> -driverController.getRightX(),
+                        () -> driverController.back().getAsBoolean()));
 
                 driverController.y().onTrue(Commands.runOnce(swerve::resetGyro));
 
-                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
+                driverController.rightTrigger()
+                        .onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY))
+                        .onFalse(stateMachine.changeState(RobotState.IDLE));
+
                 driverController.rightBumper().onTrue(
                         Commands.either(
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.IDLE)),
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.DEPLOYED)),
-                                () -> intake.getState() == IntakeState.DEPLOYED));
+                        stateMachine.changeState(RobotState.IDLE),
+                        stateMachine.changeState(RobotState.INTAKE_DOWN),
+                        () -> stateMachine.getCurrentState() == RobotState.INTAKE_DOWN));
 
-                driverController.leftBumper().onTrue(
-                        Commands.parallel(
-                        Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
-                ).onFalse(
+                driverController.leftBumper().onFalse(
                         Commands.either(
-                                Commands.parallel(hopper.runHopper()),
-                                Commands.parallel(hopper.stopHopper()),
-                                () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
-                                      stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
-
+                        Commands.parallel(hopper.runHopper()),
+                        Commands.parallel(hopper.stopHopper()),
+                        () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
+                                stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
                 driverController.x().onTrue(new AutoAlign(
-                                swerve,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX()));
+                        swerve,
+                        () -> -driverController.getLeftY(),
+                        () -> -driverController.getLeftX()));
 
                 driverController.leftTrigger().toggleOnTrue(shooter.shoot(3000, 25));
                 driverController.povUp().onTrue(shooter.stepHood(5));

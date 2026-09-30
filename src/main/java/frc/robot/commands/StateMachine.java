@@ -15,18 +15,11 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(IntakeState.DEPLOYED),
-        SHOOT_ONLY(IntakeState.DEPLOYED),//IntakeState.DEPLOYED
+        IDLE(IntakeState.IDLE),
+        SHOOT_ONLY(IntakeState.DEPLOYED),
         INTAKE_DOWN(IntakeState.DEPLOYED),
-        //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
-        //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
         INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
         PASSING(IntakeState.DEPLOYED);
-        //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
-        //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
-
 
         public final IntakeState intakeState;
 
@@ -72,29 +65,29 @@ public class StateMachine extends SubsystemBase {
         return this.state;
     }
 
-    //TODO: Combine
     public Command changeState(RobotState newState) {
         boolean shoot = newState == RobotState.SHOOT_ONLY;
-        if(shoot) {
+
+        if (shoot) {
             return Commands.sequence(
-            Commands.runOnce(() ->
-            state = newState
-            ),
-            Commands.parallel(
-                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
-                Commands.run(() -> shooter.shoot(3000, 25))
+                Commands.runOnce(() -> state = newState),
+                Commands.parallel(
+                    intake.pivot(newState.intakeState.pivotAngle),
+                    intake.setStateRollers(newState.intakeState.rollerSpeed),
+                    shooter.shoot(3000, 25)
+                )
             );
         }
+
         return Commands.sequence(
-            Commands.runOnce(() ->
-            state = newState
-            ),
+            Commands.runOnce(() -> state = newState),
             Commands.parallel(
-                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
-                Commands.runOnce(() -> shooter.stop())
+                intake.pivot(newState.intakeState.pivotAngle),
+                intake.setStateRollers(newState.intakeState.rollerSpeed)
+            ),
+            Commands.runOnce(() -> shooter.stop())
         );
     }
-
     public RobotState getCurrentState() {
         return state;
     }
