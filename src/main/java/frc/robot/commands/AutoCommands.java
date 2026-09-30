@@ -25,7 +25,7 @@ public class AutoCommands {
             selectedAuto.set("Nothing");
 
 
-            NamedCommands.registerCommand("Shoot",
+        NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN_AND_SHOOT)));

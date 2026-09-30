@@ -30,25 +30,6 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "NT_Turn_Back"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Down"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
                   "pathName": "NT_AutoAlign"
                 }
               },
