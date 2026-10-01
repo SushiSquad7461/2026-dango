@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.commands.AutoAlign;
 
 public class AutoCommands {
     private final SendableChooser<Command> autoChooser=new SendableChooser<Command>();;
@@ -24,7 +25,6 @@ public class AutoCommands {
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
-
         NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
@@ -33,6 +33,10 @@ public class AutoCommands {
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN)));
         NamedCommands.registerCommand("Idle",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
+        //NamedCommands.registerCommand("AutoAlign",
+            //new AutoAlign(swerve, () -> 0.0, () -> 0.0));
+        //AutoAlign doesn't actually work
+
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
