@@ -31,7 +31,6 @@ public class Shooter extends SubsystemBase {
         return runOnce(() -> setShot(rpm, hoodDegrees))
                 .andThen(Commands.waitUntil(() -> isReady()))
                 .andThen(runOnce(() -> flywheel.setFeeder(true)))
-                .andThen(Commands.idle())
                 .finallyDo(() -> stop());
     }
 
@@ -42,4 +41,9 @@ public class Shooter extends SubsystemBase {
     public Command zeroHood() {
         return runOnce(() -> hood.zeroHood());
     }
+
+    public Command idleRPM() {
+        return runOnce(() -> flywheel.setRPM(Constants.Shooter.SHOOTER_IDLE_RPM));
+    }
+    
 }

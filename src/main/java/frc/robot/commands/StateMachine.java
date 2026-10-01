@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.Hopper.HopperState;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeState;
 import frc.robot.subsystems.shooter.Shooter;
@@ -16,24 +15,15 @@ public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(HopperState.IDLE,IntakeState.DEPLOYED),
-        SHOOT_ONLY(HopperState.RUNNING, IntakeState.DEPLOYED),//IntakeState.DEPLOYED
-        INTAKE_DOWN(HopperState.IDLE,IntakeState.DEPLOYED),
-        //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
-        //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(HopperState.RUNNING, IntakeState.DEPLOYED),
-        PASSING(HopperState.RUNNING, IntakeState.DEPLOYED);
-        //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
-        //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
+        IDLE(IntakeState.IDLE),
+        SHOOT_ONLY(IntakeState.DEPLOYED),
+        INTAKE_DOWN(IntakeState.DEPLOYED),
+        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
+        PASSING(IntakeState.DEPLOYED);
 
-
-        public final HopperState hopperState;
         public final IntakeState intakeState;
 
-        private RobotState(HopperState hopperState,IntakeState intakeState) {
-            this.hopperState = hopperState;
+        private RobotState(IntakeState intakeState) {
             this.intakeState = intakeState;
         }
     }
@@ -75,31 +65,29 @@ public class StateMachine extends SubsystemBase {
         return this.state;
     }
 
-    //TODO: Combine
     public Command changeState(RobotState newState) {
         boolean shoot = newState == RobotState.SHOOT_ONLY;
-        if(shoot) {
+
+        if (shoot) {
             return Commands.sequence(
-            Commands.runOnce(() ->
-            state = newState
-            ),
-            Commands.parallel(
-                hopper.changeState(newState.hopperState),
-                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
-                Commands.run(() -> shooter.shoot(3000, 25))
+                Commands.runOnce(() -> state = newState),
+                Commands.parallel(
+                    intake.pivot(newState.intakeState.pivotAngle),
+                    intake.setStateRollers(newState.intakeState.rollerSpeed),
+                    shooter.shoot(3000, 25)
+                )
             );
         }
+
         return Commands.sequence(
-            Commands.runOnce(() ->
-            state = newState
-            ),
+            Commands.runOnce(() -> state = newState),
             Commands.parallel(
-                hopper.changeState(newState.hopperState),
-                Commands.runOnce(() -> intake.setWantedState(newState.intakeState))),
-                Commands.runOnce(() -> shooter.stop())
+                intake.pivot(newState.intakeState.pivotAngle),
+                intake.setStateRollers(newState.intakeState.rollerSpeed)
+            ),
+            Commands.runOnce(() -> shooter.stop())
         );
     }
-
     public RobotState getCurrentState() {
         return state;
     }
