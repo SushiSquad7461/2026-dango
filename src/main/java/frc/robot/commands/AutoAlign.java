@@ -14,8 +14,8 @@ import frc.robot.subsystems.Swerve;
 import frc.robot.util.AllianceUtil;
 
 /**
- * Turns the robot to face the hub while the driver keeps translation control, and sets flywheel
- * RPM and hood angle from the LUT based on distance to the hub. Feeding is SHOOT_ONLY's job.
+ * Turns the robot to face the hub while the driver keeps translation control. Flywheel, hood and
+ * feeding are AutoShot's job (run by SHOOT_ONLY).
  * Only requires swerve, so it can run alongside SHOOT_ONLY (which requires the shooter).
  * Runs until interrupted.
  */
@@ -71,7 +71,7 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return false; // only ends when the button is released (see whileTrue binding)
+        return false; // cancelled on trigger release: the IDLE onFalse command shares the hopper requirement
     }
 
     @Override

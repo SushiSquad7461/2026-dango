@@ -78,7 +78,7 @@ class ShooterHW {
     public double getRPM() {
         return krakenShooterLeft.getVelocity().getValueAsDouble() * 60.0;
     }
-    //stops shooter by coasting to 0, rather than setting 0rpm and the shooter braking
+    //"stops" shooter by holding a low closed-loop rpm (does not coast to 0)
     
     public void stopShooter(double rpm) {
         double rps = rpm / 60.0;

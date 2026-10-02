@@ -15,7 +15,7 @@ package frc.robot.subsystems.shooter;
  *   { distanceMeters, flywheelRPM, hoodAngleDegrees }
  *
  * DISTANCE  — from the robot center to the hub center, in meters.
- * RPM       — flywheel RPM (ShooterIOKraken applies the gear ratio internally).
+ * RPM       — sent straight to the shooter motor; no gear ratio is applied.
  * ANGLE     — hood angle in degrees. Must be within [hoodMinDegrees, hoodMaxDegrees].
  *
  * TIPS:
