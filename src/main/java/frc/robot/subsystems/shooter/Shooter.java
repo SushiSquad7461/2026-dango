@@ -53,5 +53,7 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putNumber("Target RPM", targetRPM);
         SmartDashboard.putBoolean("Feeder Status", flywheel.getFeeder());
         SmartDashboard.putBoolean("Shooter Ready", isReady());
+        SmartDashboard.putNumber("Shooter Supply Current",flywheel.getSupplyCurrent());
+        SmartDashboard.putNumber("Shooter Stator Current",flywheel.getStatorCurrent());
     }
 }
