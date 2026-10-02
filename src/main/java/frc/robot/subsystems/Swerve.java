@@ -477,47 +477,39 @@ public class Swerve extends SubsystemBase {
         poseEstimator.update(getGyroYaw(), getModulePositions());
 
         StatusSignal<AngularVelocity> yawRate = gyro.getAngularVelocityZDevice();
+        double yawRateDps = yawRate.refresh().getValueAsDouble();
 
-        boolean doRejectUpdateLeft = false;
-        boolean doRejectUpdateRight = false;
+        addLimelightMeasurement("limelight-left", yawRateDps);
+        addLimelightMeasurement("limelight-right", yawRateDps);
+    }
 
-        LimelightHelpers.SetIMUMode("limelight-left", 4);
-        LimelightHelpers.SetRobotOrientation("limelight-left", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate mt2Left = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
-        if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
-        {
-            doRejectUpdateLeft = true;
+    // Rotation std devs (radians) for MT2 heading. In IMU mode 3 the Limelight's internal IMU
+    // is continuously corrected by MegaTag1's tag-derived yaw, so MT2's heading is field-referenced
+    // rather than an echo of our Pigeon. Trust it hard while disabled (seed heading before the match),
+    // gently while enabled (correct drift without fighting the Pigeon during fast turns).
+    private static final double VISION_ROT_STDDEV_DISABLED = 0.05;
+    private static final double VISION_ROT_STDDEV_ENABLED = 0.5;
+    // Complementary filter alpha for MT1 assist. Higher converges the LL IMU onto MT1 yaw faster.
+    private static final double IMU_ASSIST_ALPHA_DISABLED = 0.01;
+    private static final double IMU_ASSIST_ALPHA_ENABLED = 0.001; // Limelight default
+
+    private void addLimelightMeasurement(String limelightName, double yawRateDps) {
+        boolean disabled = DriverStation.isDisabled();
+
+        LimelightHelpers.SetIMUMode(limelightName, 3); // internal IMU + MT1 assist
+        LimelightHelpers.SetIMUAssistAlpha(limelightName, disabled ? IMU_ASSIST_ALPHA_DISABLED : IMU_ASSIST_ALPHA_ENABLED);
+        LimelightHelpers.SetRobotOrientation(limelightName, poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+
+        if (mt2 == null || mt2.tagCount == 0) {
+            return;
         }
-        if(mt2Left.tagCount == 0)
-        {
-            doRejectUpdateLeft = true;
-        }
-        if(!doRejectUpdateLeft)
-        {
-            poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-            poseEstimator.addVisionMeasurement(
-                    mt2Left.pose,
-                    mt2Left.timestampSeconds);
+        if (Math.abs(yawRateDps) > 720) { // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+            return;
         }
 
-        LimelightHelpers.SetIMUMode("limelight-right", 4);
-        LimelightHelpers.SetRobotOrientation("limelight-right", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate mt2Right = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-right");
-        if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
-        {
-            doRejectUpdateRight = true;
-        }
-        if(mt2Right.tagCount == 0)
-        {
-            doRejectUpdateRight = true;
-        }
-        if(!doRejectUpdateRight)
-        {
-            poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-            poseEstimator.addVisionMeasurement(
-                    mt2Right.pose,
-                    mt2Right.timestampSeconds);
-        }
-        
+        double rotStdDev = disabled ? VISION_ROT_STDDEV_DISABLED : VISION_ROT_STDDEV_ENABLED;
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, rotStdDev));
+        poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
     }
 }
