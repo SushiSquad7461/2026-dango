@@ -112,7 +112,6 @@ public class RobotContainer {
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX()));
 
-                driverController.leftTrigger().toggleOnTrue(shooter.shoot(3000, 25));
                 driverController.povUp().onTrue(shooter.stepHood(5));
                 driverController.povDown().onTrue(shooter.stepHood(-5));
         }
