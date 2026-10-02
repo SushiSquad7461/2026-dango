@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -46,4 +47,11 @@ public class Shooter extends SubsystemBase {
         return runOnce(() -> flywheel.setRPM(Constants.Shooter.SHOOTER_IDLE_RPM));
     }
     
+    public void periodic() {
+        SmartDashboard.putNumber("Shooter RPM", flywheel.getRPM());
+        SmartDashboard.putNumber("Hood Position", hood.getPosition());
+        SmartDashboard.putNumber("Target RPM", targetRPM);
+        SmartDashboard.putBoolean("Feeder Status", flywheel.getFeeder());
+        SmartDashboard.putBoolean("Shooter Ready", isReady());
+    }
 }
