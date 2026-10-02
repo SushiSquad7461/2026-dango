@@ -45,6 +45,9 @@ public class Constants {
         public static final String primaryLimelightName = "limelight-left";
         public static final String secondaryLimelightName = "limelight-right";
         public static PIDController rotationPID = new PIDController(0.09, 0, 0.0145);
+        // Ignore vision while the gyro yaw rate exceeds this (deg/s). Max commanded rotation is
+        // Swerve.maxAngularVelocity = 6 rad/s ~= 344 deg/s, so this only trips on hard spins.
+        public static final double MAX_YAW_RATE_DPS = 270;
     }
     public static final class Shooter {
         public static double SHOOTER_KS = 0.0;

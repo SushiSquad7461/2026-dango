@@ -11,6 +11,9 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
@@ -479,8 +482,9 @@ public class Swerve extends SubsystemBase {
         StatusSignal<AngularVelocity> yawRate = gyro.getAngularVelocityZDevice();
         double yawRateDps = yawRate.refresh().getValueAsDouble();
 
-        addLimelightMeasurement("limelight-left", yawRateDps);
-        addLimelightMeasurement("limelight-right", yawRateDps);
+        boolean spinningTooFast = Math.abs(yawRateDps) > Constants.Vision.MAX_YAW_RATE_DPS;
+        addLimelightMeasurement("limelight-left", spinningTooFast);
+        addLimelightMeasurement("limelight-right", spinningTooFast);
     }
 
     // Rotation std devs (radians) for MT2 heading. In IMU mode 3 the Limelight's internal IMU
@@ -493,7 +497,11 @@ public class Swerve extends SubsystemBase {
     private static final double IMU_ASSIST_ALPHA_DISABLED = 0.01;
     private static final double IMU_ASSIST_ALPHA_ENABLED = 0.001; // Limelight default
 
-    private void addLimelightMeasurement(String limelightName, double yawRateDps) {
+    // Timestamp of the newest frame already seen from each camera. LimelightHelpers returns the same
+    // timestamp until a new frame arrives, so a slow or stalled camera would otherwise be re-added every loop.
+    private final Map<String, Double> lastFrameTimestamps = new HashMap<>();
+
+    private void addLimelightMeasurement(String limelightName, boolean spinningTooFast) {
         boolean disabled = DriverStation.isDisabled();
 
         LimelightHelpers.SetIMUMode(limelightName, 3); // internal IMU + MT1 assist
@@ -504,7 +512,13 @@ public class Swerve extends SubsystemBase {
         if (mt2 == null || mt2.tagCount == 0) {
             return;
         }
-        if (Math.abs(yawRateDps) > 720) { // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+        // Only use each frame once. Mark it as seen before the spin filter so a frame captured
+        // while spinning isn't picked up later (a disconnected camera also stops here).
+        if (mt2.timestampSeconds <= lastFrameTimestamps.getOrDefault(limelightName, 0.0)) {
+            return;
+        }
+        lastFrameTimestamps.put(limelightName, mt2.timestampSeconds);
+        if (spinningTooFast) {
             return;
         }
 
