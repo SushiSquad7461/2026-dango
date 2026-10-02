@@ -100,9 +100,9 @@ class ShooterHW {
         return krakenShooterFeeder.getVelocity().getValueAsDouble() > 2; //margin of error of 120rpm/2rps
     }
     public double getSupplyCurrent(){
-        return krakenShooterFeeder.getSupplyCurrent().getValueAsDouble();
+        return krakenShooterLeft.getSupplyCurrent().getValueAsDouble();
     }
     public double getStatorCurrent(){
-        return krakenShooterFeeder.getStatorCurrent().getValueAsDouble();
+        return krakenShooterLeft.getStatorCurrent().getValueAsDouble();
     }
 }
