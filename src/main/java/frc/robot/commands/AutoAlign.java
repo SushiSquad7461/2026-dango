@@ -29,9 +29,7 @@ public class AutoAlign extends Command {
         this.yTranslation = yTranslation;
         addRequirements(swerve);
 
-        AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-        int hubTagId = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26;
-        hubPose = fieldLayout.getTagPose(hubTagId).get().toPose2d();
+        hubPose = getHubPose();
 
         rotationPID = new PIDController(
                 Constants.Vision.rotationPID.getP(),
@@ -39,6 +37,12 @@ public class AutoAlign extends Command {
                 Constants.Vision.rotationPID.getD());
         rotationPID.enableContinuousInput(-180, 180);
         rotationPID.setTolerance(4.0);
+    }
+
+    public static Pose2d getHubPose() {
+        AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+        int hubTagId = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26;
+        return fieldLayout.getTagPose(hubTagId).get().toPose2d();
     }
 
     @Override

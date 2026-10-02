@@ -64,7 +64,7 @@ public class RobotContainer {
                         intake = new Intake();
                         hopper = new Hopper();
                 }
-                this.stateMachine = new StateMachine(hopper,intake, shooter);
+                this.stateMachine = new StateMachine(hopper,intake, shooter, swerve);
 
                 this.autos = new AutoCommands(stateMachine, intake, swerve);
 
@@ -91,7 +91,12 @@ public class RobotContainer {
                 driverController.y().onTrue(Commands.runOnce(swerve::resetGyro));
 
                 driverController.rightTrigger()
-                        .onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY))
+                        .onTrue(Commands.parallel(
+                                stateMachine.changeState(RobotState.SHOOT_ONLY),
+                                new AutoAlign(
+                                        swerve,
+                                        () -> -driverController.getLeftY(),
+                                        () -> -driverController.getLeftX())))
                         .onFalse(stateMachine.changeState(RobotState.IDLE));
 
                 driverController.rightBumper().onTrue(
@@ -106,11 +111,6 @@ public class RobotContainer {
                         Commands.parallel(hopper.stopHopper()),
                         () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                                 stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
-
-                driverController.x().whileTrue(new AutoAlign(
-                        swerve,
-                        () -> -driverController.getLeftY(),
-                        () -> -driverController.getLeftX()));
 
                 driverController.povUp().onTrue(shooter.stepHood(5));
                 driverController.povDown().onTrue(shooter.stepHood(-5));

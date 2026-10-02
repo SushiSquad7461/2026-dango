@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -9,6 +11,7 @@ import frc.robot.generated.Constants;
 public class Shooter extends SubsystemBase {
     private final ShooterHW flywheel = new ShooterHW();
     private final HoodHW hood = new HoodHW();
+    private final ShotLUT lut = ShotTable.buildLUT();
     private double targetRPM = 0.0;
 
     public void setShot(double rpm, double hoodDegrees) {
@@ -33,6 +36,17 @@ public class Shooter extends SubsystemBase {
                 .andThen(Commands.waitUntil(() -> isReady()))
                 .andThen(runOnce(() -> flywheel.setFeeder(true)));
                 //.finallyDo(() -> stop());
+    }
+
+    /** Continuously aims RPM/hood from the LUT based on distance, feeding once ready. Runs until interrupted. */
+    public Command autoShoot(DoubleSupplier distanceSupplier) {
+        return run(() -> {
+            ShotLUT.ShotParameters shot = lut.get(distanceSupplier.getAsDouble());
+            setShot(shot.rpm(), shot.angle());
+            if (isReady()) {
+                flywheel.setFeeder(true);
+            }
+        });
     }
 
     public Command stepHood(double deltaDegrees) {
