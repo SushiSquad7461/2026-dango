@@ -1,5 +1,4 @@
 package frc.robot.commands;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -73,14 +72,13 @@ public class StateMachine extends SubsystemBase {
         boolean shoot = newState == RobotState.SHOOT_ONLY;
 
         if (shoot) {
-            Pose2d hubPose = AutoAlign.getHubPose();
             return Commands.sequence(
                 Commands.runOnce(() -> state = newState),
                 Commands.parallel(
                     intake.pivot(newState.intakeState.pivotAngle),
                     intake.setStateRollers(newState.intakeState.rollerSpeed),
-                    shooter.autoShoot(() -> swerve.getPose().getTranslation().getDistance(hubPose.getTranslation())),
-                    hopper.runHopper()
+                    hopper.runHopper(),
+                    new AutoShot(shooter, swerve) // only reads the pose, never drives, so auto paths keep swerve
                 )
             );
         }

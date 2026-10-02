@@ -64,7 +64,7 @@ public class RobotContainer {
                         intake = new Intake();
                         hopper = new Hopper();
                 }
-                this.stateMachine = new StateMachine(hopper,intake, shooter, swerve);
+                this.stateMachine = new StateMachine(hopper, intake, shooter, swerve);
 
                 this.autos = new AutoCommands(stateMachine, intake, swerve);
 
