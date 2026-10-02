@@ -5,15 +5,14 @@ import edu.wpi.first.math.interpolation.Interpolatable;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 
-/** LUT for a shooter with adjustable flywheel velocity (RPM), hood angle (degrees), and ToF (seconds). */
+/** LUT for a shooter with adjustable flywheel velocity (RPM) and hood angle (degrees). */
 public class ShotLUT {
-    public record ShotParameters(double rpm, double angle, double tof)
+    public record ShotParameters(double rpm, double angle)
             implements Interpolatable<ShotParameters> {
         public ShotParameters interpolate(ShotParameters endValue, double t) {
             return new ShotParameters(
-                MathUtil.interpolate(rpm(), endValue.rpm(), t),
-                MathUtil.interpolate(angle(),    endValue.angle(),    t),
-                MathUtil.interpolate(tof(),      endValue.tof(),      t));
+                MathUtil.interpolate(rpm(),   endValue.rpm(),   t),
+                MathUtil.interpolate(angle(), endValue.angle(), t));
         }
     }
 
