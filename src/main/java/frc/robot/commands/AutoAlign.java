@@ -2,12 +2,11 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -41,10 +40,13 @@ public class AutoAlign extends Command {
         rotationPID.setTolerance(4.0);
     }
 
+    // Hub centers in blue-origin field coordinates (meters), precomputed from 2026-rebuilt-andymark.json
+    // as the midpoint of each hub's tag bounding box (blue tags 18-21, 24-27; red tags 2-5, 8-11).
+    private static final Pose2d BLUE_HUB_CENTER = new Pose2d(4.6115097, 4.0213534, Rotation2d.kZero);
+    private static final Pose2d RED_HUB_CENTER = new Pose2d(11.9015002, 4.0213534, Rotation2d.kZero);
+
     public static Pose2d getHubPose() {
-        AprilTagFieldLayout fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-        int hubTagId = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26;
-        return fieldLayout.getTagPose(hubTagId).get().toPose2d();
+        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? RED_HUB_CENTER : BLUE_HUB_CENTER;
     }
 
     @Override
