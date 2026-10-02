@@ -69,7 +69,9 @@ public class StateMachine extends SubsystemBase {
     }
 
     public Command changeState(RobotState newState) {
-        boolean shoot = newState == RobotState.SHOOT_ONLY;
+        boolean shoot = newState == RobotState.SHOOT_ONLY
+                || newState == RobotState.INTAKE_DOWN_AND_SHOOT
+                || newState == RobotState.PASSING;
 
         if (shoot) {
             return Commands.sequence(
