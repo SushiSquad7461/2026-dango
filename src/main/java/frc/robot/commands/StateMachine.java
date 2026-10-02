@@ -74,7 +74,8 @@ public class StateMachine extends SubsystemBase {
                 Commands.parallel(
                     intake.pivot(newState.intakeState.pivotAngle),
                     intake.setStateRollers(newState.intakeState.rollerSpeed),
-                    shooter.shoot(3000, 25)
+                    shooter.shoot(3000, 25),
+                    hopper.runHopper()
                 )
             );
         }
@@ -83,7 +84,8 @@ public class StateMachine extends SubsystemBase {
             Commands.runOnce(() -> state = newState),
             Commands.parallel(
                 intake.pivot(newState.intakeState.pivotAngle),
-                intake.setStateRollers(newState.intakeState.rollerSpeed)
+                intake.setStateRollers(newState.intakeState.rollerSpeed),
+                hopper.stopHopper()
             ),
             Commands.runOnce(() -> shooter.stop())
         );

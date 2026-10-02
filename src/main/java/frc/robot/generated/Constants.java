@@ -132,7 +132,7 @@ public class Constants {
         /** Meters per Second */
         public static final double maxSpeed = 4.5;
         /** Radians per Second */
-        public static final double maxAngularVelocity = 7.2;
+        public static final double maxAngularVelocity = 6;
 
         /* Neutral Modes */
         public static final NeutralModeValue angleNeutralMode = NeutralModeValue.Coast;
