@@ -19,8 +19,8 @@ public class StateMachine extends SubsystemBase {
         IDLE(IntakeState.IDLE),
         SHOOT_ONLY(IntakeState.DEPLOYED),
         INTAKE_DOWN(IntakeState.DEPLOYED),
-        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
-        PASSING(IntakeState.DEPLOYED);
+        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED);
+        // PASSING(IntakeState.DEPLOYED);
 
         public final IntakeState intakeState;
 
@@ -70,8 +70,7 @@ public class StateMachine extends SubsystemBase {
 
     public Command changeState(RobotState newState) {
         boolean shoot = newState == RobotState.SHOOT_ONLY
-                || newState == RobotState.INTAKE_DOWN_AND_SHOOT
-                || newState == RobotState.PASSING;
+                || newState == RobotState.INTAKE_DOWN_AND_SHOOT;
 
         if (shoot) {
             return Commands.sequence(

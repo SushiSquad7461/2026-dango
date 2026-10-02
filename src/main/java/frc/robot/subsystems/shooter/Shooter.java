@@ -1,6 +1,6 @@
 package frc.robot.subsystems.shooter;
 
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,18 +30,14 @@ public class Shooter extends SubsystemBase {
                 && Math.abs(Math.abs(flywheel.getRPM()) - targetRPM) < Constants.Shooter.SHOOTER_RPM_TOLERANCE;
     }
 
-    // Tracks the supplied shot every loop, starts feeding once the flywheel is at speed, stops when ended.
-    public Command shoot(Supplier<ShotLUT.ShotParameters> shot) {
-        Runnable aim = () -> {
-            ShotLUT.ShotParameters s = shot.get();
-            setShot(s.rpm(), s.angle());
-        };
-        return run(aim).until(this::isReady)
-                .andThen(run(() -> {
-                    aim.run();
-                    flywheel.setFeeder(true);
-                }))
-                .finallyDo(this::stop);
+    // Sets rpm and hood every loop, feeds once at speed, stops when ended.
+    public Command shoot(DoubleSupplier rpm, DoubleSupplier hoodDegrees) {
+        return run(() -> {
+            setShot(rpm.getAsDouble(), hoodDegrees.getAsDouble());
+            if (isReady()) {
+                flywheel.setFeeder(true);
+            }
+        }).finallyDo(this::stop);
     }
 
     public Command stepHood(double deltaDegrees) {

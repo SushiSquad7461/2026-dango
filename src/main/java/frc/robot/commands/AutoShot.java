@@ -13,10 +13,13 @@ public class AutoShot extends WrapperCommand {
     private static final ShotLUT lut = ShotTable.buildLUT();
 
     public AutoShot(Shooter shooter, Swerve swerve) {
-        super(shooter.shoot(() -> {
-            double distance = AllianceUtil.getHubCenter().getDistance(swerve.getPose().getTranslation());
-            SmartDashboard.putNumber("AutoShot/DistanceM", distance);
-            return lut.get(distance);
-        }));
+        super(shooter.shoot(() -> aim(swerve).rpm(), () -> aim(swerve).angle()));
+    }
+
+    // LUT shot for the current distance to our hub.
+    private static ShotLUT.ShotParameters aim(Swerve swerve) {
+        double distance = AllianceUtil.getHubCenter().getDistance(swerve.getPose().getTranslation());
+        SmartDashboard.putNumber("AutoShot/DistanceM", distance);
+        return lut.get(distance);
     }
 }
