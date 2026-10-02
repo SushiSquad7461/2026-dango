@@ -481,9 +481,9 @@ public class Swerve extends SubsystemBase {
         boolean doRejectUpdateLeft = false;
         boolean doRejectUpdateRight = false;
 
-        
+        LimelightHelpers.SetIMUMode("limelight-left", 4);
         LimelightHelpers.SetRobotOrientation("limelight-left", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate mt2Left = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-left");
+        LimelightHelpers.PoseEstimate mt2Left = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-left");
         if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
         {
             doRejectUpdateLeft = true;
@@ -500,8 +500,9 @@ public class Swerve extends SubsystemBase {
                     mt2Left.timestampSeconds);
         }
 
+        LimelightHelpers.SetIMUMode("limelight-right", 4);
         LimelightHelpers.SetRobotOrientation("limelight-right", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate mt2Right = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-right");
+        LimelightHelpers.PoseEstimate mt2Right = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-right");
         if(Math.abs(yawRate.refresh().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
         {
             doRejectUpdateRight = true;
