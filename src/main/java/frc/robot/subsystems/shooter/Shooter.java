@@ -18,7 +18,7 @@ public class Shooter extends SubsystemBase {
 
     public void stop() {
         targetRPM = 0.0;
-        flywheel.stopShooter();
+        flywheel.stopShooter(500);
         flywheel.setFeeder(false);
     }
 
@@ -30,8 +30,8 @@ public class Shooter extends SubsystemBase {
     public Command shoot(double rpm, double hoodDegrees) {
         return runOnce(() -> setShot(rpm, hoodDegrees))
                 .andThen(Commands.waitUntil(() -> isReady()))
-                .andThen(runOnce(() -> flywheel.setFeeder(true)))
-                .finallyDo(() -> stop());
+                .andThen(runOnce(() -> flywheel.setFeeder(true)));
+                //.finallyDo(() -> stop());
     }
 
     public Command stepHood(double deltaDegrees) {

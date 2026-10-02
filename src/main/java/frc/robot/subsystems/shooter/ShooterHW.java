@@ -79,8 +79,9 @@ class ShooterHW {
     }
     //stops shooter by coasting to 0, rather than setting 0rpm and the shooter braking
     
-    public void stopShooter() {
-        krakenShooterLeft.set(0);
+    public void stopShooter(double rpm) {
+        double rps = rpm / 60.0;
+        krakenShooterLeft.setControl(shooterRequest.withVelocity(-rps));
     }
     //feeder is on/off
     
