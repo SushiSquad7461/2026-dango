@@ -522,8 +522,14 @@ public class Swerve extends SubsystemBase {
             return;
         }
 
+        // Trust falls off with distance, per PhotonVision's pose estimation example: drop far single-tag
+        // frames, scale std devs by (1 + d^2/30). 0.7 m base is from Limelight's MegaTag2 example.
+        if (mt2.tagCount == 1 && mt2.avgTagDist > 4) {
+            return;
+        }
+        double xyStdDev = 0.7 * (1 + mt2.avgTagDist * mt2.avgTagDist / 30);
         double rotStdDev = disabled ? VISION_ROT_STDDEV_DISABLED : VISION_ROT_STDDEV_ENABLED;
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, rotStdDev));
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdDev, xyStdDev, rotStdDev));
         poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
     }
 }
