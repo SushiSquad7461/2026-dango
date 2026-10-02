@@ -7,12 +7,11 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
+import frc.robot.util.AllianceUtil;
 
 /**
  * Turns the robot to face the hub while the driver keeps translation control, and sets flywheel
@@ -21,11 +20,6 @@ import frc.robot.subsystems.Swerve;
  * Runs until interrupted.
  */
 public class AutoAlign extends Command {
-
-    // Hub centers in blue-origin field coordinates (meters), precomputed from 2026-rebuilt-andymark.json
-    // as the midpoint of each hub's tag bounding box (blue tags 18-21, 24-27; red tags 2-5, 8-11).
-    private static final Translation2d BLUE_HUB_CENTER = new Translation2d(4.6115097, 4.0213534);
-    private static final Translation2d RED_HUB_CENTER = new Translation2d(11.9015002, 4.0213534);
 
     private final Swerve swerve;
     private final DoubleSupplier xTranslation;
@@ -47,11 +41,6 @@ public class AutoAlign extends Command {
         rotationPID.setTolerance(4.0);
     }
 
-    // Looked up every loop, not at construction: the alliance is often unknown when robot code boots.
-    private static Translation2d getHubCenter() {
-        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? RED_HUB_CENTER : BLUE_HUB_CENTER;
-    }
-
     @Override
     public void initialize() {
         rotationPID.reset();
@@ -67,7 +56,7 @@ public class AutoAlign extends Command {
         Translation2d driverInput = raw.times(Math.pow(magnitude, 2)).times(Constants.Swerve.maxSpeed); // same scaling as normal driving
 
         Pose2d currentPose = swerve.getPose(); // get robot pose
-        Translation2d toHub = getHubCenter().minus(currentPose.getTranslation());
+        Translation2d toHub = AllianceUtil.getHubCenter().minus(currentPose.getTranslation());
         double desiredHeadingDeg = toHub.getAngle().getDegrees(); // find heading difference
         double pidOutput = rotationPID.calculate(currentPose.getRotation().getDegrees()+180, desiredHeadingDeg);
         double rotationSpeed = MathUtil.clamp(pidOutput,
