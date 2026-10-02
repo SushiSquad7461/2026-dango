@@ -49,7 +49,7 @@ public class Constants {
     public static final class Shooter {
         public static double SHOOTER_KS = 0.0;
         public static double SHOOTER_KV = 0.12; //0.12
-        public static double SHOOTER_KP = 0.1;
+        public static double SHOOTER_KP = 0.3;
         public static double SHOOTER_KI = 0;
         public static double SHOOTER_KD = 0;
         public static final double FEEDER_RPM = 1000;
