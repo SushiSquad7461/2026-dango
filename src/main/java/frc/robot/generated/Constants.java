@@ -57,8 +57,8 @@ public class Constants {
         public static double SHOOTER_KD = 0;
         public static final double FEEDER_RPM = 1000;
         public static final double FEEDER_ANGLE = 0;
-        public static final double FEEDER_KS = 0;
-        public static final double FEEDER_KV = 0;
+        public static final double FEEDER_KS = 0.1;
+        public static final double FEEDER_KV = 0.12;
         public static final double FEEDER_KP = 0;
         public static final double FEEDER_KI = 0;
         public static final double FEEDER_KD = 0;
