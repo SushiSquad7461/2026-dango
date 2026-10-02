@@ -107,7 +107,7 @@ public class RobotContainer {
                         () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                                 stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
-                driverController.x().onTrue(new AutoAlign(
+                driverController.x().whileTrue(new AutoAlign(
                         swerve,
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX()));

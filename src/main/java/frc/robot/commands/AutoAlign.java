@@ -69,7 +69,7 @@ public class AutoAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return rotationPID.atSetpoint();
+        return false; // only ends when the button is released (see whileTrue binding)
     }
 
     @Override
