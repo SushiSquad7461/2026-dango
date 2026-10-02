@@ -6,6 +6,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -21,6 +22,7 @@ public class AutoAlign extends Command {
     private final DoubleSupplier xTranslation;
     private final DoubleSupplier yTranslation;
     private final PIDController rotationPID;
+    private final SlewRateLimiter rotationLimiter = new SlewRateLimiter(2 * Constants.Swerve.maxAngularVelocity);
     private final Pose2d hubPose;
 
     public AutoAlign(Swerve swerve, DoubleSupplier xTranslation, DoubleSupplier yTranslation) {
@@ -48,6 +50,7 @@ public class AutoAlign extends Command {
     @Override
     public void initialize() {
         rotationPID.reset();
+        rotationLimiter.reset(0);
     }
 
     @Override
@@ -64,6 +67,7 @@ public class AutoAlign extends Command {
         double pidOutput = rotationPID.calculate(currentPose.getRotation().getDegrees()+180, desiredHeadingDeg);
         double rotationSpeed = MathUtil.clamp(pidOutput,
                 -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity); // clamps heading change speed
+        rotationSpeed = rotationLimiter.calculate(rotationSpeed); // prevents instantaneous +/-max flips when error noise crosses the +-180 wrap boundary
 
         swerve.drive(driverInput, rotationSpeed, true, true);
 
