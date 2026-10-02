@@ -12,9 +12,9 @@ public class Hopper extends SubsystemBase{
     public Hopper(){
         motor = new TalonFX(7);
         TalonFXConfiguration motorConfig = new TalonFXConfiguration();
-        motorConfig.CurrentLimits.StatorCurrentLimit = 120.0;
+        motorConfig.CurrentLimits.StatorCurrentLimit = 80.0;
         motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        motorConfig.CurrentLimits.SupplyCurrentLimit = 70.0;
+        motorConfig.CurrentLimits.SupplyCurrentLimit = 50.0;
         motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         // adapts for different battery voltages
