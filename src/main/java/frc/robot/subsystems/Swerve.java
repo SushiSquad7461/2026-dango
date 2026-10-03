@@ -529,7 +529,7 @@ public class Swerve extends SubsystemBase {
         }
         double xyStdDev = 0.7 * (1 + mt2.avgTagDist * mt2.avgTagDist / 30);
         double rotStdDev = disabled ? VISION_ROT_STDDEV_DISABLED : VISION_ROT_STDDEV_ENABLED;
-        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdDev, xyStdDev, rotStdDev));
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdDev, xyStdDev, 999999));
         poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
     }
 }
