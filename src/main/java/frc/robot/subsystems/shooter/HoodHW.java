@@ -41,31 +41,27 @@ class HoodHW {
 
         zeroHood();
     }
-
-    //TODO: Make the degrees negative if hood moves in the wrong direction
     void setPosition(double angleInDegrees){
-        // Convert hood degrees → motor rotations via gear ratio
-        double rotations = (angleInDegrees / 360.0) * Constants.HoodedShooterConstants.motorRotationsPerHoodRotation;
-        lastCommandedDegrees = angleInDegrees;
+        hoodSetpointDegrees = MathUtil.clamp(
+                angleInDegrees,
+                Constants.HoodedShooterConstants.hoodMinDegrees,
+                Constants.HoodedShooterConstants.hoodMaxDegrees
+        );
+        double rotations = (hoodSetpointDegrees / 360.0) * Constants.HoodedShooterConstants.motorRotationsPerHoodRotation;
         hoodMotor.setControl(hoodControl.withPosition(rotations));
     }
 
     double getPosition() {
-        return 0;
+        return hoodMotor.getPosition().getValueAsDouble() * 360.0
+                / Constants.HoodedShooterConstants.motorRotationsPerHoodRotation;
     }
 
     void zeroHood(){
         hoodMotor.setPosition(0);
+        hoodSetpointDegrees = 0.0;
     }
 
-
-    /** D-pad: steps the hood setpoint by ±5° and holds position via Motion Magic. */
     void stepHood(double deltaDegrees) {
-        hoodSetpointDegrees = MathUtil.clamp(
-                hoodSetpointDegrees + deltaDegrees,
-                Constants.HoodedShooterConstants.hoodMinDegrees,
-                Constants.HoodedShooterConstants.hoodMaxDegrees
-        );
-        setPosition(hoodSetpointDegrees);
+        setPosition(hoodSetpointDegrees + deltaDegrees);
     }
 }
