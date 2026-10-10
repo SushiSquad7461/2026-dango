@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.Constants;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.intake.Intake;
@@ -19,9 +20,10 @@ public class StateMachine extends SubsystemBase {
         IDLE(IntakeState.IDLE),
         SHOOT_ONLY(IntakeState.DEPLOYED),
         INTAKE_DOWN(IntakeState.DEPLOYED),
-        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED);
+        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
         // PASSING(IntakeState.DEPLOYED);
 
+        SHOOT_NO_AUTO(IntakeState.DEPLOYED);
         public final IntakeState intakeState;
 
         private RobotState(IntakeState intakeState) {
@@ -71,6 +73,18 @@ public class StateMachine extends SubsystemBase {
     public Command changeState(RobotState newState) {
         boolean shoot = newState == RobotState.SHOOT_ONLY
                 || newState == RobotState.INTAKE_DOWN_AND_SHOOT;
+
+        if (newState == RobotState.SHOOT_NO_AUTO) {
+            return Commands.sequence(
+                    Commands.runOnce(() -> state = newState),
+                    Commands.parallel(
+                            intake.pivot(newState.intakeState.pivotAngle),
+                            intake.setStateRollers(newState.intakeState.rollerSpeed),
+                            hopper.runHopper(),
+                            shooter.shoot(Constants.Shooter.DEFAULTRPM, Constants.Shooter.DEFAULTANGLE) // only reads the pose, never drives, so auto paths keep swerve
+                    )
+            );
+        }
 
         if (shoot) {
             return Commands.sequence(

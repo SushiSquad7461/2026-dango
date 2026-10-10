@@ -113,6 +113,15 @@ public class RobotContainer {
                 //                 () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
                 //                         stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
 
+           driverController.leftTrigger()
+                   .onTrue(Commands.parallel(
+                           stateMachine.changeState(RobotState.SHOOT_NO_AUTO),
+                           new AutoAlign(
+                                   swerve,
+                                   () -> -driverController.getLeftY(),
+                                   () -> -driverController.getLeftX())))
+                   .onFalse(stateMachine.changeState(RobotState.IDLE));
+
                 driverController.povUp().onTrue(shooter.stepHood(5));
                 driverController.povDown().onTrue(shooter.stepHood(-5));
         }
