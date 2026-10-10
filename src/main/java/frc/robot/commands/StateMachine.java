@@ -21,7 +21,7 @@ public class StateMachine extends SubsystemBase {
         SHOOT_ONLY(IntakeState.DEPLOYED),
         INTAKE_DOWN(IntakeState.DEPLOYED),
         INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
-        // PASSING(IntakeState.DEPLOYED);
+        PASSING(IntakeState.DEPLOYED),
 
         SHOOT_NO_AUTO(IntakeState.DEPLOYED);
         public final IntakeState intakeState;
@@ -82,6 +82,18 @@ public class StateMachine extends SubsystemBase {
                             intake.setStateRollers(newState.intakeState.rollerSpeed),
                             hopper.runHopper(),
                             shooter.shoot(Constants.Shooter.DEFAULTRPM, Constants.Shooter.DEFAULTANGLE) // only reads the pose, never drives, so auto paths keep swerve
+                    )
+            );
+        }
+
+        if (newState == RobotState.PASSING) {
+            return Commands.sequence(
+                    Commands.runOnce(() -> state = newState),
+                    Commands.parallel(
+                            intake.pivot(newState.intakeState.pivotAngle),
+                            intake.setStateRollers(newState.intakeState.rollerSpeed),
+                            hopper.runHopper(),
+                            shooter.shoot(Constants.Shooter.PASSINGRPM, Constants.Shooter.PASSINGRPM) // only reads the pose, never drives, so auto paths keep swerve
                     )
             );
         }

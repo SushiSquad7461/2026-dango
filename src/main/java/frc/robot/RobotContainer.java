@@ -106,6 +106,12 @@ public class RobotContainer {
                         stateMachine.changeState(RobotState.INTAKE_DOWN),
                         () -> stateMachine.getCurrentState() == RobotState.INTAKE_DOWN));
 
+
+                  driverController.a().onTrue(
+                        Commands.either(
+                        stateMachine.changeState(RobotState.IDLE),
+                        stateMachine.changeState(RobotState.PASSING),
+                        () -> stateMachine.getCurrentState() == RobotState.PASSING));
                 // driverController.leftBumper().onFalse(
                 //         Commands.either(
                 //                 Commands.parallel(hopper.runHopper()),
