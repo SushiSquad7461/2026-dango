@@ -89,6 +89,7 @@ public class RobotContainer {
                         () -> driverController.back().getAsBoolean()));
 
                 driverController.y().onTrue(Commands.runOnce(swerve::resetGyro));
+                driverController.x().onTrue(intake.zeroPivot());
 
                 driverController.rightTrigger()
                         .onTrue(Commands.parallel(
