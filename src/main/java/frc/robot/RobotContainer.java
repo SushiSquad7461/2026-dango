@@ -121,11 +121,7 @@ public class RobotContainer {
 
            driverController.leftTrigger()
                    .onTrue(Commands.parallel(
-                           stateMachine.changeState(RobotState.SHOOT_NO_AUTO),
-                           new AutoAlign(
-                                   swerve,
-                                   () -> -driverController.getLeftY(),
-                                   () -> -driverController.getLeftX())))
+                           stateMachine.changeState(RobotState.SHOOT_NO_AUTO)))
                    .onFalse(stateMachine.changeState(RobotState.IDLE));
 
                 driverController.povUp().onTrue(shooter.stepHood(5));
