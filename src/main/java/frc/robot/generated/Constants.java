@@ -52,7 +52,7 @@ public class Constants {
     }
     public static final class Shooter {
         public static final DoubleSupplier DEFAULTRPM = () -> 2000;
-        public static final DoubleSupplier DEFAULTANGLE = () -> 5;
+        public static final DoubleSupplier DEFAULTANGLE = () -> 10;
         public static final DoubleSupplier PASSINGRPM = () -> 5000;
         public static final DoubleSupplier PASSINGANGLE = () -> 32;
         public static double SHOOTER_KS = 0.0;
