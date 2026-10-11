@@ -531,7 +531,5 @@ public class Swerve extends SubsystemBase {
         double rotStdDev = disabled ? VISION_ROT_STDDEV_DISABLED : VISION_ROT_STDDEV_ENABLED;
         poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdDev, xyStdDev, 999999));
         poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
-
-        System.out.printf("Limelight %s heading: %f", limelightName, mt2.pose.getRotation().getDegrees());
     }
-}   
+}
