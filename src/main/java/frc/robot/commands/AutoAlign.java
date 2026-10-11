@@ -57,7 +57,7 @@ public class AutoAlign extends Command {
 
         Pose2d currentPose = swerve.getPose(); // get robot pose
         Translation2d toHub = AllianceUtil.getHubCenter().minus(currentPose.getTranslation());
-        double desiredHeadingDeg = toHub.getAngle().getDegrees() + (!AllianceUtil.isRedAlliance() ? 180 : 0); // find heading difference
+        double desiredHeadingDeg = toHub.getAngle().getDegrees(); // find heading difference
         double pidOutput = rotationPID.calculate(currentPose.getRotation().getDegrees(), desiredHeadingDeg);
         double rotationSpeed = MathUtil.clamp(pidOutput,
                 -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity); // clamps heading change speed
