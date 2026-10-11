@@ -30,7 +30,7 @@ Subsystems own their Phoenix6 hardware directly (no IO/sim layers). `Shooter` wr
 - **Shooter** — Flywheel + hood (MotionMagic) + feeder. `AutoShot` picks RPM/hood from the `ShotTable` LUT by distance to the hub
 - **Intake** — Pivot (two TalonFX, MotionMagic) + rollers
 - **Hopper** — Simple transport motor
-- **AutoAlign** — Turns to face the hub (`AllianceUtil.getHubCenter()`) while the driver translates
+- **AutoAlign** — Turns the back of the robot (where the shooter is) toward the hub (`AllianceUtil.getHubCenter()`) while the driver translates
 
 ### Key Constants Location
 
