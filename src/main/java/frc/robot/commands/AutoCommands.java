@@ -13,25 +13,19 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.HoodedShooter;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.vision.Vision;
+import frc.robot.commands.AutoAlign;
 
 public class AutoCommands {
     private final SendableChooser<Command> autoChooser=new SendableChooser<Command>();;
     private final StringPublisher selectedAuto;
     private final NetworkTable autoNetworkTable;
 
-    public AutoCommands(StateMachine stateMachine, Intake intake, ShooterSubsystem shooter, HoodedShooter hoodedShooter, Swerve swerve, Vision vision){
+    public AutoCommands(StateMachine stateMachine, Intake intake, Swerve swerve){
             autoNetworkTable = NetworkTableInstance.getDefault().getTable("Auto");
             selectedAuto = autoNetworkTable.getStringTopic("selectedAuto").publish();
             selectedAuto.set("Nothing");
 
-            NamedCommands.registerCommand("AutoAlign",
-                new AutoAlign(swerve, vision, shooter, hoodedShooter,
-                    () -> 0.0, () -> 0.0, () -> 0.0));
-
-             NamedCommands.registerCommand("Shoot",
+        NamedCommands.registerCommand("Shoot",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.SHOOT_ONLY)));
         NamedCommands.registerCommand("Intake",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN_AND_SHOOT)));
@@ -39,20 +33,23 @@ public class AutoCommands {
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.INTAKE_DOWN)));
         NamedCommands.registerCommand("Idle",
             new InstantCommand(() -> stateMachine.scheduleNewState(RobotState.IDLE)));
+        //NamedCommands.registerCommand("AutoAlign",
+            //new AutoAlign(swerve, () -> 0.0, () -> 0.0));
+        //AutoAlign doesn't actually work
+
     
             autoChooser.setDefaultOption("Nothing", new InstantCommand());
             autoChooser.addOption("Test_Auto", new PathPlannerAuto("Test_Auto"));
             autoChooser.addOption("N_Shoot", new PathPlannerAuto("N_Shoot"));
-            autoChooser.addOption("Trench_N_Shoot", new PathPlannerAuto("Ideal_N_Shoot"));
+            autoChooser.addOption("Ideal_N_Shoot", new PathPlannerAuto("Ideal_N_Shoot"));
+            autoChooser.addOption("TestIdeal_N_Shoot", new PathPlannerAuto("TestIdeal_N_Shoot"));
             autoChooser.addOption("Shoot_Still", new PathPlannerAuto("Shoot_Still"));
             autoChooser.addOption("AutoAlign_Shoot", new PathPlannerAuto("AutoAlign_Shoot"));
             autoChooser.addOption("Shoot_N_Shoot", new PathPlannerAuto("Shoot_N_Shoot"));
-            autoChooser.addOption("Trench_Align_Shoot", new PathPlannerAuto("Trench_Align_Shoot"));
-            autoChooser.addOption("Neutral_Passing", new PathPlannerAuto("Neutral_Passing"));
-            autoChooser.addOption("Ideal_N_Shoot", new PathPlannerAuto("Ideal_N_Shoot"));
-            autoChooser.addOption("TestIdeal_N_Shoot", new PathPlannerAuto("TestIdeal_N_Shoot"));
             autoChooser.addOption("Shoot_Neutral_Trench", new PathPlannerAuto("Shoot_Neutral_Trench"));
-            autoChooser.addOption("BestIdeal_N_Shoot_Extra", new PathPlannerAuto("BestIdeal_N_Shoot_Extra"));
+            autoChooser.addOption("RTrench_Shoot", new PathPlannerAuto("RTrench_Shoot"));
+            autoChooser.addOption("RTrench_Corner_Shoot", new PathPlannerAuto("RTrench_Corner_Shoot"));
+            autoChooser.addOption("Hub_Shoot", new PathPlannerAuto("Hub_Shoot"));
             SmartDashboard.putData("Auto Chooser", autoChooser);
 
     }

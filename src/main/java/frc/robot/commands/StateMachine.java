@@ -5,56 +5,49 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.generated.Constants;
+import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.Hopper.HopperState;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem.ShooterState;
+import frc.robot.subsystems.shooter.Shooter;
 
 
 public class StateMachine extends SubsystemBase {
     public enum RobotState {
 
 
-        IDLE(ShooterState.IDLE,HopperState.IDLE),
-        SHOOT_ONLY(ShooterState.SHOOT_INIT,HopperState.RUNNING),//IntakeState.DEPLOYED
-        INTAKE_DOWN(ShooterState.IDLE,HopperState.IDLE),
-        //WIGGLING(IntakeState.WIGGLING,ShooterState.IDLE,HopperState.IDLE),
-        //INTAKE_DOWN_SHOOT(IntakeState.DEPLOYED, ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_ROLL_IN(IntakeState.ROLLERS_IN,ShooterState.IDLE,HopperState.IDLE),
-        INTAKE_DOWN_AND_SHOOT(ShooterState.PRESHOOT,HopperState.RUNNING),
-        PASSING(ShooterState.PRESHOOT,HopperState.RUNNING);
-        //INTAKE_ROLL_OUT(IntakeState.ROLLERS_OUT,ShooterState.IDLE,HopperState.IDLE);
-        //INTAKE_ROLL_OUT_AND_SHOOT(IntakeState.ROLLERS_OUT,ShooterState.SHOOT,HopperState.RUNNING),
-        //INTAKE_WIGGLE_AND_SHOOT(IntakeState.WIGGLING,ShooterState.SHOOT,HopperState.RUNNING);
+        IDLE(IntakeState.IDLE),
+        SHOOT_ONLY(IntakeState.DEPLOYED),
+        INTAKE_DOWN(IntakeState.DEPLOYED),
+        INTAKE_DOWN_AND_SHOOT(IntakeState.DEPLOYED),
+        PASSING(IntakeState.DEPLOYED),
 
+        SHOOT_NO_AUTO(IntakeState.DEPLOYED);
+        public final IntakeState intakeState;
 
-        public final ShooterState shooterState;
-        public final HopperState hopperState;
-        //public final IntakeState intakeState;
-
-        private RobotState( ShooterState shooterState,HopperState hopperState) {
-            this.shooterState = shooterState;
-            this.hopperState = hopperState;
-            //this.intakeState = intakeState;
+        private RobotState(IntakeState intakeState) {
+            this.intakeState = intakeState;
         }
     }
 
     private RobotState state;
-    private final ShooterSubsystem shooter;
     private final Hopper hopper;
-    //private final Intake intake;
+    private final Intake intake;
     private final NetworkTable stateTable;
     private final StringPublisher currentStatePub;
+    private final Shooter shooter;
+    private final Swerve swerve;
 
     /**
      * Constructs the State Machine
      */
-    public StateMachine(ShooterSubsystem shooter, Hopper hopper) {
-        this.shooter = shooter;
+    public StateMachine(Hopper hopper, Intake intake, Shooter shooter, Swerve swerve) {
         this.hopper = hopper;
+        this.intake = intake;
         this.state = RobotState.IDLE;
+        this.shooter = shooter;
+        this.swerve = swerve;
 
 
         this.stateTable = NetworkTableInstance.getDefault().getTable("StateMachine");
@@ -77,26 +70,61 @@ public class StateMachine extends SubsystemBase {
         return this.state;
     }
 
-    //TODO: Combine
     public Command changeState(RobotState newState) {
+        boolean shoot = newState == RobotState.SHOOT_ONLY
+                || newState == RobotState.INTAKE_DOWN_AND_SHOOT;
+
+        if (newState == RobotState.SHOOT_NO_AUTO) {
+            return Commands.sequence(
+                    Commands.runOnce(() -> state = newState),
+                    Commands.parallel(
+                            intake.pivot(newState.intakeState.pivotAngle),
+                            intake.setStateRollers(newState.intakeState.rollerSpeed),
+                            hopper.runHopper(),
+                            shooter.shoot(Constants.Shooter.DEFAULTRPM, Constants.Shooter.DEFAULTANGLE) // only reads the pose, never drives, so auto paths keep swerve
+                    )
+            );
+        }
+
+        if (newState == RobotState.PASSING) {
+            return Commands.sequence(
+                    Commands.runOnce(() -> state = newState),
+                    Commands.parallel(
+                            intake.pivot(newState.intakeState.pivotAngle),
+                            intake.setStateRollers(newState.intakeState.rollerSpeed),
+                            hopper.runHopper(),
+                            shooter.shoot(Constants.Shooter.PASSINGRPM, Constants.Shooter.PASSINGRPM) // only reads the pose, never drives, so auto paths keep swerve
+                    )
+            );
+        }
+
+        if (shoot) {
+            return Commands.sequence(
+                Commands.runOnce(() -> state = newState),
+                Commands.parallel(
+                    intake.pivot(newState.intakeState.pivotAngle),
+                    intake.setStateRollers(newState.intakeState.rollerSpeed),
+                    hopper.runHopper(),
+                    new AutoShot(shooter, swerve) // only reads the pose, never drives, so auto paths keep swerve
+                )
+            );
+        }
 
         return Commands.sequence(
-            Commands.runOnce(() ->
-            state = newState
-            ),
+            Commands.runOnce(() -> state = newState),
             Commands.parallel(
-                shooter.changeState(newState.shooterState),
-                hopper.changeState(newState.hopperState)
-               // Commands.runOnce(() -> intake.setWantedState(newState.intakeState))
-               )
+                intake.pivot(newState.intakeState.pivotAngle),
+                intake.setStateRollers(newState.intakeState.rollerSpeed),
+                hopper.stopHopper()
+            ),
+            Commands.runOnce(() -> shooter.stop())
         );
     }
-
     public RobotState getCurrentState() {
         return state;
     }
 
-      private void publishStates() {
-         currentStatePub.set(state.toString());
-      }
+    private void publishStates() {
+        currentStatePub.set(state.toString());
+    }
  }

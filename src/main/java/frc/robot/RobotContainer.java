@@ -12,23 +12,14 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.generated.Constants;
 import frc.robot.commands.AutoAlign;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.StateMachine;
 import frc.robot.commands.StateMachine.RobotState;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIOReal;
-import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeReal;
-import frc.robot.subsystems.intake.IntakeSim;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.intake.Intake.IntakeState;
-import frc.robot.subsystems.shooter.HoodedShooter;
-import frc.robot.subsystems.shooter.ShooterIOKraken;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.Swerve;
 import frc.robot.subsystems.TeleopSwerve;
 
@@ -45,20 +36,16 @@ public class RobotContainer {
         // Subsystems
         private final Swerve swerve = new Swerve();
         private final Intake intake;
-        private final ShooterSubsystem shooter;
         private final Hopper hopper;
+        private final Shooter shooter = new Shooter();
         private final StateMachine stateMachine;
-        private final HoodedShooter hoodedShooter;
         private final AutoCommands autos;
-        //@SuppressWarnings("unused")
-        private final Vision vision;
 
 
         // private boolean wiggleOn;
 
         // Controller
         private final CommandXboxController driverController = new CommandXboxController(0);
-        private final CommandXboxController operatorController = new CommandXboxController(1);
 
         // Dashboard inputs
         // private final LoggedDashboardChooser<Command> autoChooser;
@@ -69,21 +56,17 @@ public class RobotContainer {
         public RobotContainer() {
 
                 if (Robot.isReal()) {
-                        shooter = new ShooterSubsystem(new ShooterIOKraken());
-                        intake = new Intake(new IntakeReal());
-                        hopper = new Hopper(new HopperIOReal());
+                        intake = new Intake();
+                        hopper = new Hopper();
                         // swerve.resetGyro();
 
                 } else {
-                        shooter = new ShooterSubsystem(new ShooterIOSim());
-                        intake = new Intake(new IntakeSim());
-                        hopper = new Hopper(new HopperIOSim());
+                        intake = new Intake();
+                        hopper = new Hopper();
                 }
-                hoodedShooter = new HoodedShooter();
-                vision = new Vision();
-                this.stateMachine = new StateMachine(shooter, hopper);
+                this.stateMachine = new StateMachine(hopper, intake, shooter, swerve);
 
-                this.autos = new AutoCommands(stateMachine, intake, shooter, hoodedShooter, swerve, vision);
+                this.autos = new AutoCommands(stateMachine, intake, swerve);
 
                 // Configure the button bindings
                 configureButtonBindings();
@@ -97,73 +80,47 @@ public class RobotContainer {
          * it to a {@link
          * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
          */
-        private void configureButtonBindings() {
+       private void configureButtonBindings() {
                 swerve.setDefaultCommand(new TeleopSwerve(
-                                swerve,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX(),
-                                () -> -driverController.getRightX(),
-                                () -> driverController.back().getAsBoolean())); // allows you to drive as robot relative
-                                                                                // only while holding down the button
-
-                driverController.y().onTrue(Commands.runOnce(() -> {
-                        swerve.resetGyro();
-                        vision.resetOffset();
-                }));
-
-                driverController.rightTrigger().onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY)).onFalse(stateMachine.changeState(RobotState.IDLE));
-                driverController.rightBumper().onTrue(
-                        Commands.either(
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.IDLE)),
-                                Commands.runOnce(()->intake.setWantedState(IntakeState.DEPLOYED)),
-                                () -> intake.getState() == IntakeState.DEPLOYED));
-
-                driverController.leftBumper().onTrue(
-                        Commands.parallel(
-                        Commands.runOnce(() -> intake.setWantedState(IntakeState.WIGGLING)))
-                ).onFalse(
-                        Commands.either(
-                                Commands.parallel(shooter.runFeeder(), hopper.runHopper()),
-                                Commands.parallel(shooter.stopFeeder(), hopper.stopHopper()),
-                                () -> stateMachine.getCurrentState() == RobotState.SHOOT_ONLY ||
-                                      stateMachine.getCurrentState() == RobotState.INTAKE_DOWN_AND_SHOOT));
-
-                // D-pad: step hood ±5° using MotionMagic position hold
-                driverController.povDown().onTrue(Commands.runOnce(() -> hoodedShooter.stepHood(-Constants.HoodedShooterConstants.hoodStepDegrees), hoodedShooter));
-                driverController.povUp().onTrue(  Commands.runOnce(() -> hoodedShooter.stepHood( Constants.HoodedShooterConstants.hoodStepDegrees), hoodedShooter));
-
-                driverController.leftTrigger().whileTrue(new AutoAlign(
-                        swerve, vision, shooter, hoodedShooter,
+                        swerve,
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX(),
-                        () -> -driverController.getRightX()
-                ));
+                        () -> -driverController.getRightX(),
+                        () -> driverController.back().getAsBoolean()));
 
-                // Passing mode toggle (operator A button)
-                operatorController.a().onTrue(
+                driverController.y().onTrue(Commands.runOnce(swerve::resetGyro));
+                driverController.x().onTrue(intake.zeroPivot());
+
+                driverController.rightTrigger()
+                        .onTrue(Commands.parallel(
+                                stateMachine.changeState(RobotState.SHOOT_ONLY),
+                                new AutoAlign(
+                                        swerve,
+                                        () -> -driverController.getLeftY(),
+                                        () -> -driverController.getLeftX())))
+                        .onFalse(stateMachine.changeState(RobotState.IDLE));
+
+                driverController.rightBumper().onTrue(
                         Commands.either(
-                                // Already passing → revert to IDLE
-                                Commands.sequence(
-                                        Commands.runOnce(() -> shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT)),
-                                        stateMachine.changeState(RobotState.IDLE)
-                                ),
-                                // Not passing → enter passing mode
-                                Commands.sequence(
-                                        Commands.runOnce(() -> {
-                                                shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_PASS);
-                                                hoodedShooter.moveHoodToSetpoint(Constants.Shooter.TARGET_HOOD_PASS);
-                                        }),
-                                        stateMachine.changeState(RobotState.PASSING)
-                                ),
-                                () -> stateMachine.getCurrentState() == RobotState.PASSING
-                        )
-                );
+                        stateMachine.changeState(RobotState.IDLE),
+                        stateMachine.changeState(RobotState.INTAKE_DOWN),
+                        () -> stateMachine.getCurrentState() == RobotState.INTAKE_DOWN));
 
-                // bind to copilot D-pad
-                operatorController.povUp().onTrue(Commands.runOnce(() -> vision.adjustOffset(100.0)));
-                operatorController.povDown().onTrue(Commands.runOnce(() -> vision.adjustOffset(-100.0)));
-                driverController.b().onTrue(Commands.runOnce(() -> swerve.babyMode()));                       
-                driverController.x().whileTrue(Commands.sequence(Commands.runOnce(() -> shooter.setTargetRPM(Constants.Shooter.TARGET_RPM_DEFAULT), shooter), stateMachine.changeState(RobotState.SHOOT_ONLY))).onFalse(stateMachine.changeState(RobotState.IDLE));
+
+                  driverController.a().onTrue(
+                        Commands.either(
+                        stateMachine.changeState(RobotState.IDLE),
+                        stateMachine.changeState(RobotState.PASSING),
+                        () -> stateMachine.getCurrentState() == RobotState.PASSING));
+
+
+           driverController.leftTrigger()
+                   .onTrue(Commands.parallel(
+                           stateMachine.changeState(RobotState.SHOOT_NO_AUTO)))
+                   .onFalse(stateMachine.changeState(RobotState.IDLE));
+
+                driverController.povUp().onTrue(shooter.stepHood(5));
+                driverController.povDown().onTrue(shooter.stepHood(-5));
         }
 
         public Command getAutonomousCommand() {

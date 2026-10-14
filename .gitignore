@@ -193,3 +193,6 @@ src/main/java/frc/robot/.BuildConstants.java.swp
 # Local planning and AI assistant files (not for repo)
 docs/
 .claude/
+
+# Local machine-specific properties
+local.properties

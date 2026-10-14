@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.LimelightHelpers;
 import frc.robot.util.AllianceUtil;
 import frc.robot.generated.Constants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -7,6 +10,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
 import static edu.wpi.first.units.Units.Volts;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -41,12 +47,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class Swerve extends SubsystemBase {
-    private boolean babyMode = false;
-
     private final SwerveDrivePoseEstimator poseEstimator;
     private final SwerveModule[] mSwerveMods;
     private final BaseStatusSignal[] modStatusSignals;
-    private final Pigeon2 gyro;
+        private final Pigeon2 gyro;
     private final StatusSignal<Angle> gyroYaw;
     private final SysIdRoutine driveSysIdRoutine;
     private final SysIdRoutine steerSysIdRoutine;
@@ -283,10 +287,6 @@ public class Swerve extends SubsystemBase {
         }
     }
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
-        if(babyMode) {
-            translation = new Translation2d(translation.getX() * Constants.Swerve.LOW_SPEED, translation.getY() * Constants.Swerve.LOW_SPEED);
-            rotation = rotation * Constants.Swerve.LOW_ROT;
-        }
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
                         translation.getX(),
@@ -478,14 +478,58 @@ public class Swerve extends SubsystemBase {
     private void updateOdom() {
         gyroYaw.refresh();
         poseEstimator.update(getGyroYaw(), getModulePositions());
-        
+
+        StatusSignal<AngularVelocity> yawRate = gyro.getAngularVelocityZDevice();
+        double yawRateDps = yawRate.refresh().getValueAsDouble();
+
+        boolean spinningTooFast = Math.abs(yawRateDps) > Constants.Vision.MAX_YAW_RATE_DPS;
+        addLimelightMeasurement("limelight-left", spinningTooFast);
+        addLimelightMeasurement("limelight-right", spinningTooFast);
     }
 
-    public void babyMode() {
-        if(babyMode) {
-            babyMode = false;
-        } else {
-            babyMode = true;
+    // Rotation std devs (radians) for MT2 heading. In IMU mode 3 the Limelight's internal IMU
+    // is continuously corrected by MegaTag1's tag-derived yaw, so MT2's heading is field-referenced
+    // rather than an echo of our Pigeon. Trust it hard while disabled (seed heading before the match),
+    // gently while enabled (correct drift without fighting the Pigeon during fast turns).
+    private static final double VISION_ROT_STDDEV_DISABLED = 0.05;
+    private static final double VISION_ROT_STDDEV_ENABLED = 0.5;
+    // Complementary filter alpha for MT1 assist. Higher converges the LL IMU onto MT1 yaw faster.
+    private static final double IMU_ASSIST_ALPHA_DISABLED = 0.01;
+    private static final double IMU_ASSIST_ALPHA_ENABLED = 0.001; // Limelight default
+
+    // Timestamp of the newest frame already seen from each camera. LimelightHelpers returns the same
+    // timestamp until a new frame arrives, so a slow or stalled camera would otherwise be re-added every loop.
+    private final Map<String, Double> lastFrameTimestamps = new HashMap<>();
+
+    private void addLimelightMeasurement(String limelightName, boolean spinningTooFast) {
+        boolean disabled = DriverStation.isDisabled();
+
+        LimelightHelpers.SetIMUMode(limelightName, 3); // internal IMU + MT1 assist
+        LimelightHelpers.SetIMUAssistAlpha(limelightName, disabled ? IMU_ASSIST_ALPHA_DISABLED : IMU_ASSIST_ALPHA_ENABLED);
+        LimelightHelpers.SetRobotOrientation(limelightName, poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
+
+        if (mt2 == null || mt2.tagCount == 0) {
+            return;
         }
+        // Only use each frame once. Mark it as seen before the spin filter so a frame captured
+        // while spinning isn't picked up later (a disconnected camera also stops here).
+        if (mt2.timestampSeconds <= lastFrameTimestamps.getOrDefault(limelightName, 0.0)) {
+            return;
+        }
+        lastFrameTimestamps.put(limelightName, mt2.timestampSeconds);
+        if (spinningTooFast) {
+            return;
+        }
+
+        // Trust falls off with distance, per PhotonVision's pose estimation example: drop far single-tag
+        // frames, scale std devs by (1 + d^2/30). 0.7 m base is from Limelight's MegaTag2 example.
+        if (mt2.tagCount == 1 && mt2.avgTagDist > 4) {
+            return;
+        }
+        double xyStdDev = 0.7 * (1 + mt2.avgTagDist * mt2.avgTagDist / 30);
+        double rotStdDev = disabled ? VISION_ROT_STDDEV_DISABLED : VISION_ROT_STDDEV_ENABLED;
+        poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(xyStdDev, xyStdDev, 999999));
+        poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
     }
 }

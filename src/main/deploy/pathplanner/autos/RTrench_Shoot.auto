@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Fix_Trench_Neutral"
+                  "pathName": "RTrench_Neutral"
                 }
               },
               {
@@ -30,7 +30,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "PreparetoPass"
+                  "pathName": "Neutral_Shoot"
                 }
               },
               {
@@ -45,19 +45,19 @@
         {
           "type": "named",
           "data": {
-            "name": "Intake"
+            "name": "Shoot"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 10.0
+            "waitTime": 20.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "idle"
+            "name": "Idle"
           }
         }
       ]
