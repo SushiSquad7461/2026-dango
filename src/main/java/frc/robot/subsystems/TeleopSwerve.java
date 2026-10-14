@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.generated.Constants;
+import frc.robot.util.AllianceUtil;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -33,10 +34,12 @@ public class TeleopSwerve extends Command {
         double strafeVal = MathUtil.applyDeadband(strafeSup.getAsDouble(), Constants.stickDeadband);
         double rotationVal = MathUtil.applyDeadband(rotationSup.getAsDouble(), Constants.stickDeadband);
 
-        // if (AllianceUtil.isRedAlliance()) {
-        //     translationVal = -translationVal;
-        //     strafeVal = -strafeVal;
-        // }
+        // Pose is always blue-origin, so the red driver's "forward" is field -X.
+        // Robot-centric driving doesn't depend on which wall the driver stands at.
+        if (!robotCentricSup.getAsBoolean() && AllianceUtil.isRedAlliance()) {
+            translationVal = -translationVal;
+            strafeVal = -strafeVal;
+        }
 
         Translation2d translationVector = new Translation2d(translationVal, strafeVal);
         double magnitude = translationVector.getNorm();

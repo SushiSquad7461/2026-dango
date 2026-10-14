@@ -6,6 +6,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -54,10 +55,14 @@ public class AutoAlign extends Command {
         Translation2d raw = new Translation2d(x, y);
         double magnitude = raw.getNorm();
         Translation2d driverInput = raw.times(Math.pow(magnitude, 2)).times(Constants.Swerve.maxSpeed); // same scaling as normal driving
+        if (AllianceUtil.isRedAlliance()) {
+            driverInput = driverInput.unaryMinus(); // same driver-perspective flip as TeleopSwerve
+        }
 
         Pose2d currentPose = swerve.getPose(); // get robot pose
         Translation2d toHub = AllianceUtil.getHubCenter().minus(currentPose.getTranslation());
-        double desiredHeadingDeg = toHub.getAngle().getDegrees(); // find heading difference
+        // The shooter is on the back of the robot, so point the back (not the front) at the hub
+        double desiredHeadingDeg = toHub.getAngle().plus(Rotation2d.k180deg).getDegrees();
         double pidOutput = rotationPID.calculate(currentPose.getRotation().getDegrees(), desiredHeadingDeg);
         double rotationSpeed = MathUtil.clamp(pidOutput,
                 -Constants.Swerve.maxAngularVelocity, Constants.Swerve.maxAngularVelocity); // clamps heading change speed
