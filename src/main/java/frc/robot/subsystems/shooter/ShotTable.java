@@ -31,6 +31,7 @@ public class ShotTable {
     private static final double[][] DATA = {
         // { distM,  rpm,   angleDeg }
         {    1.5,  1300,     5.5 },
+        {    1.27,  2000,     10 },
         {    2.0,  2000,     6.9 },
         {    3, 2400,     12.0 },
         {    4,  2600,     15.5 },
