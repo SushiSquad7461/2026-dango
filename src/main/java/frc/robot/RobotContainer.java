@@ -107,11 +107,15 @@ public class RobotContainer {
                         () -> stateMachine.getCurrentState() == RobotState.INTAKE_DOWN));
 
 
-                  driverController.a().onTrue(
+                driverController.a().onTrue(
                         Commands.either(
                         stateMachine.changeState(RobotState.IDLE),
                         stateMachine.changeState(RobotState.PASSING),
                         () -> stateMachine.getCurrentState() == RobotState.PASSING));
+
+                driverController.leftBumper()
+                        .onTrue(stateMachine.changeState(RobotState.SHOOT_ONLY))
+                        .onFalse(stateMachine.changeState(RobotState.IDLE));
 
 
            driverController.leftTrigger()
